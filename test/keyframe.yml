@@ -1,0 +1,16 @@
+slug: openbalena-keyframe
+type: meta.keyframe
+version: 0.0.1
+repo: 'https://github.com/balena-io/balena-io.git'
+children:
+  sw:
+    containerized-application:
+      openbalena-api:
+        slug: openbalena-api
+        version: v0.24.3
+        type: sw.containerized-application
+        assets:
+          image:
+            url: 'balena/open-balena-api'
+          repo:
+            url: 'https://github.com/balena-io/open-balena-api.git'
