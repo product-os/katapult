@@ -1,0 +1,4 @@
+version: v1.0.0
+config-store:
+    type: envFile
+    path: envvars.env

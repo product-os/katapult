@@ -1,8 +1,7 @@
 import { Command, flags } from '@oclif/command';
-
 import { EnvironmentEditor } from '../lib/controllers/environment/environment-editor';
 
-export const initializeFlags = {
+const syncFlags = {
 	configurationPath: flags.string({
 		description: 'URI of the environment configuration path',
 		required: true,
@@ -18,13 +17,14 @@ export const initializeFlags = {
 	}),
 };
 
-export default class Init extends Command {
-	static description = 'Initialize environment configuration';
+export default class SyncCommand extends Command {
+	static description = 'Sync environment configuration';
 
-	static flags = initializeFlags;
+	static flags = syncFlags;
 
 	async run() {
-		const { flags } = this.parse(Init);
-		return (await EnvironmentEditor.create(flags)).initializeEnvironment();
+		const { flags } = this.parse(SyncCommand);
+
+		return (await EnvironmentEditor.create(flags)).initializeEnvironment(false);
 	}
 }

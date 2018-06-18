@@ -1,63 +1,25 @@
 import { Command, flags } from '@oclif/command';
 
-import generateDeploy = require('../lib/commands/generate-deploy');
+import { ArtifactsGenerator } from '../lib/controllers/artifacts-generator/artifacts-generator';
+import { ConfigManifest } from '../lib/controllers/config-manifest/config-manifest';
+import { ConfigStore } from '../lib/controllers/config-store/config-store';
+import { ConfigurationManager } from '../lib/controllers/configuration-manager/configuration-manager';
+import { EnvironmentEditor } from '../lib/controllers/environment/environment-editor';
+import { convertRelativePaths, getBasePath, readFromURI } from '../lib/tools';
 
 export const GenerateDeployFlags = {
-	configuration: flags.string({
-		description: 'URI to deploy-template folder/repo',
-		default: './',
-		char: 'c',
-	}),
-
-	environment: flags.string({
-		description: 'Name of the selected environment',
+	configurationPath: flags.string({
+		description: 'URI of the environment configuration path',
 		required: true,
-		char: 'e',
-	}),
-
-	target: flags.string({
-		description: 'Name of the selected target',
-		char: 't',
+		default: './environment.yml',
+		char: 'c',
 	}),
 
 	mode: flags.string({
 		description: 'Determine how to resolve data which is missing at runtime.',
-		options: ['interactive', 'defensive', 'aggressive'],
-		default: 'aggressive',
+		options: ['interactive', 'quiet', 'edit'],
+		default: 'interactive',
 		char: 'm',
-	}),
-
-	keyframe: flags.string({
-		description: 'Path to keyframe file, if available',
-		default: './keyframe.yml',
-		char: 'k',
-	}),
-
-	format: flags.string({
-		name: 'service-format',
-		description:
-			"Determine how a component should be acquired; build or image. Formated as 'component=format', eg 'haproxy=build'",
-		char: 'f',
-		multiple: true,
-	}),
-
-	path: flags.string({
-		name: 'build-path',
-		description:
-			'Build path for a component as: --build-path <component>=<path>',
-		char: 'b',
-		multiple: true,
-	}),
-
-	verbose: flags.boolean({
-		description: 'Enable verbose mode',
-		char: 'v',
-		default: false,
-	}),
-
-	deploy: flags.boolean({
-		hidden: true,
-		default: false,
 	}),
 };
 
@@ -68,6 +30,24 @@ export default class Generate extends Command {
 
 	async run() {
 		const { flags } = this.parse(Generate);
-		return generateDeploy(flags).asCallback();
+		const environment = convertRelativePaths({
+			conf: await (await EnvironmentEditor.create(flags)).initializeEnvironment(
+				false,
+			),
+			basePath: getBasePath(flags.configurationPath),
+		});
+		const configStore = await ConfigStore.create(environment.configStore);
+		const configManifest = new ConfigManifest(
+			await readFromURI(environment.productRepo, 'config-manifest.yml'),
+		);
+		const configMap = (await ConfigurationManager.create({
+			mode: flags.mode,
+			configManifest,
+			configStore,
+		})).sync();
+
+		const generator = await ArtifactsGenerator.create(environment, configMap);
+		await generator.generate();
+		return true;
 	}
 }

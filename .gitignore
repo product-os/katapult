@@ -75,3 +75,4 @@ Thumbs.db
 /tmp
 /yarn.lock
 release/
+/environment.yml
