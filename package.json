@@ -1,0 +1,27 @@
+{
+ "name": "katapult",
+ "version": "0.0.1",
+ "description": "A tool for launching!",
+ "scripts": {
+  "test": "mocha"
+ },
+ "bin": {
+  "katapult": "./bin/katapult"
+ },
+ "repository": {
+  "type": "git",
+  "url": "git+https://github.com/resin-io/katapult"
+ },
+ "author": "",
+ "license": "Apache-2.0",
+ "dependencies": {
+  "bluebird": "~3",
+  "capitano": "~1",
+  "lodash": "~4",
+  "mkdirp": "~0.5",
+  "yamljs": "~0.3"
+ },
+ "devDependencies": {
+  "mocha": "~5"
+ }
+}
