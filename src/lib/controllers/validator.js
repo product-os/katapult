@@ -72,7 +72,7 @@ module.exports = class Validator {
 	}
 
 	static validateOutput(output){
-		return validateDirectoryPath(output).then(error => {
+		return validateDirectoryPath(path.dirname(output)).then(error => {
 			if (error) return [error]
 			else return []
 		})
