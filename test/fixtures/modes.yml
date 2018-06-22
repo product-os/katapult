@@ -1,0 +1,7 @@
+production:
+  - api
+  - ui
+development:
+  - api
+  - db
+  - ui

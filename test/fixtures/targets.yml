@@ -1,0 +1,9 @@
+compose:
+  api:
+    tmpfs:
+      - /run
+      - /sys/fs/cgroup
+  ui:
+    tmpfs:
+      - /run
+      - /sys/fs/cgroup

@@ -1,0 +1,4 @@
+balena-production:
+  api:
+    labels:
+      production: 'true'
