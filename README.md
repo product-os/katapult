@@ -1,6 +1,6 @@
 # katapult
 
-A tool for merging launching!
+A tool for launching!
 
 This cli tool consumes a repo of declarative yaml docker-compose format configuration layers.
 The input options require specifying mode, target and environment from for the available declarative yaml configuratio nlayers,
