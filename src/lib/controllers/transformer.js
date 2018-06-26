@@ -2,7 +2,7 @@
 
 const _ = require("lodash")
 const Promise = require('bluebird')
-const { writeFileAsync } = Promise.promisifyAll(require('fs'))
+const { readFileAsync, writeFileAsync } = Promise.promisifyAll(require('fs'))
 const path = require('path')
 const { loadFromFile, ymlString } = require('../utils')
 const { validateFilePath, validateDirectoryPath, validateTopLevelDirectiveYaml } = require('../utils')
@@ -98,6 +98,7 @@ module.exports = class Transformer {
 					if (this.target === 'kubernetes'){
 						writeFileAsync('/tmp/katapult.tmp.out', ymlString(release)).then(
 							execAsync('env -i kompose convert -f /tmp/katapult.tmp.out --stdout').then( output => {
+								// TODO: inject secrets, in case we use this for k8s.
 								console.log(output)
 							})
 						)
@@ -111,10 +112,49 @@ module.exports = class Transformer {
 				else {
 					return writeFileAsync(this.output, ymlString(release))
 						.then(() => {
-							execAsync(`env -i kompose convert -f "${this.output}"`)
+							execAsync(`env -i kompose convert -f "${this.output}"`).then(() => {
+								// inject kubernetes secrets from environment
+								_.mapKeys(this.release.services, (serviceDefinition, serviceName) => {
+									Transformer.createSecrets(serviceDefinition, serviceName)
+								})
+							})
 							return [release, errors]
 						})
 				}
 			})
+	}
+
+	static createSecrets(serviceDefinition, serviceName){
+		if (serviceDefinition.environment){
+			let secrets = {
+				kind: 'Secret',
+				apiVersion: 'v1',
+				metadata: null,
+				type: 'Opaque',
+				data: null
+			}
+			let deploymentPath = `${serviceName}-deployment.yaml`
+			loadFromFile(deploymentPath).then((obj) => {
+				_.set(secrets, 'metadata.name', serviceName)
+				_.mapKeys(serviceDefinition.environment, (value, envvar) => {
+					if (_.get(process.env, envvar)){
+						// remove any existing envvar. Will be overriden by a secret.
+						_.remove(obj.spec.template.spec.containers[0].env, (n) => {
+							return n.name === envvar;
+						});
+						// create secret and add reference to env.
+						obj.spec.template.spec.containers[0].env.push({
+							name: envvar,
+							value:{ valueFrom: {secretKeyRef: { name: `${serviceName}-secrets`, key: envvar}}}
+						})
+						_.set(secrets, ['data', envvar], new Buffer.from(_.get(process.env, envvar)).toString('base64'))
+					}
+				})
+				return [obj, secrets]
+			}).then(([obj, secrets])=>{
+				writeFileAsync(deploymentPath, ymlString(obj))
+				writeFileAsync(`${serviceName}-secrets.yaml`, ymlString(secrets))
+			})
+		}
 	}
 }
