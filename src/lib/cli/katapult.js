@@ -102,10 +102,10 @@ capitano.command({
 		alias: [ 'o' ],
 		required: false
 	}, {
-		signature: 'composefile',
-		parameter: 'composefile',
-		alias: [ 'c' ],
-		required: true
+		signature: 'komposefile',
+		parameter: 'komposefile',
+		alias: [ 'k' ],
+		required: false
 	}, {
 		signature: 'target',
 		parameter: 'target',
@@ -126,13 +126,13 @@ capitano.command({
 
 		const {
 			output='',
-			input='../balena-io',
-			composefile,
+			input,
+			komposefile='komposefile.yml',
 			target,
 			environment,
 			verbose=false,
 		} = options
-		return new transformer(input, composefile, target, environment, output, verbose).write().then(([release, errors]) =>{
+		return new transformer(input, komposefile, target, environment, output, verbose).write().then(([release, errors]) =>{
 			if(errors.length){
 				for (let e in errors) {
 					console.error(errors[e])

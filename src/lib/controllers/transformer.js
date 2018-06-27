@@ -10,9 +10,9 @@ const execAsync = Promise.promisify(require('child_process').exec)
 
 module.exports = class Transformer {
 
-	constructor(input, composefile, target, environment, output, verbose) {
+	constructor(input, komposefile, target, environment, output, verbose) {
 		this.input = input
-		this.composefile = composefile
+		this.komposefile = komposefile
 		this.target = target
 		this.environment = environment
 		this.output = output
@@ -26,7 +26,7 @@ module.exports = class Transformer {
 			validateDirectoryPath(this.input).then(error => {
 				if (error) errors=errors.concat(error)
 			}),
-			validateFilePath(path.join(this.input, this.composefile)).then(error => {
+			validateFilePath(path.join(this.input, this.komposefile)).then(error => {
 				if (error) errors=errors.concat(error)
 			}),
 			validateFilePath(path.join(this.input, 'targets.yml')).then(error => {
@@ -56,18 +56,25 @@ module.exports = class Transformer {
 	transform() {
 		return this.validate().then( (errors) => {
 			if (errors.length) return [null, errors]
-			return loadFromFile(path.join(this.input, this.composefile)).then( release => {
+			return loadFromFile(path.join(this.input, this.komposefile)).then(release => {
 				this.release = release
 				return loadFromFile(path.join(this.input, 'targets.yml')).then( targets => {
 					let releaseComponents = _.keys(_.get(this.release, 'services'))
 					if (!releaseComponents.length){
-						errors = errors.concat('The release contains no components.\n' +
-							'Please check: ' + path.join(this.input, this.composefile))
+						errors = errors.concat('The release contains no componenWts.\n' +
+							'Please check: ' + path.join(this.input, this.komposefile))
 						return [ null, errors]
 					}
 					_.merge(this.release.services, _.pick(_.get(targets, this.target), releaseComponents))
 					return loadFromFile(path.join(this.input, 'environments.yml')).then( environments => {
 						_.merge(this.release.services, _.pick(_.get(environments, this.environment), releaseComponents))
+						let envvars = _.get(_.get(environments, this.environment, {}), 'environment', {})
+						if (envvars){
+							_.forEach(releaseComponents, component => {
+								_.merge(_.get(this.release.services, component, {}),
+									{'environment': envvars})
+							})
+						}
 						return [this.release, errors]
 					})
 				})
@@ -76,7 +83,7 @@ module.exports = class Transformer {
 			// Override environment variables from environment.
 			// as compose has no secrets primitive (unless swarm node),
 			// empty environment variables in environment.yml are used as secrets.
-			if (this.target === 'compose') {
+			if (this.target === 'docker-compose') {
 				_.mapValues(this.release.services, (o) => {
 					if (o.environment){
 						_.mapKeys(o.environment, (value, envvar) => {
@@ -115,7 +122,7 @@ module.exports = class Transformer {
 							execAsync(`env -i kompose convert -f "${this.output}"`).then(() => {
 								// inject kubernetes secrets from environment
 								_.mapKeys(this.release.services, (serviceDefinition, serviceName) => {
-									Transformer.createSecrets(serviceDefinition, serviceName)
+									Transformer.replaceSecrets(serviceDefinition, serviceName)
 								})
 							})
 							return [release, errors]
@@ -124,37 +131,25 @@ module.exports = class Transformer {
 			})
 	}
 
-	static createSecrets(serviceDefinition, serviceName){
-		if (serviceDefinition.environment){
-			let secrets = {
-				kind: 'Secret',
-				apiVersion: 'v1',
-				metadata: null,
-				type: 'Opaque',
-				data: null
-			}
-			let deploymentPath = `${serviceName}-deployment.yaml`
-			loadFromFile(deploymentPath).then((obj) => {
-				_.set(secrets, 'metadata.name', serviceName)
-				_.mapKeys(serviceDefinition.environment, (value, envvar) => {
-					if (_.get(process.env, envvar)){
-						// remove any existing envvar. Will be overriden by a secret.
-						_.remove(obj.spec.template.spec.containers[0].env, (n) => {
-							return n.name === envvar;
-						});
-						// create secret and add reference to env.
-						obj.spec.template.spec.containers[0].env.push({
-							name: envvar,
-							value:{ valueFrom: {secretKeyRef: { name: `${serviceName}-secrets`, key: envvar}}}
-						})
-						_.set(secrets, ['data', envvar], new Buffer.from(_.get(process.env, envvar)).toString('base64'))
-					}
-				})
-				return [obj, secrets]
-			}).then(([obj, secrets])=>{
-				writeFileAsync(deploymentPath, ymlString(obj))
-				writeFileAsync(`${serviceName}-secrets.yaml`, ymlString(secrets))
+	static replaceSecrets(serviceDefinition, serviceName){
+		// We need serviceDefinition for getting secret names,
+		// as they are skipped by kompose convert due to null values.
+		let deploymentPath = `${serviceName}-deployment.yaml`
+		loadFromFile(deploymentPath).then((obj) => {
+			_.mapKeys(serviceDefinition.environment, (value, envvar) => {
+				if (_.startsWith(envvar,'SECRET_')){
+					_.remove(obj.spec.template.spec.containers[0].env, (n) => {
+						return n.name === envvar;
+					});
+					obj.spec.template.spec.containers[0].env.push({
+						name: envvar,
+						valueFrom: {secretKeyRef: { name: `${serviceName}-secrets`, key: envvar}}
+					})
+				}
 			})
-		}
+			return obj
+		}).then((obj)=>{
+			writeFileAsync(deploymentPath, ymlString(obj))
+		})
 	}
 }
