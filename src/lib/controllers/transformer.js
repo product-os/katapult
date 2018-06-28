@@ -2,7 +2,7 @@
 
 const _ = require("lodash")
 const Promise = require('bluebird')
-const { readFileAsync, writeFileAsync } = Promise.promisifyAll(require('fs'))
+const { writeFileAsync } = Promise.promisifyAll(require('fs'))
 const path = require('path')
 const { loadFromFile, ymlString } = require('../utils')
 const { validateFilePath, validateDirectoryPath, validateTopLevelDirectiveYaml } = require('../utils')
@@ -61,95 +61,83 @@ module.exports = class Transformer {
 				return loadFromFile(path.join(this.input, 'targets.yml')).then( targets => {
 					let releaseComponents = _.keys(_.get(this.release, 'services'))
 					if (!releaseComponents.length){
-						errors = errors.concat('The release contains no componenWts.\n' +
+						errors = errors.concat('The release contains no components.\n' +
 							'Please check: ' + path.join(this.input, this.komposefile))
 						return [ null, errors]
 					}
 					_.merge(this.release.services, _.pick(_.get(targets, this.target), releaseComponents))
 					return loadFromFile(path.join(this.input, 'environments.yml')).then( environments => {
 						_.merge(this.release.services, _.pick(_.get(environments, this.environment), releaseComponents))
-						let envvars = _.get(_.get(environments, this.environment, {}), 'environment', {})
-						if (envvars){
-							_.forEach(releaseComponents, component => {
-								_.merge(_.get(this.release.services, component, {}),
-									{'environment': envvars})
+						let envvarsMap = _.get(_.get(environments, this.environment, {}), 'environment', {})
+						if (envvarsMap) {
+							_.forEach(_.get(this.release, 'services'), svc => {
+								_.forEach(_.keys(_.get(svc, 'environment')), envvarKey => {
+									let envvarVal = _.get(envvarsMap, envvarKey)
+									if (envvarVal !== undefined)_.set(svc.environment, envvarKey, envvarVal)
+									else errors = errors.concat('ENVVAR: ' + envvarKey + ' is not defined.')
+									// FIXME: refine error message for secrets.
+								})
 							})
 						}
 						return [this.release, errors]
 					})
 				})
 			})
-		}).then(([release, errors]) => {
-			// Override environment variables from environment.
-			// as compose has no secrets primitive (unless swarm node),
-			// empty environment variables in environment.yml are used as secrets.
-			if (this.target === 'docker-compose') {
-				_.mapValues(this.release.services, (o) => {
-					if (o.environment){
-						_.mapKeys(o.environment, (value, envvar) => {
-							if (_.get(process.env, envvar)){
-								_.set(o.environment, envvar, _.get(process.env, envvar))
-							}
-						})
-					}
-				})
-			}
-			return [this.release, errors]
 		})
 	}
 
 	write() {
 		return this.transform()
 			.then(([release, errors]) => {
-				if (this.output === '' ){
-					if (this.target === 'kubernetes'){
-						writeFileAsync('/tmp/katapult.tmp.out', ymlString(release)).then(
-							execAsync('env -i kompose convert -f /tmp/katapult.tmp.out --stdout').then( output => {
-								// TODO: inject secrets, in case we use this for k8s.
-								console.log(output)
-							})
-						)
-						return [release, errors]
+				if (_.includes(['kubernetes', 'kubernetes-local'], this.target)){
+					if (this.output === '' ){
+						writeFileAsync('/tmp/katapult.tmp.out', ymlString(release))
+							.then(
+								execAsync('env -i kompose convert -f /tmp/katapult.tmp.out --stdout -j')
+									.then( output => {
+										console.log(ymlString(output))
+									})
+							)
 					}
 					else{
-						console.log(ymlString(release))
-						return [release, errors]
+						writeFileAsync(this.output, ymlString(release))
+							.then(() => {
+								execAsync(`env -i kompose convert -f ${this.output}`).then(() => {
+									// inject kubernetes secrets from environment
+									Transformer.replaceSecretsinFile(this.release.services)
+								})
+							})
 					}
 				}
 				else {
-					return writeFileAsync(this.output, ymlString(release))
-						.then(() => {
-							execAsync(`env -i kompose convert -f "${this.output}"`).then(() => {
-								// inject kubernetes secrets from environment
-								_.mapKeys(this.release.services, (serviceDefinition, serviceName) => {
-									Transformer.replaceSecrets(serviceDefinition, serviceName)
-								})
-							})
-							return [release, errors]
-						})
+					if (this.output === '' ) console.log(ymlString(release))
+					else writeFileAsync(this.output, ymlString(release))
 				}
+				return [release, errors]
 			})
 	}
 
-	static replaceSecrets(serviceDefinition, serviceName){
+	static replaceSecretsinFile(services){
 		// We need serviceDefinition for getting secret names,
 		// as they are skipped by kompose convert due to null values.
-		let deploymentPath = `${serviceName}-deployment.yaml`
-		loadFromFile(deploymentPath).then((obj) => {
-			_.mapKeys(serviceDefinition.environment, (value, envvar) => {
-				if (_.startsWith(envvar,'SECRET_')){
-					_.remove(obj.spec.template.spec.containers[0].env, (n) => {
-						return n.name === envvar;
-					});
-					obj.spec.template.spec.containers[0].env.push({
-						name: envvar,
-						valueFrom: {secretKeyRef: { name: `${serviceName}-secrets`, key: envvar}}
-					})
-				}
+		_.mapKeys(services, (serviceDefinition, serviceName) => {
+			let deploymentPath = `${serviceName}-deployment.yaml`
+			loadFromFile(deploymentPath).then((obj) => {
+				_.mapKeys(serviceDefinition.environment, (value, envvar) => {
+					if (_.startsWith(envvar, 'SECRET_')) {
+						_.remove(obj.spec.template.spec.containers[0].env, (n) => {
+							return n.name === envvar;
+						});
+						obj.spec.template.spec.containers[0].env.push({
+							name: envvar,
+							valueFrom: {secretKeyRef: {name: 'katapult-secrets', key: envvar}}
+						})
+					}
+				})
+				return obj
+			}).then((obj) => {
+				writeFileAsync(deploymentPath, ymlString(obj))
 			})
-			return obj
-		}).then((obj)=>{
-			writeFileAsync(deploymentPath, ymlString(obj))
 		})
 	}
 }
