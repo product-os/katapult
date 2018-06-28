@@ -38,7 +38,18 @@ module.exports = class Transformer {
 			() => {
 				return errors
 			}
-		).then(() => {
+		).then( () => {
+			if (_.includes(['kubernetes', 'kubernetes-local'], this.target))
+				validateDirectoryPath(this.output).then(error => {
+					// Define the kompose temporary output filename.
+					this.output = path.join(this.output,'kompose.yml')
+					if (error) errors=errors.concat(error)
+				})
+			else validateFilePath(this.output).then(error => {
+				if (error) errors=errors.concat(error)
+			})
+		})
+			.then(() => {
 			return Promise.join(
 				validateTopLevelDirectiveYaml(this.target, path.join(this.input, 'targets.yml')).then(error => {
 					if (error) errors=errors.concat(error)
@@ -66,6 +77,9 @@ module.exports = class Transformer {
 						return [ null, errors]
 					}
 					_.merge(this.release.services, _.pick(_.get(targets, this.target), releaseComponents))
+					return [this.release, errors]
+				}).then(() => {
+					let releaseComponents = _.keys(_.get(this.release, 'services'))
 					return loadFromFile(path.join(this.input, 'environments.yml')).then( environments => {
 						_.merge(this.release.services, _.pick(_.get(environments, this.environment), releaseComponents))
 						let envvarsMap = _.get(_.get(environments, this.environment, {}), 'environment', {})
@@ -90,28 +104,16 @@ module.exports = class Transformer {
 		return this.transform()
 			.then(([release, errors]) => {
 				if (_.includes(['kubernetes', 'kubernetes-local'], this.target)){
-					if (this.output === '' ){
-						writeFileAsync('/tmp/katapult.tmp.out', ymlString(release))
-							.then(
-								execAsync('env -i kompose convert -f /tmp/katapult.tmp.out --stdout -j')
-									.then( output => {
-										console.log(ymlString(output))
-									})
-							)
-					}
-					else{
-						writeFileAsync(this.output, ymlString(release))
-							.then(() => {
-								execAsync(`env -i kompose convert -f ${this.output}`).then(() => {
-									// inject kubernetes secrets from environment
-									Transformer.replaceSecretsinFile(this.release.services)
-								})
+					writeFileAsync(this.output, ymlString(release))
+						.then(() => {
+							execAsync(`env -i kompose convert -f ${this.output}`).then(() => {
+								// inject kubernetes secrets from environment
+								Transformer.replaceSecretsinFile(this.release.services)
 							})
-					}
+						})
 				}
 				else {
-					if (this.output === '' ) console.log(ymlString(release))
-					else writeFileAsync(this.output, ymlString(release))
+					writeFileAsync(this.output, ymlString(release))
 				}
 				return [release, errors]
 			})

@@ -100,7 +100,7 @@ capitano.command({
 		signature: 'output',
 		parameter: 'output',
 		alias: [ 'o' ],
-		required: false
+		required: true
 	}, {
 		signature: 'komposefile',
 		parameter: 'komposefile',
@@ -125,7 +125,7 @@ capitano.command({
 		if (options.verbose) console.info(options)
 
 		const {
-			output='',
+			output,
 			input,
 			komposefile='komposefile.yml',
 			target,
