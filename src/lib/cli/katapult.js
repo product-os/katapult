@@ -2,9 +2,8 @@
 
 const capitano = require('capitano')
 
-const generator = require('../controllers/generator')
 const templateGenerator = require('../controllers/templateGenerator')
-const validator = require('../controllers/validator')
+const deploySpec = require('../controllers/deploySpec')
 
 const help = () => {
 	console.log(`Usage: compose-merger [COMMANDS] [OPTIONS]`)
@@ -31,7 +30,7 @@ capitano.command({
 
 capitano.command({
 	signature: 'generate',
-	description: 'Generate configuration files.',
+	description: 'Generate Deploy Spec from template path and environment configuration.',
 	options: [{
 		signature: 'input',
 		parameter: 'input',
@@ -41,15 +40,10 @@ capitano.command({
 		signature: 'output',
 		parameter: 'output',
 		alias: [ 'o' ],
-		required: false
-	}, {
-		signature: 'mode',
-		parameter: 'mode',
-		alias: [ 'm' ],
 		required: true
 	}, {
-		signature: 'target',
-		parameter: 'target',
+		signature: 'template',
+		parameter: 'template',
 		alias: [ 't' ],
 		required: true
 	}, {
@@ -66,25 +60,20 @@ capitano.command({
 		if (options.verbose) console.info(options)
 
 		const {
-			output='',
+			output,
 			input='../balena-io',
-			mode,
-			target,
+			template,
 			environment,
 			verbose=false,
 		} = options
-		return  new validator(input, mode, target, environment, output, verbose).validate().then(errors =>{
+		return new deploySpec(input, output, template, environment, verbose).generate().then(errors => {
 			if(errors.length){
 				for (let e in errors) {
 					console.error(errors[e])
 				}
 				process.exit(1)
 			}
-			else{
-				return new generator(input, mode, target, environment, output, verbose).write()
-			}
 		}).asCallback()
-
 	}
 })
 

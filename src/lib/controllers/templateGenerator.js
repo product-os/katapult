@@ -23,13 +23,13 @@ module.exports = class TemplateGenerator {
 		let errors = []
 		return Promise.join(
 			validateDirectoryPath(this.input).then(error => {
-				if (error) errors=errors.concat(error)
+				if (error) errors.push(error)
 			}),
 			validateFilePath(path.join(this.input, this.composefile)).then(error => {
-				if (error) errors=errors.concat(error)
+				if (error) errors.push(error)
 			}),
 			validateFilePath(path.join(this.input, 'targets.yml')).then(error => {
-				if (error) errors=errors.concat(error)
+				if (error) errors.push(error)
 			}),
 			() => {
 				return errors
@@ -37,21 +37,16 @@ module.exports = class TemplateGenerator {
 		).then( () => {
 			if (_.includes(['kubernetes', 'kubernetes-local'], this.target))
 				validateDirectoryPath(this.output).then(error => {
-					if (error) errors=errors.concat(error)
+					if (error) errors.push(error)
 				})
 			else validateDirectoryPath(path.dirname(this.output)).then(error => {
-				if (error) errors=errors.concat(error)
+				if (error) errors.push(error)
 			})
 		})
-			.then(() => {
-			return Promise.join(
-				validateTopLevelDirectiveYaml(this.target, path.join(this.input, 'targets.yml')).then(error => {
-					if (error) errors=errors.concat(error)
-				}),
-				() => {
-					return errors
-				}
-			)
+		.then(() => {
+			return validateTopLevelDirectiveYaml(this.target, path.join(this.input, 'targets.yml')).then(error => {
+				if (error) errors=errors.concat(error)
+			}).return(errors)
 		})
 	}
 
@@ -63,7 +58,7 @@ module.exports = class TemplateGenerator {
 				return loadFromFile(path.join(this.input, 'targets.yml')).then( targets => {
 					let releaseComponents = _.keys(_.get(this.release, 'services'))
 					if (!releaseComponents.length){
-						errors = errors.concat('The release contains no components.\n' +
+						errors.push('The release contains no components.\n' +
 							'Please check: ' + path.join(this.input, this.composefile))
 						return [ null, errors]
 					}
@@ -126,7 +121,7 @@ module.exports = class TemplateGenerator {
 		_.forEach(_.get(this.release, 'services'), svc => {
 			// template envvars
 			_.forEach(_.keys(_.get(svc, 'environment')), envvarKey => {
-				_.set(svc.environment, envvarKey, `{{environment.${envvarKey}}}`)
+				_.set(svc.environment, envvarKey, `{{{environment.${envvarKey}}}}`)
 			})
 		})
 		return this.release
@@ -135,7 +130,7 @@ module.exports = class TemplateGenerator {
 	applyTemplateEnvironmentLabels(labels){
 		_.forEach(_.get(this.release, 'services'), (svc, serviceName)=> {
 			_.forEach(labels, (value, label) => {
-				_.set(svc.labels, [`${label}`], `{{${serviceName}.${value}}}`)
+				_.set(svc.labels, [`${label}`], `{{{${serviceName}.${value}}}}`)
 			})
 		})
 	}
