@@ -3,7 +3,7 @@
 const capitano = require('capitano')
 
 const generator = require('../controllers/generator')
-const transformer = require('../controllers/transformer')
+const templateGenerator = require('../controllers/templateGenerator')
 const validator = require('../controllers/validator')
 
 const help = () => {
@@ -89,8 +89,8 @@ capitano.command({
 })
 
 capitano.command({
-	signature: 'transform',
-	description: 'Transform a docker-compose file to configuration files.',
+	signature: 'template',
+	description: 'Generate target specific template files.',
 	options: [{
 		signature: 'input',
 		parameter: 'input',
@@ -102,19 +102,14 @@ capitano.command({
 		alias: [ 'o' ],
 		required: true
 	}, {
-		signature: 'komposefile',
-		parameter: 'komposefile',
-		alias: [ 'k' ],
+		signature: 'composefile',
+		parameter: 'composefile',
+		alias: [ 'c' ],
 		required: false
 	}, {
 		signature: 'target',
 		parameter: 'target',
 		alias: [ 't' ],
-		required: true
-	}, {
-		signature: 'environment',
-		parameter: 'environment',
-		alias: [ 'e' ],
 		required: true
 	}, {
 		signature: 'verbose',
@@ -127,12 +122,11 @@ capitano.command({
 		const {
 			output,
 			input,
-			komposefile='komposefile.yml',
+			composefile='composefile.yml',
 			target,
-			environment,
 			verbose=false,
 		} = options
-		return new transformer(input, komposefile, target, environment, output, verbose).write().then(([release, errors]) =>{
+		return new templateGenerator(input, composefile, target, output, verbose).write().then(([release, errors]) =>{
 			if(errors.length){
 				for (let e in errors) {
 					console.error(errors[e])
