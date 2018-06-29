@@ -19,6 +19,7 @@
   "capitano": "~1",
   "lodash": "~4",
   "mkdirp": "~0.5",
+  "mustache": "~2",
   "yamljs": "~0.3"
  },
  "devDependencies": {
