@@ -2,9 +2,9 @@
 
 const _ = require("lodash")
 const Promise = require('bluebird')
-const { writeFileAsync, renameAsync } = Promise.promisifyAll(require('fs'))
+const { writeFileAsync } = Promise.promisifyAll(require('fs'))
 const path = require('path')
-const { loadFromFile, ymlString } = require('../utils')
+const { loadFromFile, ymlString, moveFilesMatch } = require('../utils')
 const { validateFilePath, validateDirectoryPath, validateTopLevelDirectiveYaml } = require('../utils')
 const execAsync = Promise.promisify(require('child_process').exec)
 
@@ -97,14 +97,7 @@ module.exports = class TemplateGenerator {
 		return this.transform()
 			.then(([release, errors]) => {
 				if (_.includes(['kubernetes', 'kubernetes-local'], this.target)){
-					let moved = []
-					// move components definition to output folder
-					execAsync(`ls *-*.yaml`).then(output => {
-						_.forEach(output.trim().split('\n'), templateFile => {
-							moved.push(renameAsync(templateFile, path.join(this.output, templateFile)))
-						})
-					})
-					return Promise.all(moved).then(() => {
+					return moveFilesMatch('*-*.yaml', this.output).then(() => {
 						return [release, errors]
 					})
 				}

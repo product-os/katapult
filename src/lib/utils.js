@@ -2,8 +2,10 @@
 
 const _ = require("lodash")
 const Promise = require('bluebird')
-const { readFileAsync, statAsync } = Promise.promisifyAll(require('fs'))
+const { readFileAsync, statAsync, renameAsync } = Promise.promisifyAll(require('fs'))
+const execAsync = Promise.promisify(require('child_process').exec)
 const yaml = require('yamljs')
+const path = require('path')
 
 const validateFilePath = (path) => {
 	return statAsync(path).then(stat => {
@@ -45,8 +47,19 @@ const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 	});
 }
 
+const moveFilesMatch = (pattern, dest) => {
+	return execAsync('ls ' + pattern).then(output => {
+		let moved = []
+		_.forEach(output.trim().split('\n'), filePath => {
+			moved.push(renameAsync(filePath, path.join(dest, filePath)))
+		})
+		return Promise.all(moved)
+	})
+}
+
 module.exports.validateTopLevelDirectiveYaml = validateTopLevelDirectiveYaml
 module.exports.validateDirectoryPath = validateDirectoryPath
 module.exports.validateFilePath = validateFilePath
+module.exports.moveFilesMatch = moveFilesMatch
 module.exports.loadFromFile = loadFromFile
 module.exports.ymlString = ymlString
