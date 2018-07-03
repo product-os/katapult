@@ -2,7 +2,7 @@
 
 const _ = require("lodash")
 const Promise = require('bluebird')
-const { readFileAsync, statAsync, renameAsync } = Promise.promisifyAll(require('fs'))
+const { readFileAsync, writeFileAsync, statAsync, renameAsync } = Promise.promisifyAll(require('fs'))
 const execAsync = Promise.promisify(require('child_process').exec)
 const yaml = require('yamljs')
 const path = require('path')
@@ -57,9 +57,31 @@ const moveFilesMatch = (pattern, dest) => {
 	})
 }
 
+const scrubk8sMetadata = (annotationPrefix, manifestPath) =>{
+	return loadFromFile(manifestPath).then(manifest => {
+		if (_.get(manifest, 'metadata.annotations', false)){
+			manifest.metadata.annotations = _.pickBy(manifest.metadata.annotations, function(value, key) {
+				return !_.startsWith(key, annotationPrefix)
+			});
+		}
+		return writeFileAsync(manifestPath, ymlString(manifest))
+	})
+}
+
+const scrubk8sMetadataMatch = (filesPattern, annotationPrefix) => {
+	return execAsync('ls ' + filesPattern).then(output => {
+		let scrubed = []
+		_.forEach(output.trim().split('\n'), manifestPath => {
+			scrubed.push(scrubk8sMetadata(annotationPrefix, manifestPath))
+		})
+		return Promise.all(scrubed)
+	})
+}
 module.exports.validateTopLevelDirectiveYaml = validateTopLevelDirectiveYaml
 module.exports.validateDirectoryPath = validateDirectoryPath
+module.exports.scrubk8sMetadataMatch = scrubk8sMetadataMatch
 module.exports.validateFilePath = validateFilePath
+module.exports.scrubk8sMetadata = scrubk8sMetadata
 module.exports.moveFilesMatch = moveFilesMatch
 module.exports.loadFromFile = loadFromFile
 module.exports.ymlString = ymlString

@@ -4,7 +4,7 @@ const _ = require("lodash")
 const Promise = require('bluebird')
 const { writeFileAsync } = Promise.promisifyAll(require('fs'))
 const path = require('path')
-const { loadFromFile, ymlString, moveFilesMatch } = require('../utils')
+const { loadFromFile, ymlString, moveFilesMatch, scrubk8sMetadataMatch } = require('../utils')
 const { validateFilePath, validateDirectoryPath, validateTopLevelDirectiveYaml } = require('../utils')
 const execAsync = Promise.promisify(require('child_process').exec)
 
@@ -97,8 +97,12 @@ module.exports = class TemplateGenerator {
 		return this.transform()
 			.then(([release, errors]) => {
 				if (_.includes(['kubernetes', 'kubernetes-local'], this.target)){
-					return moveFilesMatch('*-*.yaml', this.output).then(() => {
-						return [release, errors]
+					return scrubk8sMetadataMatch('*-*.yaml', 'kompose.').then(() => {
+						return scrubk8sMetadataMatch('*-deployment.yaml', 'service.').then(() => {
+							return moveFilesMatch('*-*.yaml', this.output).then(() => {
+								return [release, errors]
+							})
+						})
 					})
 				}
 				else {
