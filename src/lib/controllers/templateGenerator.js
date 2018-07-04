@@ -84,9 +84,13 @@ module.exports = class TemplateGenerator {
 								.then(() => {
 									return execAsync(`env -i kompose convert -f ${tmpFile}`).then(() => {
 										// inject kubernetes secrets from environment
-										return this.replaceSecretsK8sSpec()
+										return this.replaceSecretsK8s()
 									}).then(() => {return [this.release, errors]})
 								})
+						}
+						else {
+							this.replaceSecretsCompose()
+							return [this.release, errors]
 						}
 				})
 			})
@@ -132,7 +136,7 @@ module.exports = class TemplateGenerator {
 		})
 	}
 
-	replaceSecretsK8sSpec(){
+	replaceSecretsK8s(){
 		// We need serviceDefinition for getting secret names,
 		// as they are skipped by kompose convert due to null values.
 		let replaced = []
@@ -146,8 +150,8 @@ module.exports = class TemplateGenerator {
 								return n.name === envvar;
 							});
 							obj.spec.template.spec.containers[0].env.push({
-								name: envvar,
-								valueFrom: {secretKeyRef: {name: 'katapult-secrets', key: envvar}}
+								name: _.trimStart(envvar, 'SECRET_'),
+								valueFrom: {secretKeyRef: {name: 'katapult-secrets', key: _.trimStart(envvar, 'SECRET_')}}
 							})
 						}
 					})
@@ -160,4 +164,16 @@ module.exports = class TemplateGenerator {
 		})
 		return Promise.all(replaced)
 	}
+
+	replaceSecretsCompose(){
+		_.mapKeys(this.release.services, (serviceDefinition, serviceName) => {
+			_.mapKeys(serviceDefinition.environment, (value, envvar) => {
+				if (_.startsWith(envvar, 'SECRET_')) {
+					serviceDefinition.environment = _.omit(serviceDefinition.environment, [envvar])
+					serviceDefinition.environment[_.trimStart(envvar, 'SECRET_')] = value
+				}
+			})
+		})
+	}
+
 }
