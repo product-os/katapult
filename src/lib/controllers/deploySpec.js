@@ -1,13 +1,11 @@
-'use strict';
+'use strict'
 
-const _ = require("lodash")
+const _ = require('lodash')
+const path = require('path')
 const Promise = require('bluebird')
 const mustache = require('mustache')
 const { readFileAsync, writeFileAsync, readdirAsync } = Promise.promisifyAll(require('fs'))
-const path = require('path')
-const { loadFromFile, ymlString } = require('../utils')
-const { validateFilePath, validateDirectoryPath, validateTopLevelDirectiveYaml } = require('../utils')
-const execAsync = Promise.promisify(require('child_process').exec)
+const { loadFromFile, validateDirectoryPath, validateTopLevelDirectiveYaml } = require('../utils')
 
 
 module.exports = class DeploySpec {
@@ -18,34 +16,27 @@ module.exports = class DeploySpec {
 		this.template = template
 		this.environment = environment
 		this.verbose = verbose
-		this.release = null
 	}
 
 	validate() {
-		let errors = []
-		return Promise.join(
-			validateDirectoryPath(this.input).then(error => {
-				if (error) errors=errors.concat(error)
-			}),
-			validateDirectoryPath(path.join(this.output)).then(error => {
-				if (error) errors=errors.concat(error)
-			}),
-			validateDirectoryPath(path.join(this.template)).then(error => {
-				if (error) errors=errors.concat(error)
-			}),
-			() => {
-				return errors
-			}
-		)
-			.then(() => {
-				return Promise.join(
-					validateTopLevelDirectiveYaml(this.environment, path.join(this.input, 'environments.yml')).then(error => {
-						if (error) errors=errors.concat(error)
-					}),
-					() => {
-						return errors
-					}
-				)
+
+		let reqDirs = [
+			this.input,
+			this.output,
+			this.template
+		]
+
+		return Promise.map(reqDirs, dir => {
+			return validateDirectoryPath(dir)
+		})
+			.then((errors) => {
+				return validateTopLevelDirectiveYaml(this.environment, path.join(this.input, 'environments.yml'))
+					.then(error => {
+						return errors.concat(error)
+					})
+			})
+			.then(errors => {
+				return _.without(errors, false)
 			})
 	}
 
@@ -61,7 +52,7 @@ module.exports = class DeploySpec {
 					let errors = []
 					_.forEach(filenames, templateFile => {
 						promises.push(
-							DeploySpec.generateTemplateFile(
+							DeploySpec.generateDeploySpecFile(
 								path.join(this.template, templateFile),
 								_.get(environments, this.environment),
 								path.join(this.output, templateFile))
@@ -70,16 +61,22 @@ module.exports = class DeploySpec {
 								})
 						)
 					})
-					return Promise.join(promises).return(errors)
+					return Promise.all(promises).then(() => {
+						return _.without(errors, undefined)
+					})
 				})
 			})
 		})
 	}
 
-	static generateTemplateFile(templatePath, variables, outputPath){
-		return readFileAsync(templatePath, "utf8").then( template => {
-			return writeFileAsync(outputPath, mustache.render(template,variables))
-		})
+	static generateDeploySpecFile(templatePath, variables, outputPath){
+		return readFileAsync(templatePath, "utf8")
+			.then( template => {
+				let output = mustache.render(template, variables)
+				return writeFileAsync(outputPath.replace('.tpl.','.'), output)
+			}).catch(err => {
+				return err.message
+			})
 	}
 
 }

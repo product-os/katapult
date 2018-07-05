@@ -1,0 +1,34 @@
+version: '3'
+services:
+  admin:
+    image: 'resin/resin-admin:v1.18.3'
+    ports:
+      - '443:80'
+    cap_add:
+      - SYS_RESOURCE
+      - SYS_ADMIN
+    environment:
+      API_HOST: 'api.resin.io'
+      UI_HOST: 'dashboard.resin.io'
+      PRODUCTION: 'true'
+      CONFD_BACKEND: 'ENV'
+      LOGENTRIES_TOKEN: ''
+      MAPS_API_KEY: 'QUl6YVN5QTJUajBtanR5OTJhdEdNb3dTbkVOMU9LRlBhRnBZUmhJ'
+  registry:
+    image: 'resin/resin-registry:v1.7.2'
+    ports:
+      - '443:80'
+    cap_add:
+      - SYS_RESOURCE
+      - SYS_ADMIN
+    volumes:
+      - 'registry-data:/data'
+    environment:
+      CONFD_BACKEND: 'ENV'
+      REGISTRY_HOST: 'registry.resin.io'
+      REGISTRY_S3_BUCKET: ''
+      REGISTRY_STORAGE_PATH: '/data'
+      LOGENTRIES_TOKEN: ''
+      REGISTRY_S3_KEY: ''
+      REGISTRY_S3_SECRET: ''
+      REGISTRY_TOKEN: ''

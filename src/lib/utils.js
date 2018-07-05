@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const _ = require("lodash")
+const _ = require('lodash')
 const Promise = require('bluebird')
 const { readFileAsync, writeFileAsync, statAsync, renameAsync } = Promise.promisifyAll(require('fs'))
 const execAsync = Promise.promisify(require('child_process').exec)
@@ -15,7 +15,7 @@ const validateFilePath = (path) => {
 		return false
 	}).catch((err) => {
 		return err.message
-	});
+	})
 }
 
 const validateDirectoryPath = (path) => {
@@ -44,7 +44,7 @@ const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 		return []
 	}).catch(() => {
 		return ['Error parsing \'' + yamlPath + '\'']
-	});
+	})
 }
 
 const moveFilesMatch = (pattern, dest) => {
@@ -62,7 +62,7 @@ const scrubk8sMetadata = (annotationPrefix, manifestPath) =>{
 		if (_.get(manifest, 'metadata.annotations', false)){
 			manifest.metadata.annotations = _.pickBy(manifest.metadata.annotations, function(value, key) {
 				return !_.startsWith(key, annotationPrefix)
-			});
+			})
 		}
 		return writeFileAsync(manifestPath, ymlString(manifest))
 	})
