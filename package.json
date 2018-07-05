@@ -3,7 +3,7 @@
  "version": "0.0.1",
  "description": "A tool for launching!",
  "scripts": {
-  "test": "mocha"
+  "test": "nyc mocha"
  },
  "bin": {
   "katapult": "./bin/katapult"
@@ -24,6 +24,8 @@
  },
  "devDependencies": {
   "chai": "~4",
-  "mocha": "~5"
+  "mocha": "~5",
+  "mocha-eslint": "~4",
+  "nyc": "~12"
  }
 }
