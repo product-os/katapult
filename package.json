@@ -23,6 +23,7 @@
   "yamljs": "~0.3"
  },
  "devDependencies": {
+  "chai": "~4",
   "mocha": "~5"
  }
 }
