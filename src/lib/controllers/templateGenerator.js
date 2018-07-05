@@ -150,8 +150,8 @@ module.exports = class TemplateGenerator {
 								return n.name === envvar;
 							});
 							obj.spec.template.spec.containers[0].env.push({
-								name: _.trimStart(envvar, 'SECRET_'),
-								valueFrom: {secretKeyRef: {name: 'katapult-secrets', key: _.trimStart(envvar, 'SECRET_')}}
+								name: envvar.substring(7),
+								valueFrom: {secretKeyRef: {name: 'katapult-secrets', key: envvar.substring(7)}}
 							})
 						}
 					})
@@ -170,7 +170,7 @@ module.exports = class TemplateGenerator {
 			_.mapKeys(serviceDefinition.environment, (value, envvar) => {
 				if (_.startsWith(envvar, 'SECRET_')) {
 					serviceDefinition.environment = _.omit(serviceDefinition.environment, [envvar])
-					serviceDefinition.environment[_.trimStart(envvar, 'SECRET_')] = value
+					serviceDefinition.environment[envvar.substring(7)] = value
 				}
 			})
 		})

@@ -1,20 +1,25 @@
 const loadFromFile = require('../src/lib/utils').loadFromFile
-const validator = require('../src/lib/controllers/validator')
-const generator = require('../src/lib/controllers/generator')
+const templateGenerator = require('../src/lib/controllers/templateGenerator')
+const Promise = require('bluebird')
+const assert = require('chai').assert
+const { mkdirAsync } = Promise.promisifyAll(require('fs'))
+const execAsync = Promise.promisify(require('child_process').exec)
 
-it('Test validator (stdout)', function(){
-	let verbose=false
-	return (new validator('test/fixtures', 'production', 'compose', 'balena-production', '', verbose).validate())
-		.then(errors =>{
-			return errors.length
+it('Test templateGenerator (compose)', function(){
+	return mkdirAsync('/tmp/katapult-tests-tmp').then(() => {
+		let verbose=false
+		return (new templateGenerator('./test/fixtures/', 'composefile.yml', 'docker-compose', '/tmp/katapult-tests-tmp/docker-compose.tpl.yml', verbose).write()).then(([release, errors]) =>{
+			return assertFilesEqual('/tmp/katapult-tests-tmp/docker-compose.tpl.yml', './test/outputs/compose/docker-compose.tpl.yml')
 		})
-});
-
-it('Test generator (stdout)', function(){
-	let verbose=false
-	return (new generator('test/fixtures', 'production', 'compose', 'balena-production', '', verbose).write()).then(stdout => {
-		return loadFromFile("test/outputs/test.docker-compose.out.yml").then((expected) => {
-			return stdout === expected
-		})
+	}).finally(() => {
+		return execAsync('rm -rf /tmp/katapult-tests-tmp/')
 	})
 });
+
+const assertFilesEqual = (path1, path2) => {
+	return loadFromFile(path1).then((obj1) => {
+		return loadFromFile(path2).then(obj2 => {
+			return assert.deepEqual(obj1, obj2)
+		})
+	})
+}
