@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const _ = require("lodash")
+const _ = require('lodash')
 const Promise = require('bluebird')
 const { writeFileAsync } = Promise.promisifyAll(require('fs'))
 const path = require('path')
@@ -43,11 +43,11 @@ module.exports = class TemplateGenerator {
 				if (error) errors.push(error)
 			})
 		})
-		.then(() => {
-			return validateTopLevelDirectiveYaml(this.target, path.join(this.input, 'targets.yml')).then(error => {
-				if (error) errors=errors.concat(error)
-			}).return(errors)
-		})
+			.then(() => {
+				return validateTopLevelDirectiveYaml(this.target, path.join(this.input, 'targets.yml')).then(error => {
+					if (error) errors=errors.concat(error)
+				}).return(errors)
+			})
 	}
 
 	transform() {
@@ -66,7 +66,8 @@ module.exports = class TemplateGenerator {
 						_.merge(svc, _.get(targets, this.target))
 					})
 					return [this.release, errors]
-				}).then(this.templateReleaseVars())
+				})
+					.then(this.templateReleaseVars())
 					.then(() => {
 						return loadFromFile('etc/settings.yml')
 					})
@@ -92,7 +93,7 @@ module.exports = class TemplateGenerator {
 							this.replaceSecretsCompose()
 							return [this.release, errors]
 						}
-				})
+					})
 			})
 		})
 	}
@@ -147,8 +148,8 @@ module.exports = class TemplateGenerator {
 					_.mapKeys(serviceDefinition.environment, (value, envvar) => {
 						if (_.startsWith(envvar, 'SECRET_')) {
 							_.remove(obj.spec.template.spec.containers[0].env, (n) => {
-								return n.name === envvar;
-							});
+								return n.name === envvar
+							})
 							obj.spec.template.spec.containers[0].env.push({
 								name: envvar.substring(7),
 								valueFrom: {secretKeyRef: {name: 'katapult-secrets', key: envvar.substring(7)}}
@@ -157,9 +158,9 @@ module.exports = class TemplateGenerator {
 					})
 					return obj
 				})
-				.then((obj) => {
-					return writeFileAsync(deploymentPath, ymlString(obj))
-				})
+					.then((obj) => {
+						return writeFileAsync(deploymentPath, ymlString(obj))
+					})
 			)
 		})
 		return Promise.all(replaced)

@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 const capitano = require('capitano')
 
@@ -6,7 +6,7 @@ const templateGenerator = require('../controllers/templateGenerator')
 const deploySpec = require('../controllers/deploySpec')
 
 const help = () => {
-	console.log(`Usage: compose-merger [COMMANDS] [OPTIONS]`)
+	console.log('Usage: compose-merger [COMMANDS] [OPTIONS]')
 	console.log('\nCommands:\n')
 
 	for (let command of capitano.state.commands) {

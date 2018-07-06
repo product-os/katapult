@@ -70,7 +70,7 @@ module.exports = class DeploySpec {
 	}
 
 	static generateDeploySpecFile(templatePath, variables, outputPath){
-		return readFileAsync(templatePath, "utf8")
+		return readFileAsync(templatePath, 'utf8')
 			.then( template => {
 				let output = mustache.render(template, variables)
 				return writeFileAsync(outputPath.replace('.tpl.','.'), output)
