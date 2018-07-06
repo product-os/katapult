@@ -2,7 +2,8 @@
 
 const _ = require('lodash')
 const Promise = require('bluebird')
-const { readFileAsync, writeFileAsync, statAsync, renameAsync } = Promise.promisifyAll(require('fs'))
+const { readFileAsync, writeFileAsync, statAsync } = Promise.promisifyAll(require('fs'))
+const mvAsync = Promise.promisify(require('mv'))
 const execAsync = Promise.promisify(require('child_process').exec)
 const yaml = require('yamljs')
 const path = require('path')
@@ -51,7 +52,7 @@ const moveFilesMatch = (pattern, dest) => {
 	return execAsync('ls ' + pattern).then(output => {
 		let moved = []
 		_.forEach(output.trim().split('\n'), filePath => {
-			moved.push(renameAsync(filePath, path.join(dest, filePath)))
+			moved.push(mvAsync(filePath, path.join(dest, filePath)))
 		})
 		return Promise.all(moved)
 	})
