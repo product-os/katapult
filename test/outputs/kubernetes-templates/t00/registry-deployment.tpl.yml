@@ -1,0 +1,82 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations: {}
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry
+  name: registry
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: registry
+    spec:
+      containers:
+        -
+          env:
+            -
+              name: CONFD_BACKEND
+              value: '{{{environment.CONFD_BACKEND}}}'
+            -
+              name: REGISTRY_HOST
+              value: '{{{environment.REGISTRY_HOST}}}'
+            -
+              name: REGISTRY_S3_BUCKET
+              value: '{{{environment.REGISTRY_S3_BUCKET}}}'
+            -
+              name: REGISTRY_STORAGE_PATH
+              value: '{{{environment.REGISTRY_STORAGE_PATH}}}'
+            -
+              name: LOGENTRIES_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: katapult-secrets
+                  key: LOGENTRIES_TOKEN
+            -
+              name: REGISTRY_S3_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: katapult-secrets
+                  key: REGISTRY_S3_KEY
+            -
+              name: REGISTRY_S3_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: katapult-secrets
+                  key: REGISTRY_S3_SECRET
+            -
+              name: REGISTRY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: katapult-secrets
+                  key: REGISTRY_TOKEN
+          image: 'resin/resin-registry:v1.7.2'
+          name: registry
+          ports:
+            -
+              containerPort: 80
+          resources: {}
+          securityContext:
+            capabilities:
+              add:
+                - SYS_RESOURCE
+                - SYS_ADMIN
+          volumeMounts:
+            -
+              mountPath: /data
+              name: registry-data
+      imagePullSecrets:
+        -
+          name: '{{{registry.labels.image-pull-secret}}}'
+      restartPolicy: Always
+      volumes:
+        -
+          name: registry-data
+          persistentVolumeClaim:
+            claimName: registry-data
+status: {}
