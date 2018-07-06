@@ -1,7 +1,8 @@
 'use strict'
-const { loadFromFile } = require('../src/lib/utils')
+const { validateFilePath, validateDirectoryPath } = require('../src/lib/utils')
 const templateGenerator = require('../src/lib/controllers/templateGenerator')
 const deploySpec = require('../src/lib/controllers/deploySpec')
+const { assertFilesEqual } = require('./testUtils')
 const Promise = require('bluebird')
 const { assert } = require('chai')
 const mkdirAsync = Promise.promisify(require('fs').mkdir)
@@ -12,7 +13,7 @@ it('Test templateGenerator (compose)', () => {
 		let verbose=false
 		return (
 			new templateGenerator(
-				'./test/fixtures/',
+				'./test/fixtures/validFileSet',
 				'composefile.yml',
 				'docker-compose',
 				'/tmp/katapult-tests-tmp/docker-compose.tpl.yml',
@@ -33,7 +34,7 @@ it('Test deploySpec (compose)', () => {
 		let verbose=false
 		return (
 			new deploySpec(
-				'./test/fixtures/',
+				'./test/fixtures/validFileSet',
 				'/tmp/katapult-test-deploySpec-tmp',
 				'test/outputs/compose-templates',
 				'balena-production',
@@ -55,7 +56,7 @@ it('Test deploySpec with invalid template (compose)', () => {
 		let verbose=false
 		return (
 			new deploySpec(
-				'./test/fixtures/',
+				'./test/fixtures/validFileSet',
 				'/tmp/katapult-test-deploySpec-tmp',
 				'test/fixtures/deploySpecGenerator/',
 				'balena-production',
@@ -74,7 +75,7 @@ it('Test deploySpec with invalid environment (compose)', () => {
 		let verbose=false
 		return (
 			new deploySpec(
-				'./test/fixtures/',
+				'./test/fixtures/validFileSet',
 				'/tmp/katapult-test-deploySpec-tmp',
 				'test/outputs/compose-templates',
 				'balena-missing',
@@ -123,10 +124,20 @@ it('Test template interpolation function', () => {
 	})
 })
 
-const assertFilesEqual = (path1, path2) => {
-	return loadFromFile(path1).then((obj1) => {
-		return loadFromFile(path2).then(obj2 => {
-			return assert.deepEqual(obj1, obj2)
-		})
+it('Test validateFilePath with dir', () => {
+	return validateFilePath('/tmp').then(error => {
+		return assert.equal(error, 'Error: /tmp is not a file')
 	})
-}
+})
+
+it('Test validateFilePath ENOENT', () => {
+	return validateFilePath('/etc/cron.missing').then(error => {
+		return assert.equal(error, 'ENOENT: no such file or directory, stat \'/etc/cron.missing\'')
+	})
+})
+
+it('Test validateDirectoryPath ENOENT', () => {
+	return validateDirectoryPath('test/fixtures/validFileSet/targets.yml').then(error => {
+		return assert.equal(error, 'Error: test/fixtures/validFileSet/targets.yml is not a directory')
+	})
+})

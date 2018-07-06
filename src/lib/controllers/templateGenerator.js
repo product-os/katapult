@@ -4,7 +4,7 @@ const _ = require('lodash')
 const Promise = require('bluebird')
 const { writeFileAsync } = Promise.promisifyAll(require('fs'))
 const path = require('path')
-const { loadFromFile, ymlString, moveFilesMatch, scrubk8sMetadataMatch } = require('../utils')
+const { loadFromFile, ymlString, moveFilesMatch, renameFilesMatch, scrubk8sMetadataMatch } = require('../utils')
 const { validateFilePath, validateDirectoryPath, validateTopLevelDirectiveYaml } = require('../utils')
 const execAsync = Promise.promisify(require('child_process').exec)
 
@@ -22,19 +22,13 @@ module.exports = class TemplateGenerator {
 	validate() {
 		let errors = []
 		return Promise.join(
-			validateDirectoryPath(this.input).then(error => {
-				if (error) errors.push(error)
-			}),
-			validateFilePath(path.join(this.input, this.composefile)).then(error => {
-				if (error) errors.push(error)
-			}),
-			validateFilePath(path.join(this.input, 'targets.yml')).then(error => {
-				if (error) errors.push(error)
-			}),
-			() => {
-				return errors
+			validateDirectoryPath(this.input),
+			validateFilePath(path.join(this.input, this.composefile)),
+			validateFilePath(path.join(this.input, 'targets.yml')),
+			(errors) => {
+				return _.without(errors, false)
 			}
-		).then( () => {
+		).then( (errors) => {
 			if (_.includes(['kubernetes', 'kubernetes-local'], this.target))
 				validateDirectoryPath(this.output).then(error => {
 					if (error) errors.push(error)
@@ -105,7 +99,9 @@ module.exports = class TemplateGenerator {
 					return scrubk8sMetadataMatch('*-*.yaml', 'kompose.').then(() => {
 						return scrubk8sMetadataMatch('*-deployment.yaml', 'service.').then(() => {
 							return moveFilesMatch('*-*.yaml', this.output).then(() => {
-								return [release, errors]
+								return renameFilesMatch(path.join(this.output, '*.yaml'), '.yaml', '.tpl.yml').then(() => {
+									return [release, errors]
+								})
 							})
 						})
 					})
@@ -141,7 +137,7 @@ module.exports = class TemplateGenerator {
 		// We need serviceDefinition for getting secret names,
 		// as they are skipped by kompose convert due to null values.
 		let replaced = []
-		_.mapKeys(this.release.services, (serviceDefinition, serviceName) => {
+		_.mapKeys(_.get(this.release, 'services'), (serviceDefinition, serviceName) => {
 			let deploymentPath = `${serviceName}-deployment.yaml`
 			replaced.push(
 				loadFromFile(deploymentPath).then((obj) => {

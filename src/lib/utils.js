@@ -2,7 +2,7 @@
 
 const _ = require('lodash')
 const Promise = require('bluebird')
-const { readFileAsync, writeFileAsync, statAsync } = Promise.promisifyAll(require('fs'))
+const { readFileAsync, writeFileAsync, statAsync, renameAsync } = Promise.promisifyAll(require('fs'))
 const mvAsync = Promise.promisify(require('mv'))
 const execAsync = Promise.promisify(require('child_process').exec)
 const yaml = require('yamljs')
@@ -50,12 +50,24 @@ const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 
 const moveFilesMatch = (pattern, dest) => {
 	return execAsync('ls ' + pattern).then(output => {
-		let moved = []
-		_.forEach(output.trim().split('\n'), filePath => {
-			moved.push(mvAsync(filePath, path.join(dest, filePath)))
+		return Promise.map(output.trim().split('\n'), filePath => {
+			return mvAsync(filePath, path.join(dest, filePath))
 		})
-		return Promise.all(moved)
 	})
+		.catch(error => {
+			return error
+		})
+}
+
+const renameFilesMatch = (pathPattern, pattern, replacement) => {
+	return execAsync('ls ' + pathPattern).then(output => {
+		return Promise.map(output.trim().split('\n'), filePath => {
+			return renameAsync(filePath, _.replace(filePath, pattern, replacement))
+		})
+	})
+		.catch(error => {
+			return error
+		})
 }
 
 const scrubk8sMetadata = (annotationPrefix, manifestPath) =>{
@@ -71,17 +83,19 @@ const scrubk8sMetadata = (annotationPrefix, manifestPath) =>{
 
 const scrubk8sMetadataMatch = (filesPattern, annotationPrefix) => {
 	return execAsync('ls ' + filesPattern).then(output => {
-		let scrubed = []
-		_.forEach(output.trim().split('\n'), manifestPath => {
-			scrubed.push(scrubk8sMetadata(annotationPrefix, manifestPath))
+		return Promise.map(output.trim().split('\n'), manifestPath => {
+			return scrubk8sMetadata(annotationPrefix, manifestPath)
 		})
-		return Promise.all(scrubed)
 	})
+		.catch(error => {
+			return error
+		})
 }
 module.exports.validateTopLevelDirectiveYaml = validateTopLevelDirectiveYaml
 module.exports.validateDirectoryPath = validateDirectoryPath
 module.exports.scrubk8sMetadataMatch = scrubk8sMetadataMatch
 module.exports.validateFilePath = validateFilePath
+module.exports.renameFilesMatch = renameFilesMatch
 module.exports.scrubk8sMetadata = scrubk8sMetadata
 module.exports.moveFilesMatch = moveFilesMatch
 module.exports.loadFromFile = loadFromFile
