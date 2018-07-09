@@ -13,7 +13,7 @@ it('Test templateGenerator (compose)', () => {
 		let verbose=false
 		return (
 			new templateGenerator(
-				'./test/fixtures/validFileSet',
+				'./test/fixtures/validFileSet0',
 				'composefile.yml',
 				'docker-compose',
 				'/tmp/katapult-tests-tmp/docker-compose.tpl.yml',
@@ -21,7 +21,7 @@ it('Test templateGenerator (compose)', () => {
 		).then(() =>{
 			return assertFilesEqual(
 				'/tmp/katapult-tests-tmp/docker-compose.tpl.yml',
-				'./test/outputs/compose-templates/docker-compose.tpl.yml'
+				'./test/outputs/docker-compose/templates/t00/docker-compose.tpl.yml'
 			)
 		})
 	}).finally(() => {
@@ -34,16 +34,16 @@ it('Test deploySpec (compose)', () => {
 		let verbose=false
 		return (
 			new deploySpec(
-				'./test/fixtures/validFileSet',
+				'./test/fixtures/validFileSet0',
 				'/tmp/katapult-test-deploySpec-tmp',
-				'test/outputs/compose-templates',
+				'test/outputs/docker-compose/templates/t00',
 				'balena-production',
 				verbose
 			).generate()
 		).then(() =>{
 			return assertFilesEqual(
 				'/tmp/katapult-test-deploySpec-tmp/docker-compose.yml',
-				'./test/outputs/compose-deployspecs/docker-compose.yml'
+				'./test/outputs/docker-compose/deployspecs/ds00/docker-compose.yml'
 			)
 		})
 	}).finally(() => {
@@ -56,7 +56,7 @@ it('Test deploySpec with invalid template (compose)', () => {
 		let verbose=false
 		return (
 			new deploySpec(
-				'./test/fixtures/validFileSet',
+				'./test/fixtures/validFileSet0',
 				'/tmp/katapult-test-deploySpec-tmp',
 				'test/fixtures/deploySpecGenerator/',
 				'balena-production',
@@ -75,9 +75,9 @@ it('Test deploySpec with invalid environment (compose)', () => {
 		let verbose=false
 		return (
 			new deploySpec(
-				'./test/fixtures/validFileSet',
+				'./test/fixtures/validFileSet0',
 				'/tmp/katapult-test-deploySpec-tmp',
-				'test/outputs/compose-templates',
+				'test/outputs/docker-compose/templates/t00',
 				'balena-missing',
 				verbose
 			).generate()
@@ -94,7 +94,7 @@ it('Test deploySpec validation (compose)', () => {
 	let expectedErrors = [
 		'ENOENT: no such file or directory, stat \'./test/fixtures-missing/\'',
 		'ENOENT: no such file or directory, stat \'/tmp/katapult-test-deploySpec-tmp-missing\'',
-		'ENOENT: no such file or directory, stat \'test/outputs/compose-deployspecs-missing\'',
+		'ENOENT: no such file or directory, stat \'test/outputs/docker-compose/deployspecs-missing\'',
 		'Error parsing \'test/fixtures-missing/environments.yml\''
 	]
 
@@ -102,7 +102,7 @@ it('Test deploySpec validation (compose)', () => {
 		new deploySpec(
 			'./test/fixtures-missing/',
 			'/tmp/katapult-test-deploySpec-tmp-missing',
-			'test/outputs/compose-deployspecs-missing',
+			'test/outputs/docker-compose/deployspecs-missing',
 			'balena-production-missing',
 			verbose
 		).generate()
@@ -137,7 +137,7 @@ it('Test validateFilePath ENOENT', () => {
 })
 
 it('Test validateDirectoryPath ENOENT', () => {
-	return validateDirectoryPath('test/fixtures/validFileSet/targets.yml').then(error => {
-		return assert.equal(error, 'Error: test/fixtures/validFileSet/targets.yml is not a directory')
+	return validateDirectoryPath('test/fixtures/validFileSet0/targets.yml').then(error => {
+		return assert.equal(error, 'Error: test/fixtures/validFileSet0/targets.yml is not a directory')
 	})
 })

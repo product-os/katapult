@@ -36,7 +36,7 @@ it('Test templateGenerator (kubernetes)', () => {
 		let verbose=false
 		return (
 			new templateGenerator(
-				'./test/fixtures/validFileSet',
+				'./test/fixtures/validFileSet0',
 				'composefile.yml',
 				'kubernetes',
 				'/tmp/katapult-kubernetes-tests-tmp',
@@ -46,7 +46,7 @@ it('Test templateGenerator (kubernetes)', () => {
 				return Promise.map(files, fileName => {
 					return assertFilesEqual(
 						path.join('/tmp/katapult-kubernetes-tests-tmp', fileName),
-						path.join('./test/outputs/kubernetes-templates/t00', fileName),
+						path.join('./test/outputs/kubernetes/templates/t00', fileName),
 					)
 				})
 			})
