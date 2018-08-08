@@ -17,6 +17,7 @@
  "dependencies": {
   "bluebird": "~3",
   "capitano": "~1",
+  "dotenv": "~6",
   "fs-extra": "~7",
   "lodash": "~4",
   "mkdirp": "~0.5",
