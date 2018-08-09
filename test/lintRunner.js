@@ -1,6 +1,6 @@
 'use strict'
 
-const lint = require('mocha-eslint');1
+const lint = require('mocha-eslint')
 
 const paths = [
 	'src',
@@ -17,4 +17,4 @@ const options = {
 };
 
 // Run the tests
-lint(paths, options);
+lint(paths, options)
