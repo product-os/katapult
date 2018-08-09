@@ -41,10 +41,10 @@ const ymlString = (ymlObj) => {
 
 const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 	return loadFromFile(yamlPath).then(obj => {
-		if (!_.get(obj, name))return ['\'' + name + '\' not defined in \'' + yamlPath +'\' \n Available options: ' + _.keys(obj)]
-		return []
+		if (!_.get(obj, name))return '\'' + name + '\' not defined in \'' + yamlPath +'\' \n Available options: ' + _.keys(obj)
+		return false
 	}).catch(() => {
-		return ['Error parsing \'' + yamlPath + '\'']
+		return 'Error parsing \'' + yamlPath + '\''
 	})
 }
 
@@ -91,6 +91,27 @@ const scrubk8sMetadataMatch = (filesPattern, annotationPrefix) => {
 			return error
 		})
 }
+
+const validateEnvironmentConfiguration = (configuration, environment) => {
+	// TODO: git validation.
+	return validateDirectoryPath(configuration)
+		.then((error) => {
+			if (error) return error
+			return validateTopLevelDirectiveYaml(environment, path.join(configuration, 'environments.yml'))
+				.then(error => {
+					return error === []
+				})
+		})
+}
+
+const parseEnvironmentConfiguration = ((configurationPath, environmentName) => {
+	return loadFromFile(path.join(configurationPath, 'environments.yml')).then(conf => {
+		return _.get(conf, environmentName)
+	})
+})
+
+module.exports.validateEnvironmentConfiguration = validateEnvironmentConfiguration
+module.exports.parseEnvironmentConfiguration = parseEnvironmentConfiguration
 module.exports.validateTopLevelDirectiveYaml = validateTopLevelDirectiveYaml
 module.exports.validateDirectoryPath = validateDirectoryPath
 module.exports.scrubk8sMetadataMatch = scrubk8sMetadataMatch
