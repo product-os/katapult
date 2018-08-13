@@ -4,68 +4,37 @@ const _ = require('lodash')
 const path = require('path')
 const Promise = require('bluebird')
 const mustache = require('mustache')
-const { readFileAsync, writeFileAsync, readdirAsync } = Promise.promisifyAll(require('fs'))
-const { loadFromFile, validateDirectoryPath, validateTopLevelDirectiveYaml } = require('../utils')
-
-
+const { readFileAsync, writeFileAsync } = Promise.promisifyAll(require('fs'))
+const deploySpecAdapters = require('./deploySpecAdapters/all')
 module.exports = class DeploySpec {
 
-	constructor(input, output, template, environment, verbose) {
-		this.input = input
-		this.output = output
-		this.template = template
-		this.environment = environment
-		this.verbose = verbose
-	}
-
-	validate() {
-
-		let reqDirs = [
-			this.input,
-			this.output,
-			this.template
-		]
-
-		return Promise.map(reqDirs, dir => {
-			return validateDirectoryPath(dir)
-		})
-			.then((errors) => {
-				return validateTopLevelDirectiveYaml(this.environment, path.join(this.input, 'environments.yml'))
-					.then(error => {
-						return errors.concat(error)
-					})
-			})
-			.then(errors => {
-				return _.without(errors, false)
-			})
+	constructor(environmentName, environmentObj, basePath) {
+		this.targets = _.omit(environmentObj, ['version', 'archive-store', 'pubkey', 'test-target', 'test-image'])
+		this.version = environmentObj.version
+		this.environmentName = environmentName
+		this.basePath = basePath
+		this.archiveStore = environmentObj['archive-store']
 	}
 
 	generate(){
-		return this.validate().then( (errors) => {
+		let promises = []
+		let errors = []
 
-			if (errors.length) return errors
-
-			return loadFromFile(path.join(this.input, 'environments.yml')).then( (environments) => {
-				return readdirAsync(this.template).then((filenames) => {
-
-					let promises = []
-					let errors = []
-					_.forEach(filenames, templateFile => {
-						promises.push(
-							DeploySpec.generateDeploySpecFile(
-								path.join(this.template, templateFile),
-								_.get(environments, this.environment),
-								path.join(this.output, templateFile))
-								.then( error => {
-									if (error) errors.push(error)
-								})
-						)
+		_.forEach(this.targets, (attrs, target) => {
+			promises.push(
+				deploySpecAdapters[target](
+					path.join(this.basePath, attrs.template),
+					path.join(this.basePath, attrs['config-store']),
+					this.version,
+					path.join(this.basePath, this.archiveStore, this.environmentName)
+				)
+					.then( error => {
+						if (error) errors.push(error)
 					})
-					return Promise.all(promises).then(() => {
-						return _.without(errors, undefined)
-					})
-				})
-			})
+			)
+		})
+		return Promise.all(promises).then(() => {
+			return _.without(errors, undefined)
 		})
 	}
 
