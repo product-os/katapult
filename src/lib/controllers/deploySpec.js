@@ -29,7 +29,9 @@ module.exports = class DeploySpec {
 					path.join(this.basePath, this.archiveStore, this.environmentName)
 				)
 					.then( error => {
-						if (error) errors.push(error)
+						if (error instanceof Array){
+						}
+						else if (error) errors.push(error)
 					})
 			)
 		})
