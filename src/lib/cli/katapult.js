@@ -2,8 +2,11 @@
 
 const capitano = require('capitano')
 
-const templateGenerator = require('../controllers/templateGenerator')
+const _ = require('lodash')
+
 const deploySpec = require('../controllers/deploySpec')
+
+const { validateEnvironmentConfiguration, parseEnvironmentConfiguration } = require('../utils')
 
 const help = () => {
 	console.log('Usage: compose-merger [COMMANDS] [OPTIONS]')
@@ -29,22 +32,13 @@ capitano.command({
 })
 
 capitano.command({
-	signature: 'generate',
-	description: 'Generate Deploy Spec from template path and environment configuration.',
+	signature: 'generate-deploy',
+	description: 'Generate Deploy Spec from environment configuration.',
 	options: [{
-		signature: 'input',
-		parameter: 'input',
-		alias: [ 'i' ],
-		required: true
-	}, {
-		signature: 'output',
-		parameter: 'output',
-		alias: [ 'o' ],
-		required: true
-	}, {
-		signature: 'template',
-		parameter: 'template',
-		alias: [ 't' ],
+		signature: 'configuration',
+		parameter: 'configuration',
+		description: 'URI to deploy-template folder/repo',
+		alias: [ 'c' ],
 		required: true
 	}, {
 		signature: 'environment',
@@ -61,69 +55,39 @@ capitano.command({
 
 		const {
 			output,
-			input='../balena-io',
-			template,
+			configuration,
 			environment,
 			verbose=false,
 		} = options
-		return new deploySpec(input, output, template, environment, verbose).generate().then(errors => {
-			if(errors.length){
-				for (let e in errors) {
-					console.error(errors[e])
+
+		// Validate and process environment info
+		return validateEnvironmentConfiguration(configuration, environment)
+			.then((error) => {
+				if (error) {
+					console.error(error)
+					process.exit(1)
 				}
-				process.exit(1)
-			}
-		}).asCallback()
-	}
-})
-
-capitano.command({
-	signature: 'template',
-	description: 'Generate target specific template files.',
-	options: [{
-		signature: 'input',
-		parameter: 'input',
-		alias: [ 'i' ],
-		required: true
-	}, {
-		signature: 'output',
-		parameter: 'output',
-		alias: [ 'o' ],
-		required: true
-	}, {
-		signature: 'composefile',
-		parameter: 'composefile',
-		alias: [ 'c' ],
-		required: false
-	}, {
-		signature: 'target',
-		parameter: 'target',
-		alias: [ 't' ],
-		required: true
-	}, {
-		signature: 'verbose',
-		alias: [ 'v' ],
-		boolean: true
-	}],
-	action: (params, options) => {
-		if (options.verbose) console.info(options)
-
-		const {
-			output,
-			input,
-			composefile='composefile.yml',
-			target,
-			verbose=false,
-		} = options
-		return new templateGenerator(input, composefile, target, output, verbose).write().then(([release, errors]) =>{
-			if(errors.length){
-				for (let e in errors) {
-					console.error(errors[e])
+			})
+			.then(() => {
+				return parseEnvironmentConfiguration(configuration, environment)
+			})
+			// TODO: handle git configuration locations in local clone for performance, and mutate environment.
+			.then((environmentObj) => {
+				return new deploySpec(
+					environment,
+					environmentObj,
+					configuration
+				).generate()
+			})
+			.then(errors => {
+				if (errors.length){
+					_.forEach(errors, error => {
+						console.error(error)
+					})
+					process.exit(1)
 				}
-				process.exit(1)
-			}
-		}).asCallback()
-
+			})
+			.asCallback()
 	}
 })
 
