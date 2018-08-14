@@ -2,9 +2,9 @@
 const Promise = require('bluebird')
 const { readFileAsync, readdirAsync, writeFileAsync, ensureDirAsync } = Promise.promisifyAll(require('fs-extra'))
 const mustache = require('mustache')
-const dotenv = require('dotenv')
 const path = require('path')
 const _ = require('lodash')
+const getConfig = require('./getConfigKubernetes')
 
 const generateDeploySpecFile = (templatePath, configPath, version, archiveStore) => {
 	return getConfig(configPath)
@@ -41,10 +41,4 @@ const generateDeploySpecFile = (templatePath, configPath, version, archiveStore)
 		})
 }
 
-const getConfig = (configPath) => {
-	return readFileAsync(configPath, 'utf8')
-		.then(configString => {
-			return dotenv.parse(Buffer.from(configString))
-		})
-}
 module.exports = generateDeploySpecFile
