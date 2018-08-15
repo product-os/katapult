@@ -35,6 +35,12 @@ const loadFromFile = (filePath) => {
 		.then(yaml.parse)
 }
 
+const loadFromJSONFile = (filePath) => {
+	return readFileAsync(filePath, 'utf8')
+		.then(JSON.parse)
+}
+
+
 const ymlString = (ymlObj) => {
 	return yaml.stringify(ymlObj, 40, 2)
 }
@@ -119,5 +125,6 @@ module.exports.validateFilePath = validateFilePath
 module.exports.renameFilesMatch = renameFilesMatch
 module.exports.scrubk8sMetadata = scrubk8sMetadata
 module.exports.moveFilesMatch = moveFilesMatch
+module.exports.loadFromJSONFile = loadFromJSONFile
 module.exports.loadFromFile = loadFromFile
 module.exports.ymlString = ymlString
