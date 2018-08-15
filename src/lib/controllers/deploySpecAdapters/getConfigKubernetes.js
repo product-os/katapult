@@ -3,14 +3,16 @@ const k8s = require('@kubernetes/client-node')
 const _ = require('lodash')
 
 const getConfig = (kubeconfigPath) => {
-	console.log(kubeconfigPath)
 	let k8sAPI = k8s.Config.fromFile(kubeconfigPath)
 
-	return k8sAPI.readNamespacedSecret('katapult-deploy-guard', 'default')
+	return k8sAPI.listNamespacedSecret('default')
 		.then(res => {
 			let ret = {}
-			_.forEach(res.body.data, (val, key) => {
-				ret[key] = Buffer.from(val, 'base64').toString('utf8')
+			_.forEach(res.body.items, (secret) => {
+				if (_.has(secret.data, secret.metadata.name.toUpperCase().replace(/-/g,'_') ))
+					_.forEach(secret.data, (value, name) => {
+						ret[name] = Buffer.from(value, 'base64').toString()
+					})
 			})
 			return ret
 		})
