@@ -20,6 +20,7 @@
   "capitano": "~1",
   "dotenv": "~6",
   "fs-extra": "~7",
+  "jsonschema": "~1",
   "lodash": "~4",
   "mkdirp": "~0.5",
   "mustache": "~2",
