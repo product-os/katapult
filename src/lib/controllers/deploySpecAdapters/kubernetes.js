@@ -14,12 +14,13 @@ module.exports = class generateDeploySpecFile {
 		this.templatePath = path.join(basePath, attrs.template)
 		this.configPath = path.join(basePath, attrs['config-store'])
 		this.configManifestPath = path.join(basePath, environmentName, version, 'docker-compose', 'config-manifest.json')
+		this.namespace = attrs.namespace
 		this.version = version
 		this.archiveStore = archiveStore
 	}
 
 	generate () {
-		return getConfig(this.configPath)
+		return getConfig(this.configPath, this.namespace)
 			.then(config => {
 				return new configValidator(config, this.configManifestPath).validate().then((errors) => {
 					if (errors.length) {

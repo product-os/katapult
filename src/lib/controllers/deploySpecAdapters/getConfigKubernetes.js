@@ -2,10 +2,10 @@
 const k8s = require('@kubernetes/client-node')
 const _ = require('lodash')
 
-const getConfig = (kubeconfigPath) => {
+const getConfig = (kubeconfigPath, namespace) => {
 	let k8sAPI = k8s.Config.fromFile(kubeconfigPath)
 
-	return k8sAPI.listNamespacedSecret('default')
+	return k8sAPI.listNamespacedSecret(namespace)
 		.then(res => {
 			let ret = {}
 			_.forEach(res.body.items, (secret) => {
