@@ -6,6 +6,7 @@ const Promise = require('bluebird')
 const mustache = require('mustache')
 const { readFileAsync, writeFileAsync } = Promise.promisifyAll(require('fs'))
 const deploySpecAdapters = require('./deploySpecAdapters/all')
+
 module.exports = class DeploySpec {
 
 	constructor(environmentName, environmentObj, basePath) {
@@ -25,11 +26,13 @@ module.exports = class DeploySpec {
 				deploySpecAdapters[target](
 					path.join(this.basePath, attrs.template),
 					path.join(this.basePath, attrs['config-store']),
+					path.join(this.basePath, this.environmentName, this.version, target, 'config-manifest.json'),
 					this.version,
 					path.join(this.basePath, this.archiveStore, this.environmentName)
 				)
 					.then( error => {
 						if (error instanceof Array){
+							errors = errors.concat(error)
 						}
 						else if (error) errors.push(error)
 					})
