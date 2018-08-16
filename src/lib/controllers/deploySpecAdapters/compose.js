@@ -7,38 +7,46 @@ const _ = require('lodash')
 const getConfig = require('./getConfigCompose')
 const configValidator = require('../configValidator/configValidator')
 
-const generateDeploySpecFile = (templatePath, configPath, configManifestPath, version, archiveStore) => {
-	return getConfig(configPath)
-		.then(config => {
-			return new configValidator(config, configManifestPath).validate().then((errors) => {
-				if (errors){
-					let errorList = []
-					_.forEach(errors, err => {
-						errorList.push(err.stack)
-					})
-					return errorList
-				}
-				else {
-					return readFileAsync(templatePath, 'utf8')
-						.then(template => {
-							let output = mustache.render(template, config)
-							let outputPath = path.join(
-								archiveStore,
-								version,
-								'docker-compose',
-								path.basename(templatePath).replace('.tpl.', '.')
-							)
-							return ensureDirAsync(path.dirname(outputPath))
-								.then(() => {
-									return writeFileAsync(outputPath, output)
-								})
-						})
-				}
-		})
-		.catch(err => {
-			return err.message
-		})
-	})
-}
+module.exports = class generateDeploySpecFile {
+	constructor(attrs, basePath, archiveStore, version, environmentName) {
+		this.templatePath = path.join(basePath, attrs.template)
+		this.configPath = path.join(basePath, attrs['config-store'])
+		this.configManifestPath = path.join(basePath, environmentName, version, 'docker-compose', 'config-manifest.json')
+		this.version = version
+		this.archiveStore = archiveStore
+	}
 
-module.exports = generateDeploySpecFile
+	generate() {
+		return getConfig(this.configPath)
+			.then(config => {
+				return new configValidator(config, this.configManifestPath).validate().then((errors) => {
+					if (errors.length){
+						let errorList = []
+						_.forEach(errors, err => {
+							errorList.push(err.stack)
+						})
+						return errorList
+					}
+					else {
+						return readFileAsync(this.templatePath, 'utf8')
+							.then(template => {
+								let output = mustache.render(template, config)
+								let outputPath = path.join(
+									this.archiveStore,
+									this.version,
+									'docker-compose',
+									path.basename(this.templatePath).replace('.tpl.', '.')
+								)
+								return ensureDirAsync(path.dirname(outputPath))
+									.then(() => {
+										return writeFileAsync(outputPath, output)
+									})
+							})
+					}
+				})
+					.catch(err => {
+						return err.message
+					})
+			})
+	}
+}

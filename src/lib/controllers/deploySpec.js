@@ -17,19 +17,20 @@ module.exports = class DeploySpec {
 		this.archiveStore = environmentObj['archive-store']
 	}
 
-	generate(){
+	generate() {
 		let promises = []
 		let errors = []
 
 		_.forEach(this.targets, (attrs, target) => {
 			promises.push(
-				deploySpecAdapters[target](
-					path.join(this.basePath, attrs.template),
-					path.join(this.basePath, attrs['config-store']),
-					path.join(this.basePath, this.environmentName, this.version, target, 'config-manifest.json'),
+				new deploySpecAdapters[target](
+					attrs,
+					this.basePath,
+					this.archiveStore,
 					this.version,
-					path.join(this.basePath, this.archiveStore, this.environmentName)
+					this.environmentName
 				)
+					.generate()
 					.then( error => {
 						if (error instanceof Array){
 							errors = errors.concat(error)
