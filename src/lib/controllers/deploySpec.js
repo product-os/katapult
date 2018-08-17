@@ -9,7 +9,8 @@ const deploySpecAdapters = require('./deploySpecAdapters/all')
 
 module.exports = class DeploySpec {
 
-	constructor(environmentName, environmentObj, basePath) {
+	constructor(environmentName, environmentObj, basePath, mode) {
+		this.mode = mode
 		this.targets = _.omit(environmentObj, ['version', 'archive-store', 'pubkey', 'test-target', 'test-image'])
 		this.version = environmentObj.version
 		this.environmentName = environmentName
@@ -25,6 +26,7 @@ module.exports = class DeploySpec {
 			promises.push(
 				new deploySpecAdapters[target](
 					attrs,
+					this.mode,
 					this.basePath,
 					this.archiveStore,
 					this.version,

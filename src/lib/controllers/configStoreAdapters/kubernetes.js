@@ -24,4 +24,29 @@ module.exports = class configStore {
 				return ret
 			})
 	}
+
+	update(envvars) {
+		_.forEach(envvars, (pair) => {
+			let [name, value] = pair
+			let k8sSecretName = name.toLowerCase().replace(/_/g,'-')
+			let secretObj = {
+				APIVersion: 'v1',
+				Kind: 'Secret',
+				metadata: {
+					name: k8sSecretName
+				},
+				type: 'Opaque',
+				data:{
+					[name]: Buffer.from(value).toString('base64')
+				}
+			}
+
+			return this.k8sAPI.deleteNamespacedSecret(k8sSecretName, this.namespace, {})
+				.catch((e) => { if (e.body.reason !== 'NotFound') throw(e)})
+				.finally(() => {
+					return this.k8sAPI.createNamespacedSecret(this.namespace, secretObj)
+				})
+		})
+		return envvars
+	}
 }

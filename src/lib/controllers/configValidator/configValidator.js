@@ -26,7 +26,6 @@ module.exports = class configValidator {
 						}
 					}
 				})
-				// console.log(this.config)
 				return this.validator.validate(this.config, configManifest).errors
 			})
 	}
