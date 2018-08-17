@@ -4,24 +4,23 @@ const { readFileAsync, readdirAsync, writeFileAsync, ensureDirAsync } = Promise.
 const mustache = require('mustache')
 const path = require('path')
 const _ = require('lodash')
-const getConfig = require('./getConfigKubernetes')
 const configValidator = require('../configValidator/configValidator')
-
 
 module.exports = class generateDeploySpecFile {
 
 	constructor(attrs, basePath, archiveStore, version, environmentName) {
 		this.templatePath = path.join(basePath, attrs.template)
 		this.configPath = path.join(basePath, attrs['config-store'])
-		this.configManifestPath = path.join(basePath, environmentName, version, 'docker-compose', 'config-manifest.json')
+		this.configManifestPath = path.join(basePath, environmentName, version, 'kubernetes', 'config-manifest.json')
 		this.namespace = attrs.namespace
 		this.version = version
 		this.archiveStore = archiveStore
 	}
 
 	generate () {
-		return getConfig(this.configPath, this.namespace)
-			.then(config => {
+		let cs = new configStore(this.configPath, this.namespace)
+		return cs.getConfig()
+			.then((config) => {
 				return new configValidator(config, this.configManifestPath).validate().then((errors) => {
 					if (errors.length) {
 						let errorList = []
