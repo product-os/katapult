@@ -4,6 +4,7 @@ const { readFileAsync, readdirAsync, writeFileAsync, ensureDirAsync } = Promise.
 const mustache = require('mustache')
 const path = require('path')
 const _ = require('lodash')
+const configStore = require('../configStoreAdapters/kubernetes')
 const configValidator = require('../configValidator/configValidator')
 
 module.exports = class generateDeploySpecFile {
