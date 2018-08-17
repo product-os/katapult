@@ -4,7 +4,7 @@ const { readFileAsync, writeFileAsync, ensureDirAsync } = Promise.promisifyAll(r
 const mustache = require('mustache')
 const path = require('path')
 const _ = require('lodash')
-const getConfig = require('./getConfigCompose')
+const configStore = require('../configStoreAdapters/compose')
 const configValidator = require('../configValidator/configValidator')
 
 module.exports = class generateDeploySpecFile {
@@ -17,7 +17,7 @@ module.exports = class generateDeploySpecFile {
 	}
 
 	generate() {
-		return getConfig(this.configPath)
+		return new configStore(this.configPath).getConfig()
 			.then(config => {
 				return new configValidator(config, this.configManifestPath).validate().then((errors) => {
 					if (errors.length){
