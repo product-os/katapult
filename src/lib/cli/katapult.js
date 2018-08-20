@@ -6,7 +6,7 @@ const _ = require('lodash')
 
 const deploySpec = require('../controllers/deploySpec')
 
-const { validateEnvironmentConfiguration, parseEnvironmentConfiguration } = require('../utils')
+const validateEnvironmentConfiguration = require('../utils').validateEnvironmentConfiguration
 
 const help = () => {
 	console.log('Usage: compose-merger [COMMANDS] [OPTIONS]')
@@ -66,17 +66,11 @@ capitano.command({
 
 		// Validate and process environment info
 		return validateEnvironmentConfiguration(configuration, environment)
-			.then((error) => {
+			.then(([environmentObj, error]) => {
 				if (error) {
 					console.error(error)
 					process.exit(1)
 				}
-			})
-			.then(() => {
-				return parseEnvironmentConfiguration(configuration, environment)
-			})
-			// TODO: handle git configuration locations in local clone for performance, and mutate environment.
-			.then((environmentObj) => {
 				return new deploySpec(
 					environment,
 					environmentObj,

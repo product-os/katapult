@@ -98,21 +98,22 @@ const scrubk8sMetadataMatch = (filesPattern, annotationPrefix) => {
 		})
 }
 
-const validateEnvironmentConfiguration = (configuration, environment) => {
+const validateEnvironmentConfiguration = (configurationPath, environment) => {
 	// TODO: git validation.
-	return validateDirectoryPath(configuration)
+	return validateDirectoryPath(configurationPath)
 		.then((error) => {
-			if (error) return error
-			return validateTopLevelDirectiveYaml(environment, path.join(configuration, 'environments.yml'))
+			if (error) return [null, error]
+			return validateTopLevelDirectiveYaml(environment, path.join(configurationPath, 'environments.yml'))
 				.then(error => {
-					return error === []
+					if (error) return [null, error]
+					else return parseEnvironmentConfiguration(configurationPath, environment)
 				})
 		})
 }
 
 const parseEnvironmentConfiguration = ((configurationPath, environmentName) => {
 	return loadFromFile(path.join(configurationPath, 'environments.yml')).then(conf => {
-		return _.get(conf, environmentName)
+		return [_.get(conf, environmentName), null]
 	})
 })
 
