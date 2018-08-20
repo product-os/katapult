@@ -6,9 +6,11 @@ const path = require('path')
 const _ = require('lodash')
 const configStore = require('../configStoreAdapters/compose')
 const configValidator = require('../configValidator/configValidator')
+const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator')
 
 module.exports = class generateDeploySpecFile {
-	constructor(attrs, basePath, archiveStore, version, environmentName) {
+	constructor(attrs, mode, basePath, archiveStore, version, environmentName) {
+		this.mode = mode
 		this.templatePath = path.join(basePath, attrs.template)
 		this.configPath = path.join(basePath, attrs['config-store'])
 		this.configManifestPath = path.join(basePath, environmentName, version, 'docker-compose', 'config-manifest.json')
@@ -17,7 +19,23 @@ module.exports = class generateDeploySpecFile {
 	}
 
 	generate() {
-		return new configStore(this.configPath).getConfig()
+		let cs = new configStore(this.configPath)
+		return cs.getConfig()
+			.then(config => {
+				let input_config = _.cloneDeep(config)
+				return new configAutoGenerator(config, this.configManifestPath, this.mode).generate()
+					.then(config => {
+						if (this.mode === 'aggressive')
+							return cs.update(
+								_.differenceWith(
+									_.toPairs(config),
+									_.toPairs(input_config),
+									_.isEqual)
+							)
+					}).then(()=> {
+						return config
+					})
+			})
 			.then(config => {
 				return new configValidator(config, this.configManifestPath).validate().then((errors) => {
 					if (errors.length){

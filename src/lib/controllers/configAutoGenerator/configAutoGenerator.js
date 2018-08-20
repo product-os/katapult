@@ -27,7 +27,7 @@ module.exports = class configAutoGenerator {
 		_.forEach(configManifest.properties, (value, name) => {
 			let formula = _.get(value, '$$formula')
 			if (formula){
-				let valid = _.get(this.config, name) &&
+				let invalid = _.get(this.config, name) &&
 					validator.validate(
 						{
 							name: this.config[name]
@@ -37,7 +37,7 @@ module.exports = class configAutoGenerator {
 							'properties': {value}
 						}).errors.length
 
-				if (!valid){
+				if (invalid){
 					let generator = _.split(formula, '(', 1).map(_.trim)[0]
 					let formulaArgs = formula.substring(
 						formula.indexOf('('),

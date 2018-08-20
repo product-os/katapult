@@ -46,6 +46,10 @@ capitano.command({
 		alias: [ 'e' ],
 		required: true
 	}, {
+		signature: 'mode',
+		parameter: 'mode',
+		alias: [ 'm' ]
+	}, {
 		signature: 'verbose',
 		alias: [ 'v' ],
 		boolean: true
@@ -54,9 +58,9 @@ capitano.command({
 		if (options.verbose) console.info(options)
 
 		const {
-			output,
 			configuration,
 			environment,
+			mode='defensive',
 			verbose=false,
 		} = options
 
@@ -76,7 +80,8 @@ capitano.command({
 				return new deploySpec(
 					environment,
 					environmentObj,
-					configuration
+					configuration,
+					mode
 				).generate()
 			})
 			.then(errors => {
