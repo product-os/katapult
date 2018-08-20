@@ -17,7 +17,7 @@ module.exports = class generateDeploySpecFile {
 		this.configManifestPath = path.join(basePath, environmentName, version, 'kubernetes', 'config-manifest.json')
 		this.namespace = attrs.namespace
 		this.version = version
-		this.archiveStore = archiveStore
+		this.archiveStore = path.join(archiveStore, environmentName)
 	}
 
 	generate () {

@@ -15,7 +15,7 @@ module.exports = class generateDeploySpecFile {
 		this.configPath = path.join(basePath, attrs['config-store'])
 		this.configManifestPath = path.join(basePath, environmentName, version, 'docker-compose', 'config-manifest.json')
 		this.version = version
-		this.archiveStore = archiveStore
+		this.archiveStore = path.join(archiveStore, environmentName)
 	}
 
 	generate() {
