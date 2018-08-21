@@ -21,13 +21,12 @@ module.exports = class configStore {
 			.then(configString => {
 				_.forEach(envvars, (pair) => {
 					let [name, value] = pair
-					let re = new RegExp(`^.*${name}.*$`, "m")
-					configString = configString.replace(re, name+'='+value);
+					let re = new RegExp(`^.*${name}.*$`, 'm')
+					configString = configString.replace(re, name+'='+value)
 				})
 				return configString
 			}).then((configString) => {
 				return writeFileAsync(this.configPath, configString)
 			})
-		return envvars
 	}
 }
