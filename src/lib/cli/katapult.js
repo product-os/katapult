@@ -2,8 +2,13 @@
 
 const capitano = require('capitano')
 
-const templateGenerator = require('../controllers/templateGenerator')
+const _ = require('lodash')
+
 const deploySpec = require('../controllers/deploySpec')
+
+const validateEnvironmentConfiguration = require('../utils').validateEnvironmentConfiguration
+
+const deployAdapters = require('../controllers/deployAdapters/all')
 
 const help = () => {
 	console.log('Usage: compose-merger [COMMANDS] [OPTIONS]')
@@ -29,28 +34,23 @@ capitano.command({
 })
 
 capitano.command({
-	signature: 'generate',
-	description: 'Generate Deploy Spec from template path and environment configuration.',
+	signature: 'generate-deploy',
+	description: 'Generate Deploy Spec from environment configuration.',
 	options: [{
-		signature: 'input',
-		parameter: 'input',
-		alias: [ 'i' ],
-		required: true
-	}, {
-		signature: 'output',
-		parameter: 'output',
-		alias: [ 'o' ],
-		required: true
-	}, {
-		signature: 'template',
-		parameter: 'template',
-		alias: [ 't' ],
+		signature: 'configuration',
+		parameter: 'configuration',
+		description: 'URI to deploy-template folder/repo',
+		alias: [ 'c' ],
 		required: true
 	}, {
 		signature: 'environment',
 		parameter: 'environment',
 		alias: [ 'e' ],
 		required: true
+	}, {
+		signature: 'mode',
+		parameter: 'mode',
+		alias: [ 'm' ]
 	}, {
 		signature: 'verbose',
 		alias: [ 'v' ],
@@ -60,41 +60,56 @@ capitano.command({
 		if (options.verbose) console.info(options)
 
 		const {
-			output,
-			input='../balena-io',
-			template,
+			configuration,
 			environment,
+			mode='defensive',
 			verbose=false,
 		} = options
-		return new deploySpec(input, output, template, environment, verbose).generate().then(errors => {
-			if(errors.length){
-				for (let e in errors) {
-					console.error(errors[e])
+
+		// Validate and process environment info
+		return validateEnvironmentConfiguration(configuration, environment)
+			.then(([environmentObj, error]) => {
+				if (error) {
+					console.error(error)
+					process.exit(1)
 				}
-				process.exit(1)
-			}
-		}).asCallback()
+				return new deploySpec(
+					environment,
+					environmentObj,
+					configuration,
+					mode
+				).generate()
+			})
+			.then(errors => {
+				if (errors.length){
+					_.forEach(errors, error => {
+						console.error(error)
+					})
+					process.exit(1)
+				}
+			})
+			.asCallback()
 	}
 })
 
 capitano.command({
-	signature: 'template',
-	description: 'Generate target specific template files.',
+	signature: 'deploy',
+	description: 'Deploy a Deploy Spec.',
 	options: [{
-		signature: 'input',
-		parameter: 'input',
-		alias: [ 'i' ],
-		required: true
-	}, {
-		signature: 'output',
-		parameter: 'output',
-		alias: [ 'o' ],
-		required: true
-	}, {
-		signature: 'composefile',
-		parameter: 'composefile',
+		signature: 'configuration',
+		parameter: 'configuration',
+		description: 'URI to deploy-template folder/repo',
 		alias: [ 'c' ],
-		required: false
+		required: true
+	}, {
+		signature: 'environment',
+		parameter: 'environment',
+		alias: [ 'e' ],
+		required: true
+	}, {
+		signature: 'mode',
+		parameter: 'mode',
+		alias: [ 'm' ]
 	}, {
 		signature: 'target',
 		parameter: 'target',
@@ -109,21 +124,44 @@ capitano.command({
 		if (options.verbose) console.info(options)
 
 		const {
-			output,
-			input,
-			composefile='composefile.yml',
+			configuration,
+			environment,
+			mode='defensive',
 			target,
 			verbose=false,
 		} = options
-		return new templateGenerator(input, composefile, target, output, verbose).write().then(([release, errors]) =>{
-			if(errors.length){
-				for (let e in errors) {
-					console.error(errors[e])
-				}
-				process.exit(1)
-			}
-		}).asCallback()
 
+		return validateEnvironmentConfiguration(configuration, environment)
+			.then(([environmentObj, error]) => {
+				if (error) {
+					console.error(error)
+					process.exit(1)
+				}
+				// sync deploySpec
+				return new deploySpec(
+					environment,
+					environmentObj,
+					configuration,
+					mode
+				)
+					.generate()
+					.then(errors => {
+						if (errors.length){
+							_.forEach(errors, error => {
+								console.error(error)
+							})
+							process.exit(1)
+						}
+					})
+					.then(() => {
+						if (!_.has(deployAdapters, target)){
+							console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
+							process.exit(1)
+						}
+						return new deployAdapters[target](environment, environmentObj).run()
+					})
+			})
+			.asCallback()
 	}
 })
 

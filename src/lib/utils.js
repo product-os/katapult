@@ -35,16 +35,22 @@ const loadFromFile = (filePath) => {
 		.then(yaml.parse)
 }
 
+const loadFromJSONFile = (filePath) => {
+	return readFileAsync(filePath, 'utf8')
+		.then(JSON.parse)
+}
+
+
 const ymlString = (ymlObj) => {
 	return yaml.stringify(ymlObj, 40, 2)
 }
 
 const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 	return loadFromFile(yamlPath).then(obj => {
-		if (!_.get(obj, name))return ['\'' + name + '\' not defined in \'' + yamlPath +'\' \n Available options: ' + _.keys(obj)]
-		return []
+		if (!_.get(obj, name))return '\'' + name + '\' not defined in \'' + yamlPath +'\' \n Available options: ' + _.keys(obj)
+		return false
 	}).catch(() => {
-		return ['Error parsing \'' + yamlPath + '\'']
+		return 'Error parsing \'' + yamlPath + '\''
 	})
 }
 
@@ -91,6 +97,28 @@ const scrubk8sMetadataMatch = (filesPattern, annotationPrefix) => {
 			return error
 		})
 }
+
+const validateEnvironmentConfiguration = (configurationPath, environment) => {
+	// TODO: git validation.
+	return validateDirectoryPath(configurationPath)
+		.then((error) => {
+			if (error) return [null, error]
+			return validateTopLevelDirectiveYaml(environment, path.join(configurationPath, 'environments.yml'))
+				.then(error => {
+					if (error) return [null, error]
+					else return parseEnvironmentConfiguration(configurationPath, environment)
+				})
+		})
+}
+
+const parseEnvironmentConfiguration = ((configurationPath, environmentName) => {
+	return loadFromFile(path.join(configurationPath, 'environments.yml')).then(conf => {
+		return [_.get(conf, environmentName), null]
+	})
+})
+
+module.exports.validateEnvironmentConfiguration = validateEnvironmentConfiguration
+module.exports.parseEnvironmentConfiguration = parseEnvironmentConfiguration
 module.exports.validateTopLevelDirectiveYaml = validateTopLevelDirectiveYaml
 module.exports.validateDirectoryPath = validateDirectoryPath
 module.exports.scrubk8sMetadataMatch = scrubk8sMetadataMatch
@@ -98,5 +126,6 @@ module.exports.validateFilePath = validateFilePath
 module.exports.renameFilesMatch = renameFilesMatch
 module.exports.scrubk8sMetadata = scrubk8sMetadata
 module.exports.moveFilesMatch = moveFilesMatch
+module.exports.loadFromJSONFile = loadFromJSONFile
 module.exports.loadFromFile = loadFromFile
 module.exports.ymlString = ymlString

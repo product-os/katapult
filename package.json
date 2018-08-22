@@ -15,8 +15,12 @@
  "author": "",
  "license": "Apache-2.0",
  "dependencies": {
+  "@kubernetes/client-node": "^0.5.2",
   "bluebird": "~3",
   "capitano": "~1",
+  "dotenv": "~6",
+  "fs-extra": "~7",
+  "jsonschema": "~1",
   "lodash": "~4",
   "mkdirp": "~0.5",
   "mustache": "~2",
