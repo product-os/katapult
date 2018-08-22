@@ -24,19 +24,22 @@ module.exports = class generateDeploySpecFile {
 		let cs = new configStore(this.configPath, this.namespace)
 		return cs.getConfig()
 			.then(config => {
-				let input_config = _.cloneDeep(config)
-				return new configAutoGenerator(config, this.configManifestPath, this.mode).generate()
-					.then(config => {
-						if (this.mode === 'aggressive')
+				if (this.mode === 'aggressive'){
+					let input_config = _.cloneDeep(config)
+					return new configAutoGenerator(config, this.configManifestPath).generate()
+						.then(config => {
 							return cs.update(
 								_.differenceWith(
 									_.toPairs(config),
 									_.toPairs(input_config),
 									_.isEqual)
 							)
-					}).then(()=> {
-						return config
-					})
+						})
+						.then(()=> {
+							return config
+						})
+				}
+				return config
 			})
 			.then((config) => {
 				return new configValidator(config, this.configManifestPath).validate().then((errors) => {

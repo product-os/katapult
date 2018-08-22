@@ -6,20 +6,16 @@ const autoGenerators = require('./autoGeneratorPlugins/all')
 const Validator = require('jsonschema').Validator
 
 module.exports = class configAutoGenerator {
-	constructor(config, configManifestPath, mode) {
-		this.mode = mode
+	constructor(config, configManifestPath) {
 		this.config = config
 		this.configManifestPath = configManifestPath
 	}
 
 	generate() {
-		if (this.mode==='aggressive'){
-			return loadFromJSONFile(this.configManifestPath)
-				.then((configManifest) => {
-					return this.applyGenerationRules(configManifest)
-				})
-		}
-		else return Promise.resolve(this.config)
+		return loadFromJSONFile(this.configManifestPath)
+			.then((configManifest) => {
+				return this.applyGenerationRules(configManifest)
+			})
 	}
 
 	applyGenerationRules(configManifest) {
@@ -27,14 +23,14 @@ module.exports = class configAutoGenerator {
 		_.forEach(configManifest.properties, (value, name) => {
 			let formula = _.get(value, '$$formula')
 			if (formula){
-				let invalid = _.get(this.config, name) &&
+				let invalid = _.has(this.config, name) &&
 					validator.validate(
 						{
-							name: this.config[name]
+							[name]: this.config[name]
 						},
 						{
 							'type': 'object',
-							'properties': {value}
+							'properties': {[name]: value}
 						}).errors.length
 
 				if (invalid){
