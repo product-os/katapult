@@ -20,7 +20,7 @@ module.exports = class configAutoGenerator {
 
 	applyGenerationRules(configManifest) {
 		let validator = new Validator()
-		let promises = []
+		let promiseChain = Promise.resolve()
 		_.forEach(configManifest.properties, (value, name) => {
 			let formula = _.get(value, '$$formula')
 			if (formula){
@@ -43,18 +43,22 @@ module.exports = class configAutoGenerator {
 						formula.lastIndexOf(')') + 1
 					)
 					if (formulaArgs && formulaArgs.length > 2) {
-						promises.push(
-							Promise.resolve(autoGenerators[generator](eval(formulaArgs))).then(out => {
-								if(Array.isArray(out)){
-									console.log(name, out)
-									this.config[name] = out[0]
+						let properties = this.config
+						promiseChain = promiseChain.then(()=>{
+							return Promise.resolve(autoGenerators[generator](eval(formulaArgs))).then(output => {
+								if(Array.isArray(output)){
+									this.config[name] = output[0]
+									// todo: add ref_config validation in config-manifest; Validate output length.
+									_.forEach(_.zip(eval(formulaArgs).ref_config, _.drop(output)), ([name, value]) =>{
+										this.config[name] = value
+									})
 								}
 								else{
-									console.log(name, out)
-									this.config[name] = out
+									this.config[name] = output
 								}
+								return this.config
 							})
-						)
+						})
 					}
 					else {
 						this.config[name] = autoGenerators[generator]()
@@ -62,8 +66,6 @@ module.exports = class configAutoGenerator {
 				}
 			}
 		})
-		return Promise.all(promises).then(()=>{
-			return this.config
-		})
+		return promiseChain
 	}
 }
