@@ -4,16 +4,17 @@ const { readFileAsync, writeFileAsync, ensureDirAsync } = Promise.promisifyAll(r
 const mustache = require('mustache')
 const path = require('path')
 const _ = require('lodash')
-const configStore = require('../configStoreAdapters/compose')
+const configStore = require('../configStoreAdapters/all')['compose']
 const configValidator = require('../configValidator/configValidator')
 const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator')
 
 module.exports = class generateDeploySpecFile {
-	constructor(attrs, mode, basePath, archiveStore, version, environmentName) {
+	constructor(attrs, mode, basePath, archiveStore, version, environmentName, target) {
 		this.mode = mode
+		this.target = target
 		this.templatePath = path.join(basePath, attrs.template)
 		this.configPath = path.join(basePath, attrs['config-store'])
-		this.configManifestPath = path.join(basePath, environmentName, version, 'docker-compose', 'config-manifest.json')
+		this.configManifestPath = path.join(basePath, environmentName, version, target, 'config-manifest.json')
 		this.version = version
 		this.archiveStore = path.join(archiveStore, environmentName)
 	}
@@ -55,7 +56,7 @@ module.exports = class generateDeploySpecFile {
 								let outputPath = path.join(
 									this.archiveStore,
 									this.version,
-									'docker-compose',
+									this.target,
 									path.basename(this.templatePath).replace('.tpl.', '.')
 								)
 								return ensureDirAsync(path.dirname(outputPath))

@@ -4,7 +4,7 @@ const { readFileAsync, readdirAsync, writeFileAsync, ensureDirAsync } = Promise.
 const mustache = require('mustache')
 const path = require('path')
 const _ = require('lodash')
-const configStore = require('../configStoreAdapters/kubernetes')
+const configStore = require('../configStoreAdapters/all')['kubernetes']
 const configValidator = require('../configValidator/configValidator')
 const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator')
 
