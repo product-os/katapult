@@ -26,6 +26,7 @@
   "mustache": "~2",
   "mv": "~2",
   "node-forge": "^0.7.6",
+  "simple-git": "~1",
   "yamljs": "~0.3"
  },
  "devDependencies": {
