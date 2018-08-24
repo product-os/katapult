@@ -2,6 +2,7 @@
  "name": "katapult",
  "version": "0.0.1",
  "description": "A tool for launching!",
+ "private": true,
  "scripts": {
   "test": "nyc mocha"
  },
