@@ -30,7 +30,8 @@ module.exports = class DeploySpec {
 					this.basePath,
 					this.archiveStore,
 					this.version,
-					this.environmentName
+					this.environmentName,
+					target
 				)
 					.generate()
 					.then( error => {

@@ -6,35 +6,34 @@ const autoGenerators = require('./autoGeneratorPlugins/all')
 const Validator = require('jsonschema').Validator
 
 module.exports = class configAutoGenerator {
-	constructor(config, configManifestPath, mode) {
-		this.mode = mode
+	constructor(config, configManifestPath) {
 		this.config = config
 		this.configManifestPath = configManifestPath
 	}
 
 	generate() {
-		if (this.mode==='aggressive'){
-			return loadFromJSONFile(this.configManifestPath)
-				.then((configManifest) => {
-					return this.applyGenerationRules(configManifest)
-				})
-		}
-		else return Promise.resolve(this.config)
+		return loadFromJSONFile(this.configManifestPath)
+			.then((configManifest) => {
+				return this.applyGenerationRules(configManifest)
+			})
 	}
 
 	applyGenerationRules(configManifest) {
 		let validator = new Validator()
+		let promiseChain = Promise.resolve()
 		_.forEach(configManifest.properties, (value, name) => {
 			let formula = _.get(value, '$$formula')
 			if (formula){
-				let invalid = _.get(this.config, name) &&
+				let invalid =
+					(_.has(this.config, name) || configManifest.required.includes(name)) &&
 					validator.validate(
 						{
-							name: this.config[name]
+							[name]: this.config[name]
 						},
 						{
 							'type': 'object',
-							'properties': {value}
+							'properties': {[name]: value},
+							'required': [name]
 						}).errors.length
 
 				if (invalid){
@@ -44,7 +43,22 @@ module.exports = class configAutoGenerator {
 						formula.lastIndexOf(')') + 1
 					)
 					if (formulaArgs && formulaArgs.length > 2) {
-						this.config[name] = autoGenerators[generator](eval(formulaArgs))
+						let properties = this.config
+						promiseChain = promiseChain.then(()=>{
+							return Promise.resolve(autoGenerators[generator](eval(formulaArgs))).then(output => {
+								if(Array.isArray(output)){
+									this.config[name] = output[0]
+									// todo: add ref_config validation in config-manifest; Validate output length.
+									_.forEach(_.zip(eval(formulaArgs).ref_config, _.drop(output)), ([name, value]) =>{
+										this.config[name] = value
+									})
+								}
+								else{
+									this.config[name] = output
+								}
+								return this.config
+							})
+						})
 					}
 					else {
 						this.config[name] = autoGenerators[generator]()
@@ -52,6 +66,6 @@ module.exports = class configAutoGenerator {
 				}
 			}
 		})
-		return this.config
+		return promiseChain
 	}
 }
