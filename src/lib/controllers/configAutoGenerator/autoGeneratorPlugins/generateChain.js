@@ -33,9 +33,9 @@ const generateCert = require('./generateCert')
  * 	validTo: Date parsable string for cert validTo field.
  * 	bits: Integer. Defaults to 2048. RSA bits for generated key.
  * @returns {Promise <*[String, String, String]>}  [ChainPem, caPemCert, caPKPem]
- * 	ChainPem: The CA, cert, and CHAIN.
- * 	caPemCert: The PEM CA certificate. In case its needed for more certs.
- * 	caPKPem: The PEM CA private key. In case its needed for more certs signing.
+ * 	ChainPem: The CA, cert, and CHAIN, base64 encoded
+ * 	caPemCert: The PEM CA certificate. In case its needed for more certs, base64 encoded
+ * 	caPKPem: The PEM CA private key. In case its needed for more certs signing, base64 encoded
  */
 
 // caAttrs, caValidFrom, caValidTo, certAttrs, altDomains, validFrom, validTo, bits=2048
