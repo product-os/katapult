@@ -48,6 +48,11 @@ capitano.command({
 		alias: [ 'e' ],
 		required: true
 	}, {
+		signature: 'target',
+		parameter: 'target',
+		alias: [ 't' ],
+		required: true
+	}, {
 		signature: 'mode',
 		parameter: 'mode',
 		alias: [ 'm' ]
@@ -60,6 +65,7 @@ capitano.command({
 		if (options.verbose) console.info(options)
 
 		const {
+			target,
 			configuration,
 			environment,
 			mode='defensive',
@@ -73,6 +79,7 @@ capitano.command({
 					console.error(error)
 					process.exit(1)
 				}
+				if (target)environmentObj=_.pick(environmentObj, [target, 'archive-store', 'version'])
 				return new deploySpec(
 					environment,
 					environmentObj,
