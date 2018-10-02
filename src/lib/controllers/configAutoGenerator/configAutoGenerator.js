@@ -1,31 +1,32 @@
 'use strict'
 const Promise = require('bluebird')
-const { loadFromJSONFile } = require('../../utils')
 const _ = require('lodash')
-const autoGenerators = require('./autoGeneratorPlugins/all')
 const Validator = require('jsonschema').Validator
+const {
+	GENERATE_API_KEY,
+	GENERATE_API_KEY_16,
+	GENERATE_CA,
+	GENERATE_CERT,
+	GENERATE_CERT_CHAIN,
+	GENERATE_CHAIN
+} = require('./autoGeneratorPlugins/all')
+
 
 module.exports = class configAutoGenerator {
-	constructor(config, configManifestPath) {
+	constructor(config, configManifest) {
 		this.config = config
-		this.configManifestPath = configManifestPath
+		this.configManifest = configManifest
 	}
 
 	generate() {
-		return loadFromJSONFile(this.configManifestPath)
-			.then((configManifest) => {
-				return this.applyGenerationRules(configManifest)
-			})
-	}
-
-	applyGenerationRules(configManifest) {
+		Object.assign(global, this.config)
 		let validator = new Validator()
 		let promiseChain = Promise.resolve()
-		_.forEach(configManifest.properties, (value, name) => {
-			let formula = _.get(value, '$$formula')
+		_.forEach(this.configManifest.properties, (value, name) => {
+			let formula = _.get(value, ['default', 'eval'])
 			if (formula){
 				let invalid =
-					(_.has(this.config, name) || configManifest.required.includes(name)) &&
+					(_.has(this.config, name) || this.configManifest.required.includes(name)) &&
 					validator.validate(
 						{
 							[name]: this.config[name]
@@ -37,32 +38,8 @@ module.exports = class configAutoGenerator {
 						}).errors.length
 
 				if (invalid){
-					let generator = _.split(formula, '(', 1).map(_.trim)[0]
-					let formulaArgs = formula.substring(
-						formula.indexOf('('),
-						formula.lastIndexOf(')') + 1
-					)
-					if (formulaArgs && formulaArgs.length > 2) {
-						let properties = this.config
-						promiseChain = promiseChain.then(()=>{
-							return Promise.resolve(autoGenerators[generator](eval(formulaArgs))).then(output => {
-								if(Array.isArray(output)){
-									this.config[name] = output[0]
-									// todo: add ref_config validation in config-manifest; Validate output length.
-									_.forEach(_.zip(eval(formulaArgs).ref_config, _.drop(output)), ([name, value]) =>{
-										this.config[name] = value
-									})
-								}
-								else{
-									this.config[name] = output
-								}
-								return this.config
-							})
-						})
-					}
-					else {
-						this.config[name] = autoGenerators[generator]()
-					}
+					return Promise.resolve(eval(formula))
+						.then(result => {this.config[name] = result})
 				}
 			}
 		})

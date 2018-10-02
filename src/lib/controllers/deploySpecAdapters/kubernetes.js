@@ -7,6 +7,7 @@ const _ = require('lodash')
 const configStore = require('../configStoreAdapters/all')['kubernetes']
 const configValidator = require('../configValidator/configValidator')
 const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator')
+const configManifest = require('../configManifest/configManifest')
 
 module.exports = class generateDeploySpecFile {
 
@@ -14,7 +15,7 @@ module.exports = class generateDeploySpecFile {
 		this.mode = mode
 		this.templatePath = path.join(basePath, attrs.template)
 		this.configPath = path.join(basePath, attrs['config-store'])
-		this.configManifestPath = path.join(basePath, environmentName, version, 'kubernetes', 'config-manifest.json')
+		this.configManifestPath = path.join(basePath, environmentName, version, 'kubernetes', 'config-manifest.yml')
 		this.namespace = attrs.namespace
 		this.version = version
 		this.archiveStore = path.join(archiveStore, environmentName)
@@ -22,11 +23,12 @@ module.exports = class generateDeploySpecFile {
 
 	generate () {
 		let cs = new configStore(this.configPath, this.namespace)
-		return cs.getConfig()
-			.then(config => {
+		let cm = new configManifest(this.configManifestPath)
+		return Promise.join(cs.getConfig(), cm.getConfigManifest())
+			.tap(([config, cManifest]) => {
 				if (this.mode === 'aggressive'){
 					let input_config = _.cloneDeep(config)
-					return new configAutoGenerator(config, this.configManifestPath).generate()
+					return new configAutoGenerator(config, cManifest).generate()
 						.then(config => {
 							return cs.update(
 								_.differenceWith(
@@ -35,14 +37,10 @@ module.exports = class generateDeploySpecFile {
 									_.isEqual)
 							)
 						})
-						.then(()=> {
-							return config
-						})
 				}
-				return config
 			})
-			.then((config) => {
-				return new configValidator(config, this.configManifestPath).validate().then((errors) => {
+			.then(([config, cManifest]) => {
+				return new configValidator(config, cManifest).validate().then((errors) => {
 					if (errors.length) {
 						let errorList = []
 						_.forEach(errors, err => {

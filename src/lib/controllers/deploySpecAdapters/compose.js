@@ -7,6 +7,7 @@ const _ = require('lodash')
 const configStore = require('../configStoreAdapters/all')['compose']
 const configValidator = require('../configValidator/configValidator')
 const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator')
+const configManifest = require('../configManifest/configManifest')
 
 module.exports = class generateDeploySpecFile {
 	constructor(attrs, mode, basePath, archiveStore, version, environmentName, target) {
@@ -21,11 +22,12 @@ module.exports = class generateDeploySpecFile {
 
 	generate() {
 		let cs = new configStore(this.configPath)
-		return cs.getConfig()
-			.then(config => {
+		let cm = new configManifest(this.configManifestPath)
+		return Promise.join(cs.getConfig(), cm.getConfigManifest())
+			.tap(([config, cManifest]) => {
 				if (this.mode === 'aggressive'){
 					let input_config = _.cloneDeep(config)
-					return new configAutoGenerator(config, this.configManifestPath, this.mode).generate()
+					return new configAutoGenerator(config, cManifest, this.mode).generate()
 						.then(config => {
 							return cs.update(
 								_.differenceWith(
@@ -34,14 +36,10 @@ module.exports = class generateDeploySpecFile {
 									_.isEqual)
 							)
 						})
-						.then(()=> {
-							return config
-						})
 				}
-				return config
 			})
-			.then(config => {
-				return new configValidator(config, this.configManifestPath).validate().then((errors) => {
+			.then(([config, cManifest]) => {
+				return new configValidator(config, cManifest).validate().then((errors) => {
 					if (errors.length){
 						let errorList = []
 						_.forEach(errors, err => {

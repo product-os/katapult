@@ -1,21 +1,20 @@
 'use strict'
-const { loadFromJSONFile } = require('../../utils')
 const Validator = require('jsonschema').Validator
 const validationFormats = require('./validationFormats/all')
 const _ = require('lodash')
 
 
 module.exports = class configValidator {
-	constructor(config, configManifestPath) {
+	constructor(config, configManifest) {
 		this.config = config
-		this.configManifestPath = configManifestPath
+		this.configManifest = configManifest
 		this.validator = new Validator()
 	}
 
 	validate() {
-		return loadFromJSONFile(this.configManifestPath)
-			.then((configManifest) => {
-				return configValidator.addFormatValidationRules(configManifest)
+		return Promise.resolve()
+			.then(() => {
+				return configValidator.addFormatValidationRules(this.configManifest)
 			})
 			.then((configManifest) => {
 				// adapt config value types, according to configManifest, for validation.
