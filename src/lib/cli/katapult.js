@@ -10,6 +10,8 @@ const validateEnvironmentConfiguration = require('../utils').validateEnvironment
 
 const deployAdapters = require('../controllers/deployAdapters/all')
 
+const deploySpecAdapters = require('../controllers/deploySpecAdapters/all')
+
 const help = () => {
 	console.log('Usage: compose-merger [COMMANDS] [OPTIONS]')
 	console.log('\nCommands:\n')
@@ -48,6 +50,11 @@ capitano.command({
 		alias: [ 'e' ],
 		required: true
 	}, {
+		signature: 'target',
+		parameter: 'target',
+		alias: [ 't' ],
+		required: false
+	}, {
 		signature: 'mode',
 		parameter: 'mode',
 		alias: [ 'm' ]
@@ -60,6 +67,7 @@ capitano.command({
 		if (options.verbose) console.info(options)
 
 		const {
+			target,
 			configuration,
 			environment,
 			mode='defensive',
@@ -73,6 +81,15 @@ capitano.command({
 					console.error(error)
 					process.exit(1)
 				}
+
+				if (target){
+					if (!_.has(deploySpecAdapters, target)){
+						console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
+						process.exit(1)
+					}
+					environmentObj=_.pick(environmentObj, [target, 'archive-store', 'version'])
+				}
+
 				return new deploySpec(
 					environment,
 					environmentObj,
@@ -86,6 +103,9 @@ capitano.command({
 						console.error(error)
 					})
 					process.exit(1)
+				}
+				else{
+					console.log('Done')
 				}
 			})
 			.asCallback()
@@ -160,6 +180,17 @@ capitano.command({
 						}
 						return new deployAdapters[target](environment, environmentObj).run()
 					})
+			})
+			.then(errors => {
+				if (errors.length){
+					_.forEach(errors, error => {
+						console.error(error)
+					})
+					process.exit(1)
+				}
+				else{
+					console.log('Done')
+				}
 			})
 			.asCallback()
 	}

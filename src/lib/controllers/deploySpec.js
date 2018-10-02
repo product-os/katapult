@@ -1,10 +1,7 @@
 'use strict'
 
 const _ = require('lodash')
-const path = require('path')
 const Promise = require('bluebird')
-const mustache = require('mustache')
-const { readFileAsync, writeFileAsync } = Promise.promisifyAll(require('fs'))
 const deploySpecAdapters = require('./deploySpecAdapters/all')
 
 module.exports = class DeploySpec {
@@ -46,15 +43,4 @@ module.exports = class DeploySpec {
 			return _.without(errors, undefined)
 		})
 	}
-
-	static generateDeploySpecFile(templatePath, variables, outputPath){
-		return readFileAsync(templatePath, 'utf8')
-			.then( template => {
-				let output = mustache.render(template, variables)
-				return writeFileAsync(outputPath.replace('.tpl.','.'), output)
-			}).catch(err => {
-				return err.message
-			})
-	}
-
 }

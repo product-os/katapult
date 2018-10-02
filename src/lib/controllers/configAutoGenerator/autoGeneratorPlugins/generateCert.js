@@ -18,14 +18,14 @@ const pki = Promise.promisifyAll(forge.pki)
  * 		OU: 'NOC',
  * 		CN:'custom-domain.io'
  * 		}
- * 	caCertPEM: Pem string of CA certificate
- * 	caPrivateKeyPEM: Pem private key string of CA
+ * 	caCertPEM: Pem string of CA certificate, base64 encoded
+ * 	caPrivateKeyPEM: Pem private key string of CA, base64 encoded
  * 	altDomains: List of alt domains.
  * 		Example: ['*.custom-domain.io', '*.devices.custom-domain.io']
  * 	validFrom: Date parsable string for cert validFrom field.
  * 	validTo: Date parsable string for cert validTo field.
  * 	bits: Integer. Defaults to 2048. RSA bits for generated key.
- * 	@returns {Promise<*[String, String]>} [CertificatePEM, PrivateKeyPEM].
+ * 	@returns {Promise<*[String, String]>} [CertificatePEM base64 encoded, PrivateKeyPEM base64 encoded].
  */
 let generateCert = (attributes) => {
 
@@ -57,9 +57,8 @@ let generateCert = (attributes) => {
 			value: domain
 		})
 	})
-	let caCert = pki.certificateFromPem(caCertPEM)
-	let caPK = forge.pki.privateKeyFromPem(caPrivateKeyPEM)
-
+	let caCert = pki.certificateFromPem(Buffer.from(caCertPEM, 'base64').toString())
+	let caPK = forge.pki.privateKeyFromPem(Buffer.from(caPrivateKeyPEM, 'base64').toString())
 	return rsa.generateKeyPairAsync({bits: bits, workers: -1}).then((key) => {
 		let cert = forge.pki.createCertificate()
 		cert.publicKey = key.publicKey
@@ -82,7 +81,10 @@ let generateCert = (attributes) => {
 			altNames: altNames
 		}])
 		cert.sign(caPK, forge.md.sha256.create())
-		return [forge.pki.certificateToPem(cert), forge.pki.privateKeyToPem(key.privateKey)]
+		return [
+			Buffer.from(forge.pki.certificateToPem(cert)).toString('base64'),
+			Buffer.from(forge.pki.privateKeyToPem(key.privateKey)).toString('base64')
+		]
 	})
 }
 

@@ -4,7 +4,6 @@ const _ = require('lodash')
 const forge = require('node-forge')
 const Promise = require('bluebird')
 const rsa = Promise.promisifyAll(forge.rsa)
-const pki = Promise.promisifyAll(forge.pki)
 
 /**
  *
@@ -22,7 +21,7 @@ const pki = Promise.promisifyAll(forge.pki)
  * 	validFrom: Date parsable string for CA cert validFrom field.
  * 	validTo: Date parsable string for CA cert validTo field.
  * 	bits: Integer. Defaults to 2048. RSA bits for generated key.
- * @returns {Promise<*[String, String]>} [caCertificatePEM, caPrivateKeyPEM].
+ * @returns {Promise<*[String, String]>} [caCertificatePEM base64 encoded, caPrivateKeyPEM base64 encoded].
  */
 
 let generateCA = (attributes) => {
@@ -65,7 +64,10 @@ let generateCA = (attributes) => {
 				dataEncipherment: true
 			}])
 			caCert.sign(keypair.privateKey, forge.md.sha256.create())
-			return [forge.pki.certificateToPem(caCert), forge.pki.privateKeyToPem(keypair.privateKey)]
+			return [
+				Buffer.from(forge.pki.certificateToPem(caCert)).toString('base64'),
+				Buffer.from(forge.pki.privateKeyToPem(keypair.privateKey)).toString('base64')
+			]
 		})
 }
 
