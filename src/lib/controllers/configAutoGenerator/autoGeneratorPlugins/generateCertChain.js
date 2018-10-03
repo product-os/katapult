@@ -11,12 +11,13 @@ const generateCert = require('./generateCert')
  * 		C:'GR',
  * 		ST: 'Attiki',
  * 		L:'Athens',
- * 		O:'Resin Ltd.',
- * 		OU: 'NOC',
+ * 		O:'Balena Ltd.',
+ * 		OU: 'DevOps',
  * 		CN:'custom-domain.io'
  * 		}
  * 	caCertPEM: Pem string of CA certificate, base64 encoded
  * 	caPrivateKeyPEM: Pem private key string of CA, base64 encoded
+ * 	privateKeyPEM: Pem private key string for certificate
  * 	altDomains: List of alt domains.
  * 		Example: ['*.custom-domain.io', '*.devices.custom-domain.io']
  * 	validFrom: Date parsable string for cert validFrom field.
@@ -26,10 +27,11 @@ const generateCert = require('./generateCert')
  */
 let generateCertChain = (attributes) => {
 	const {
-		caCertPEM
+		caCertPEM,
+		privateKeyPEM
 	} = attributes
 	return generateCert(attributes)
-		.then(([certPEM, privateKeyPEM]) => {
+		.then((certPEM) => {
 			return certPEM+caCertPEM+privateKeyPEM
 		})
 }

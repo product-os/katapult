@@ -1,6 +1,6 @@
 'use strict'
 
-const generateCA = require('./generateCA')
+const generateCA = require('./generateCACert')
 const generateCert = require('./generateCert')
 
 /**
@@ -10,8 +10,8 @@ const generateCert = require('./generateCert')
  *    {
  *    	C:'GR',
  *    	L:'Athens',
- *    	O:'Resin Ltd.',
- *    	OU: 'NOC',
+ *    	O:'Balena Ltd.',
+ *    	OU: 'DevOps',
  *    	CN:'global-ca.io',
  *    	ST: ''
  *    	}
@@ -23,8 +23,8 @@ const generateCert = require('./generateCert')
  *    	C:'GR',
  *    	ST: 'Attiki',
  *    	L:'Athens',
- *    	O:'Resin Ltd.',
- *    	OU: 'NOC',
+ *    	O:'Balena Ltd.',
+ *    	OU: 'DevOps',
  *    	CN:'custom-domain.io'
  *    	}
  * 	altDomains: List of alt domains.
@@ -38,7 +38,6 @@ const generateCert = require('./generateCert')
  * 	caPKPem: The PEM CA private key. In case its needed for more certs signing, base64 encoded
  */
 
-// caAttrs, caValidFrom, caValidTo, certAttrs, altDomains, validFrom, validTo, bits=2048
 let generateChain = (attributes) => {
 	const {
 		caAttrs,
