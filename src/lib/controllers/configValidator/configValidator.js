@@ -16,16 +16,16 @@ module.exports = class configValidator {
 			.then(() => {
 				return configValidator.addFormatValidationRules(this.configManifest)
 			})
-			.then((configManifest) => {
+			.then(() => {
 				// adapt config value types, according to configManifest, for validation.
 				_.forEach(this.config, (value, name) => {
-					if (_.has(configManifest.properties, name)){
-						if (configManifest.properties[name].type === 'number'){
+					if (_.has(this.configManifest.properties, name)){
+						if (this.configManifest.properties[name].type === 'number'){
 							this.config[name] = parseInt(value)
 						}
 					}
 				})
-				return this.validator.validate(this.config, configManifest).errors
+				return this.validator.validate(this.config, this.configManifest).errors
 			})
 	}
 

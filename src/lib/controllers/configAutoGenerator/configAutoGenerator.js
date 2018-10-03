@@ -26,7 +26,7 @@ module.exports = class configAutoGenerator {
 			let formula = _.get(value, ['default', 'eval'])
 			if (formula){
 				let invalid =
-					(_.has(this.config, name) || this.configManifest.required.includes(name)) &&
+					(_.has(this.config, name) || _.get(value, 'required')) &&
 					validator.validate(
 						{
 							[name]: this.config[name]
@@ -38,7 +38,11 @@ module.exports = class configAutoGenerator {
 						}).errors.length
 
 				if (invalid){
-					return Promise.resolve(eval(formula))
+					if (name === 'BALENA_ROOT_CA_KEY') console.log(invalid)
+					promiseChain = promiseChain
+						.then(()=> {
+							return eval(formula)
+						})
 						.then(result => {this.config[name] = result})
 				}
 			}

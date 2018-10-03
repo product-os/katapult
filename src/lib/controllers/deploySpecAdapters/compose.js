@@ -15,7 +15,7 @@ module.exports = class generateDeploySpecFile {
 		this.target = target
 		this.templatePath = path.join(basePath, attrs.template)
 		this.configPath = path.join(basePath, attrs['config-store'])
-		this.configManifestPath = path.join(basePath, environmentName, version, target, 'config-manifest.json')
+		this.configManifestPath = path.join(basePath, environmentName, version, target, 'config-manifest.yml')
 		this.version = version
 		this.archiveStore = path.join(archiveStore, environmentName)
 	}
@@ -65,6 +65,7 @@ module.exports = class generateDeploySpecFile {
 					}
 				})
 					.catch(err => {
+						console.error(err)
 						return err.message
 					})
 			})
