@@ -3,8 +3,8 @@
 const _ = require('lodash')
 const forge = require('node-forge')
 const Promise = require('bluebird')
-const rsa = Promise.promisifyAll(forge.rsa)
 const pki = Promise.promisifyAll(forge.pki)
+const generatePublicKey = require('./generatePublicKey')
 
 /**
  * @param attributes: Attribute object with the following properties:
@@ -14,18 +14,19 @@ const pki = Promise.promisifyAll(forge.pki)
  * 		C:'GR',
  * 		ST: 'Attiki',
  * 		L:'Athens',
- * 		O:'Resin Ltd.',
- * 		OU: 'NOC',
+ * 		O:'Balena Ltd.',
+ * 		OU: 'DevOps',
  * 		CN:'custom-domain.io'
- * 		}
- * 	caCertPEM: Pem string of CA certificate, base64 encoded
- * 	caPrivateKeyPEM: Pem private key string of CA, base64 encoded
+ * 	}
+ * 	caCertPEM: PEM string of CA certificate
+ * 	caPrivateKeyPEM: PEM string of CA private key
+ * 	privateKeyPEM: PEM string of certificate private key
  * 	altDomains: List of alt domains.
  * 		Example: ['*.custom-domain.io', '*.devices.custom-domain.io']
  * 	validFrom: Date parsable string for cert validFrom field.
  * 	validTo: Date parsable string for cert validTo field.
- * 	bits: Integer. Defaults to 2048. RSA bits for generated key.
- * 	@returns {Promise<*[String, String]>} [CertificatePEM base64 encoded, PrivateKeyPEM base64 encoded].
+ *
+ * 	@returns {string} Certificate PEM format string.
  */
 let generateCert = (attributes) => {
 
@@ -36,7 +37,7 @@ let generateCert = (attributes) => {
 		altDomains,
 		validFrom,
 		validTo,
-		bits=2048
+		privateKeyPEM
 	} = attributes
 
 	// reformat caAttrs to list.
@@ -57,35 +58,31 @@ let generateCert = (attributes) => {
 			value: domain
 		})
 	})
-	let caCert = pki.certificateFromPem(Buffer.from(caCertPEM, 'base64').toString())
-	let caPK = forge.pki.privateKeyFromPem(Buffer.from(caPrivateKeyPEM, 'base64').toString())
-	return rsa.generateKeyPairAsync({bits: bits, workers: -1}).then((key) => {
-		let cert = forge.pki.createCertificate()
-		cert.publicKey = key.publicKey
-		cert.serialNumber = '01'
-		cert.validity.notBefore = new Date(validFrom)
-		cert.validity.notAfter = new Date(validTo)
-		cert.setSubject(subjectAttrs)
-		cert.setIssuer(caCert.subject.attributes)
-		cert.setExtensions([{
-			name: 'basicConstraints',
-			cA: false
-		}, {
-			name: 'keyUsage',
-			digitalSignature: true,
-			nonRepudiation: true,
-			keyEncipherment: true,
-			dataEncipherment: true
-		}, {
-			name: 'subjectAltName',
-			altNames: altNames
-		}])
-		cert.sign(caPK, forge.md.sha256.create())
-		return [
-			Buffer.from(forge.pki.certificateToPem(cert)).toString('base64'),
-			Buffer.from(forge.pki.privateKeyToPem(key.privateKey)).toString('base64')
-		]
-	})
+	let caCert = pki.certificateFromPem(caCertPEM)
+	let caPK = forge.pki.privateKeyFromPem(caPrivateKeyPEM)
+	let publicKey = forge.pki.publicKeyFromPem(generatePublicKey(privateKeyPEM))
+	let cert = forge.pki.createCertificate()
+	cert.publicKey = publicKey
+	cert.serialNumber = '05'
+	cert.validity.notBefore = new Date(validFrom)
+	cert.validity.notAfter = new Date(validTo)
+	cert.setSubject(subjectAttrs)
+	cert.setIssuer(caCert.subject.attributes)
+	cert.setExtensions([{
+		name: 'basicConstraints',
+		cA: false
+	}, {
+		name: 'keyUsage',
+		digitalSignature: true,
+		nonRepudiation: true,
+		keyEncipherment: true,
+		dataEncipherment: true
+	}, {
+		name: 'subjectAltName',
+		altNames: altNames
+	}])
+	cert.sign(caPK, forge.md.sha256.create())
+	return Buffer.from(forge.pki.certificateToPem(cert)).toString()
 }
 
 module.exports = generateCert
