@@ -12,7 +12,13 @@ module.exports = class configStore {
 	getConfig() {
 		return readFileAsync(this.configPath, 'utf8')
 			.then(configString => {
-				return dotenv.parse(Buffer.from(configString))
+				return dotenv.parse(
+					Buffer.from(
+						configString.split('\\r')
+							.join('\r'
+							)
+					)
+				)
 			})
 	}
 
@@ -21,8 +27,17 @@ module.exports = class configStore {
 			.then(configString => {
 				_.forEach(envvars, (pair) => {
 					let [name, value] = pair
+					value=value.split('\r').join('').split('\n').join('\\n')
 					let re = new RegExp(`^.*${name}.*$`, 'm')
-					configString = configString.replace(re, name+'='+value)
+					let replaced_string = configString.replace(re, name + '=\'' + value + '\'')
+					if(configString === replaced_string){
+						configString=configString + '\n' + name + '=\'' + value + '\''
+					}
+					else{
+						configString = configString.replace(re, name + '=\'' + value + '\'')
+					}
+
+
 				})
 				return configString
 			}).then((configString) => {
