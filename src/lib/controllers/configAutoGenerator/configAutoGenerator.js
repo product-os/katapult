@@ -5,12 +5,14 @@ const Validator = require('jsonschema').Validator
 const {
 	GENERATE_API_KEY,
 	GENERATE_API_KEY_16,
-	GENERATE_CA,
+	GENERATE_CA_CERT,
 	GENERATE_CERT,
 	GENERATE_CERT_CHAIN,
-	GENERATE_CHAIN
+	GENERATE_CHAIN,
+	GENERATE_PRIVATE_KEY,
+	GENERATE_PUBLIC_KEY
 } = require('./autoGeneratorPlugins/all')
-
+const { escape } = require('./filterFunctions')
 
 module.exports = class configAutoGenerator {
 	constructor(config, configManifest) {
@@ -38,15 +40,17 @@ module.exports = class configAutoGenerator {
 						}).errors.length
 
 				if (invalid){
-					if (name === 'BALENA_ROOT_CA_KEY') console.log(invalid)
 					promiseChain = promiseChain
 						.then(()=> {
-							return eval(formula)
+							return eval(formula.split('\n').join(''))
 						})
-						.then(result => {this.config[name] = result})
+						.then(result => {
+							global[name] = result
+							this.config[name] = result
+						})
 				}
 			}
 		})
-		return promiseChain
+		return promiseChain.return(this.config)
 	}
 }
