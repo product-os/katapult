@@ -16,7 +16,7 @@
  "author": "",
  "license": "Apache-2.0",
  "dependencies": {
-  "@kubernetes/client-node": "^0.5.2",
+  "@kubernetes/client-node": "~0.6",
   "bluebird": "~3",
   "capitano": "~1",
   "dotenv": "~6",
