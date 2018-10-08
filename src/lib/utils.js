@@ -40,6 +40,18 @@ const loadFromJSONFile = (filePath) => {
 		.then(JSON.parse)
 }
 
+const loadFromJSONFileOrNull = (filePath) => {
+	if (filePath){
+		return statAsync(filePath)
+			.then(stat => {
+				if (!stat.isFile()) {
+					return null
+				}
+				return loadFromJSONFile(filePath)
+			})
+	}
+	return null
+}
 
 const ymlString = (ymlObj) => {
 	return yaml.stringify(ymlObj, 40, 2)
@@ -120,6 +132,7 @@ const parseEnvironmentConfiguration = ((configurationPath, environmentName) => {
 module.exports.validateEnvironmentConfiguration = validateEnvironmentConfiguration
 module.exports.parseEnvironmentConfiguration = parseEnvironmentConfiguration
 module.exports.validateTopLevelDirectiveYaml = validateTopLevelDirectiveYaml
+module.exports.loadFromJSONFileOrNull = loadFromJSONFileOrNull
 module.exports.validateDirectoryPath = validateDirectoryPath
 module.exports.scrubk8sMetadataMatch = scrubk8sMetadataMatch
 module.exports.validateFilePath = validateFilePath
