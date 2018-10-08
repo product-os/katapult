@@ -2,15 +2,7 @@
 
 const capitano = require('capitano')
 
-const _ = require('lodash')
-
-const deploySpec = require('../controllers/deploySpec')
-
-const validateEnvironmentConfiguration = require('../utils').validateEnvironmentConfiguration
-
-const deployAdapters = require('../controllers/deployAdapters/all')
-
-const deploySpecAdapters = require('../controllers/deploySpecAdapters/all')
+const deploy = require('../commands/deploy')
 
 const help = () => {
 	console.log('Usage: compose-merger [COMMANDS] [OPTIONS]')
@@ -36,7 +28,7 @@ capitano.command({
 })
 
 capitano.command({
-	signature: 'generate-deploy',
+	signature: 'deploy',
 	description: 'Generate Deploy Spec from environment configuration.',
 	options: [{
 		signature: 'configuration',
@@ -62,137 +54,15 @@ capitano.command({
 		signature: 'verbose',
 		alias: [ 'v' ],
 		boolean: true
-	}],
-	action: (params, options) => {
-		if (options.verbose) console.info(options)
-
-		const {
-			target,
-			configuration,
-			environment,
-			mode='defensive',
-			verbose=false,
-		} = options
-
-		// Validate and process environment info
-		return validateEnvironmentConfiguration(configuration, environment)
-			.then(([environmentObj, error]) => {
-				if (error) {
-					console.error(error)
-					process.exit(1)
-				}
-
-				if (target){
-					if (!_.has(deploySpecAdapters, target)){
-						console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
-						process.exit(1)
-					}
-					environmentObj=_.pick(environmentObj, [target, 'archive-store', 'version'])
-				}
-
-				return new deploySpec(
-					environment,
-					environmentObj,
-					configuration,
-					mode
-				).generate()
-			})
-			.then(errors => {
-				if (errors.length){
-					_.forEach(errors, error => {
-						console.error(error)
-					})
-					process.exit(1)
-				}
-				else{
-					console.log('Done')
-				}
-			})
-			.asCallback()
-	}
-})
-
-capitano.command({
-	signature: 'deploy',
-	description: 'Deploy a Deploy Spec.',
-	options: [{
-		signature: 'configuration',
-		parameter: 'configuration',
-		description: 'URI to deploy-template folder/repo',
-		alias: [ 'c' ],
-		required: true
 	}, {
-		signature: 'environment',
-		parameter: 'environment',
-		alias: [ 'e' ],
-		required: true
-	}, {
-		signature: 'mode',
-		parameter: 'mode',
-		alias: [ 'm' ]
-	}, {
-		signature: 'target',
-		parameter: 'target',
-		alias: [ 't' ],
-		required: true
-	}, {
-		signature: 'verbose',
-		alias: [ 'v' ],
+		signature: 'yes',
+		description: 'Deploy to deploy adapter',
+		alias: [ 'y' ],
 		boolean: true
 	}],
 	action: (params, options) => {
 		if (options.verbose) console.info(options)
-
-		const {
-			configuration,
-			environment,
-			mode='defensive',
-			target,
-			verbose=false,
-		} = options
-
-		return validateEnvironmentConfiguration(configuration, environment)
-			.then(([environmentObj, error]) => {
-				if (error) {
-					console.error(error)
-					process.exit(1)
-				}
-				// sync deploySpec
-				return new deploySpec(
-					environment,
-					environmentObj,
-					configuration,
-					mode
-				)
-					.generate()
-					.then(errors => {
-						if (errors.length){
-							_.forEach(errors, error => {
-								console.error(error)
-							})
-							process.exit(1)
-						}
-					})
-					.then(() => {
-						if (!_.has(deployAdapters, target)){
-							console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
-							process.exit(1)
-						}
-						return new deployAdapters[target](environment, environmentObj).run()
-					})
-			})
-			.then(errors => {
-				if (errors.length){
-					_.forEach(errors, error => {
-						console.error(error)
-					})
-					process.exit(1)
-				}
-				else{
-					console.log('Done')
-				}
-			})
-			.asCallback()
+		return deploy(options).asCallback()
 	}
 })
 
