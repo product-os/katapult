@@ -6,12 +6,13 @@ const deploySpecAdapters = require('./deploySpecAdapters/all')
 
 module.exports = class DeploySpec {
 
-	constructor(environmentName, environmentObj, basePath, mode) {
+	constructor(environmentName, environmentObj, basePath, keyframe, mode) {
 		this.mode = mode
 		this.targets = _.omit(environmentObj, ['version', 'archive-store', 'pubkey', 'test-target', 'test-image'])
 		this.version = environmentObj.version
 		this.environmentName = environmentName
 		this.basePath = basePath
+		this.keyframe = keyframe
 		this.archiveStore = environmentObj['archive-store']
 	}
 
@@ -28,6 +29,7 @@ module.exports = class DeploySpec {
 					this.archiveStore,
 					this.version,
 					this.environmentName,
+					this.keyframe,
 					target
 				)
 					.generate()

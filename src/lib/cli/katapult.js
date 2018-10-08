@@ -51,6 +51,11 @@ capitano.command({
 		parameter: 'mode',
 		alias: [ 'm' ]
 	}, {
+		signature: 'keyframe',
+		parameter: 'keyframe',
+		alias: [ 'k' ],
+		required: false
+	}, {
 		signature: 'verbose',
 		alias: [ 'v' ],
 		boolean: true
