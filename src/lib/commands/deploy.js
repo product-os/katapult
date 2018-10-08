@@ -2,6 +2,7 @@
 
 const _ = require('lodash')
 const Promise = require('bluebird')
+const path = require('path')
 const deploySpec = require('../controllers/deploySpec')
 const validateEnvironmentConfiguration = require('../utils').validateEnvironmentConfiguration
 const deployAdapters = require('../controllers/deployAdapters/all')
@@ -15,7 +16,7 @@ module.exports = (args) => {
 		environment,
 		mode='defensive',
 		yes=false,
-		keyframe,
+		keyframe=path.join(process.cwd(), 'keyframe.json'),
 		verbose=false
 	} = args
 
