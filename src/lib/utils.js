@@ -48,6 +48,9 @@ const loadFromJSONFileOrNull = (filePath) => {
 					return null
 				}
 				return loadFromJSONFile(filePath)
+			}).catch(() => {
+				// ToDo: refine
+				return null
 			})
 	}
 	return null

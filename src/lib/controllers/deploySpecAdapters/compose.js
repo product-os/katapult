@@ -15,6 +15,7 @@ module.exports = class generateDeploySpecFile {
 		this.target = target
 		this.templatePath = path.join(basePath, attrs.template)
 		this.configPath = path.join(basePath, attrs['config-store'])
+		this.buildComponents = _.get(attrs, 'build-components', [])
 		this.configManifestPath = path.join(basePath, environmentName, version, target, 'config-manifest.yml')
 		this.version = version
 		this.keyframe = keyframe
@@ -56,6 +57,10 @@ module.exports = class generateDeploySpecFile {
 										config[name+'-image'] = _.get(value, 'image')
 									})
 								}
+								_.forEach(this.buildComponents, (buildPath, name) =>{
+									config['build-' + name] = true
+									config[name + '-build-path'] = buildPath || path.join(process.cwd(), name)
+								})
 								let output = mustache.render(template, config)
 								let outputPath = path.join(
 									this.archiveStore,
