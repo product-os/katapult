@@ -10,13 +10,14 @@ const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator'
 const configManifest = require('../configManifest/configManifest')
 
 module.exports = class generateDeploySpecFile {
-	constructor(attrs, mode, basePath, archiveStore, version, environmentName, target) {
+	constructor(attrs, mode, basePath, archiveStore, version, environmentName, keyframe, target) {
 		this.mode = mode
 		this.target = target
 		this.templatePath = path.join(basePath, attrs.template)
 		this.configPath = path.join(basePath, attrs['config-store'])
 		this.configManifestPath = path.join(basePath, environmentName, version, target, 'config-manifest.yml')
 		this.version = version
+		this.keyframe = keyframe
 		this.archiveStore = path.join(archiveStore, environmentName)
 	}
 
@@ -50,6 +51,11 @@ module.exports = class generateDeploySpecFile {
 					else {
 						return readFileAsync(this.templatePath, 'utf8')
 							.then(template => {
+								if (this.keyframe && _.get(this.keyframe, 'components') ){
+									_.forEach(this.keyframe['components'], (value, name) =>{
+										config[name+'-image'] = _.get(value, 'image')
+									})
+								}
 								let output = mustache.render(template, config)
 								let outputPath = path.join(
 									this.archiveStore,

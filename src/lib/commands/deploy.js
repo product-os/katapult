@@ -1,14 +1,12 @@
 'use strict'
 
 const _ = require('lodash')
-
+const Promise = require('bluebird')
 const deploySpec = require('../controllers/deploySpec')
-
 const validateEnvironmentConfiguration = require('../utils').validateEnvironmentConfiguration
-
 const deployAdapters = require('../controllers/deployAdapters/all')
-
 const deploySpecAdapters = require('../controllers/deploySpecAdapters/all')
+const loadFromJSONFileOrNull = require('../utils').loadFromJSONFileOrNull
 
 module.exports = (args) => {
 	const {
@@ -17,6 +15,7 @@ module.exports = (args) => {
 		environment,
 		mode='defensive',
 		yes=false,
+		keyframe,
 		verbose=false
 	} = args
 
@@ -36,20 +35,24 @@ module.exports = (args) => {
 				environmentObj=_.pick(environmentObj, [target, 'archive-store', 'version'])
 			}
 
-			return new deploySpec(
-				environment,
-				environmentObj,
-				configuration,
-				mode
-			)
-				.generate()
-				.then(yes ? () => {
-					if (!_.has(deployAdapters, target)){
-						console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
-						process.exit(1)
-					}
-					return new deployAdapters[target](environment, environmentObj).run()
-				} : Promise.resolve())
+			return Promise.join(loadFromJSONFileOrNull(keyframe))
+				.then(([kf]) => {
+					return new deploySpec(
+						environment,
+						environmentObj,
+						configuration,
+						kf,
+						mode
+					)
+						.generate()
+						.then(yes ? () => {
+							if (!_.has(deployAdapters, target)){
+								console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
+								process.exit(1)
+							}
+							return new deployAdapters[target](environment, environmentObj).run()
+						} : Promise.resolve())
+				})
 		})
 		.then(errors => {
 			if (errors.length){
