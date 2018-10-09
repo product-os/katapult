@@ -5,6 +5,7 @@ const Promise = require('bluebird')
 const { readFileAsync, writeFileAsync, statAsync, renameAsync } = Promise.promisifyAll(require('fs'))
 const mvAsync = Promise.promisify(require('mv'))
 const execAsync = Promise.promisify(require('child_process').exec)
+const gitP = require('simple-git/promise')
 const yaml = require('yamljs')
 const path = require('path')
 
@@ -132,12 +133,42 @@ const parseEnvironmentConfiguration = ((configurationPath, environmentName) => {
 	})
 })
 
+const ensureRepoInPath = (repoURI, repoPath) => {
+	repoURI = repoURI.trim()
+	return statAsync(repoPath)
+		.then(stat => {
+			if (stat.isDirectory()) {
+				const repo = gitP(repoPath)
+				return repo.listRemote(['--get-url'])
+					.then((remote)=>{
+						// Validate remotes match
+						remote = remote.trim()
+						if( remote === repoURI ||
+							_.includes(remote, repoURI) && remote.replace(repoURI,'') === '.git' ||
+							_.includes(repoURI, remote) && repoURI.replace(remote,'') === '.git' ){
+							return true
+						}
+						else{
+							throw new Error('Git remote: ' + repoURI + ' doesn\'t match ' + repoPath + ' existing remote: ' + remote)
+						}
+					})
+			}
+			return gitP().clone(repoURI, repoPath)
+		}).catch((err) => {
+			if (err.code === 'ENOENT'){
+				return gitP().clone(repoURI, repoPath)
+			}
+			throw err
+		})
+}
+
 module.exports.validateEnvironmentConfiguration = validateEnvironmentConfiguration
 module.exports.parseEnvironmentConfiguration = parseEnvironmentConfiguration
 module.exports.validateTopLevelDirectiveYaml = validateTopLevelDirectiveYaml
 module.exports.loadFromJSONFileOrNull = loadFromJSONFileOrNull
 module.exports.validateDirectoryPath = validateDirectoryPath
 module.exports.scrubk8sMetadataMatch = scrubk8sMetadataMatch
+module.exports.ensureRepoInPath = ensureRepoInPath
 module.exports.validateFilePath = validateFilePath
 module.exports.renameFilesMatch = renameFilesMatch
 module.exports.scrubk8sMetadata = scrubk8sMetadata
