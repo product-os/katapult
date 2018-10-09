@@ -8,6 +8,7 @@ const configStore = require('../configStoreAdapters/all')['compose']
 const configValidator = require('../configValidator/configValidator')
 const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator')
 const configManifest = require('../configManifest/configManifest')
+const ensureRepoInPath = require('../../utils').ensureRepoInPath
 
 module.exports = class generateDeploySpecFile {
 	constructor(attrs, mode, basePath, archiveStore, version, environmentName, keyframe, target) {
@@ -57,21 +58,34 @@ module.exports = class generateDeploySpecFile {
 										config[name+'-image'] = _.get(value, 'image')
 									})
 								}
+								let promises = Promise.resolve()
 								_.forEach(this.buildComponents, (buildPath, name) =>{
+									buildPath = buildPath || path.join(process.cwd(), name)
 									config['build-' + name] = true
-									config[name + '-build-path'] = buildPath || path.join(process.cwd(), name)
-								})
-								let output = mustache.render(template, config)
-								let outputPath = path.join(
-									this.archiveStore,
-									this.version,
-									this.target,
-									path.basename(this.templatePath).replace('.tpl.', '.')
-								)
-								return ensureDirAsync(path.dirname(outputPath))
-									.then(() => {
-										return writeFileAsync(outputPath, output)
+									config[name + '-build-path'] = buildPath
+									promises = promises.then(()=>{
+										if (!_.get(this.keyframe['components'], name)){
+											return new Error('Build component: ' + name + ' not defined in keyframe')
+										}
+										if (!_.get(this.keyframe['components'], [name, 'repo'], '')) {
+											return new Error('Build component: ' + name + ' repo not defined in keyframe')
+										}
+										return ensureRepoInPath(_.get(this.keyframe['components'][name], 'repo', ''), buildPath)
 									})
+								})
+								return promises.then(()=>{
+									let output = mustache.render(template, config)
+									let outputPath = path.join(
+										this.archiveStore,
+										this.version,
+										this.target,
+										path.basename(this.templatePath).replace('.tpl.', '.')
+									)
+									return ensureDirAsync(path.dirname(outputPath))
+										.then(() => {
+											return writeFileAsync(outputPath, output)
+										})
+								})
 							})
 					}
 				})
