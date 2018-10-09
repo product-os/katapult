@@ -1,8 +1,8 @@
 'use strict'
 
 const capitano = require('capitano')
-
 const deploy = require('../commands/deploy')
+let _ = require('lodash')
 
 const help = () => {
 	console.log('Usage: compose-merger [COMMANDS] [OPTIONS]')
@@ -56,6 +56,19 @@ capitano.command({
 		alias: [ 'k' ],
 		required: false
 	}, {
+		signature: 'service-format',
+		parameter: 'format',
+		description: 'Service format for a component as: --service-format <component>=<format>. May be image or build',
+		alias: [ 'f' ],
+		required: false,
+		type: 'array'
+	}, {
+		signature: 'build-path',
+		parameter: 'path',
+		description: 'build path for a component as: --build-path <component>=<path>',
+		alias: [ 'b' ],
+		required: false
+	}, {
 		signature: 'verbose',
 		alias: [ 'v' ],
 		boolean: true
@@ -66,6 +79,7 @@ capitano.command({
 		boolean: true
 	}],
 	action: (params, options) => {
+		options = parseOptions(options)
 		if (options.verbose) console.info(options)
 		return deploy(options).asCallback()
 	}
@@ -83,3 +97,34 @@ capitano.run(process.argv, (err) => {
 		process.exit(1)
 	}
 })
+
+const parseOptions = (options) => {
+
+	// Parse 'service-format' as array
+	let serviceFormats = _.get(options, 'service-format')
+	if (typeof serviceFormats === 'string'){
+		serviceFormats = [serviceFormats]
+	}
+	// Parse 'build-path' as array
+	let buildPaths = _.get(options, 'build-path', [])
+	if (typeof buildPaths === 'string'){
+		buildPaths = [buildPaths]
+	}
+	// Convert buildPaths to obj
+	buildPaths = _.reduce(buildPaths.map((value) => {
+		return value.split('=')
+	}), (obj, val) => {
+		return _.merge(obj, {[val[0]]: val[1]})
+	}, {})
+	// Combine service-format and build-path parameters into buildComponents
+	let buildComponents = {}
+	_.forEach(serviceFormats, (value) => {
+		let [component, format] = value.split('=')
+		if (format === 'build'){
+			buildComponents[component] = _.get(buildPaths, component, null)
+		}
+	})
+
+	options['buildComponents'] = buildComponents
+	return options
+}
