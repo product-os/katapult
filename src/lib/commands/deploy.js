@@ -17,6 +17,7 @@ module.exports = (args) => {
 		mode='defensive',
 		yes=false,
 		keyframe=path.join(process.cwd(), 'keyframe.json'),
+		buildComponents,
 		verbose=false
 	} = args
 
@@ -43,7 +44,8 @@ module.exports = (args) => {
 						environmentObj,
 						configuration,
 						kf,
-						mode
+						mode,
+						buildComponents
 					)
 						.generate()
 						.then(yes ? () => {

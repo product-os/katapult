@@ -11,12 +11,12 @@ const configManifest = require('../configManifest/configManifest')
 const ensureRepoInPath = require('../../utils').ensureRepoInPath
 
 module.exports = class generateDeploySpecFile {
-	constructor(attrs, mode, basePath, archiveStore, version, environmentName, keyframe, target) {
+	constructor(attrs, mode, basePath, archiveStore, version, environmentName, keyframe, target, buildComponents) {
 		this.mode = mode
 		this.target = target
 		this.templatePath = path.join(basePath, attrs.template)
 		this.configPath = path.join(basePath, attrs['config-store'])
-		this.buildComponents = _.get(attrs, 'build-components', [])
+		this.buildComponents = buildComponents || _.get(attrs, 'build-components', [])
 		this.configManifestPath = path.join(basePath, environmentName, version, target, 'config-manifest.yml')
 		this.version = version
 		this.keyframe = keyframe
@@ -65,10 +65,10 @@ module.exports = class generateDeploySpecFile {
 									config[name + '-build-path'] = buildPath
 									promises = promises.then(()=>{
 										if (!_.get(this.keyframe['components'], name)){
-											return new Error('Build component: ' + name + ' not defined in keyframe')
+											throw new Error('Build component: ' + name + ' not defined in keyframe')
 										}
 										if (!_.get(this.keyframe['components'], [name, 'repo'], '')) {
-											return new Error('Build component: ' + name + ' repo not defined in keyframe')
+											throw new Error('Build component: ' + name + ' repo not defined in keyframe')
 										}
 										return ensureRepoInPath(_.get(this.keyframe['components'][name], 'repo', ''), buildPath)
 									})
