@@ -5,7 +5,7 @@ const deploy = require('../commands/deploy')
 let _ = require('lodash')
 
 const help = () => {
-	console.log('Usage: compose-merger [COMMANDS] [OPTIONS]')
+	console.log('Usage: katapult [COMMANDS] [OPTIONS]')
 	console.log('\nCommands:\n')
 
 	for (let command of capitano.state.commands) {
@@ -35,7 +35,7 @@ capitano.command({
 		parameter: 'configuration',
 		description: 'URI to deploy-template folder/repo',
 		alias: [ 'c' ],
-		required: true
+		required: false
 	}, {
 		signature: 'environment',
 		parameter: 'environment',
@@ -116,6 +116,11 @@ const parseOptions = (options) => {
 	}), (obj, val) => {
 		return _.merge(obj, {[val[0]]: val[1]})
 	}, {})
+	// Default configuration to deploy-templates
+	let configuration = _.get(options, 'configuration')
+	if (typeof configuration !== 'string'){
+		options['configuration'] = 'deploy-templates'
+	}
 	// Combine service-format and build-path parameters into buildComponents
 	let buildComponents = {}
 	_.forEach(serviceFormats, (value) => {
