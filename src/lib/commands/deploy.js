@@ -7,7 +7,7 @@ const deploySpec = require('../controllers/deploySpec')
 const validateEnvironmentConfiguration = require('../utils').validateEnvironmentConfiguration
 const deployAdapters = require('../controllers/deployAdapters/all')
 const deploySpecAdapters = require('../controllers/deploySpecAdapters/all')
-const loadFromJSONFileOrNull = require('../utils').loadFromJSONFileOrNull
+const unwrap = require('keyframe').unwrap
 
 module.exports = (args) => {
 	const {
@@ -16,7 +16,7 @@ module.exports = (args) => {
 		environment,
 		mode='defensive',
 		yes=false,
-		keyframe=path.join(process.cwd(), 'keyframe.json'),
+		keyframe=path.join(process.cwd(), 'keyframe.yaml'),
 		buildComponents,
 		verbose=false
 	} = args
@@ -37,8 +37,13 @@ module.exports = (args) => {
 				environmentObj=_.pick(environmentObj, [target, 'archive-store', 'version'])
 			}
 
-			return Promise.join(loadFromJSONFileOrNull(keyframe))
-				.then(([kf]) => {
+			return Promise.join()
+				.then( () => {
+					let kf = unwrap({'logLevel': 'info'}, keyframe)
+					kf = _.filter(_.get(kf,'consists_of',[]), (i) => {
+						return i.type === 'sw.containerized-application'
+					})
+					kf = _.mapValues(_.keyBy(kf, 'slug'), 'assets')
 					return new deploySpec(
 						environment,
 						environmentObj,

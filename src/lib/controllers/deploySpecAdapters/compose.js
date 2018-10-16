@@ -53,9 +53,9 @@ module.exports = class generateDeploySpecFile {
 					else {
 						return readFileAsync(this.templatePath, 'utf8')
 							.then(template => {
-								if (this.keyframe && _.get(this.keyframe, 'components') ){
-									_.forEach(this.keyframe['components'], (value, name) =>{
-										config[name+'-image'] = _.get(value, 'image')
+								if (this.keyframe){
+									_.forEach(this.keyframe, (value, name) => {
+										config[name+'-image'] = _.get(value, ['image', 'url'])
 									})
 								}
 								let promises = Promise.resolve()
@@ -64,13 +64,13 @@ module.exports = class generateDeploySpecFile {
 									config['build-' + name] = true
 									config[name + '-build-path'] = buildPath
 									promises = promises.then(()=>{
-										if (!_.get(this.keyframe['components'], name)){
+										if (!_.get(this.keyframe, name)){
 											throw new Error('Build component: ' + name + ' not defined in keyframe')
 										}
-										if (!_.get(this.keyframe['components'], [name, 'repo'], '')) {
+										if (!_.get(this.keyframe, [name, 'repo', 'url'], '')) {
 											throw new Error('Build component: ' + name + ' repo not defined in keyframe')
 										}
-										return ensureRepoInPath(_.get(this.keyframe['components'][name], 'repo', ''), buildPath)
+										return ensureRepoInPath(_.get(this.keyframe[name], ['repo', 'url'], ''), buildPath)
 									})
 								})
 								return promises.then(()=>{
