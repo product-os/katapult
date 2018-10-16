@@ -25,7 +25,7 @@ module.exports = (args) => {
 	return validateEnvironmentConfiguration(configuration, environment)
 		.then(([environmentObj, error]) => {
 			if (error) {
-				console.error(error)
+				console.error('Error validating environment configuration:', error)
 				process.exit(1)
 			}
 
