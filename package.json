@@ -22,6 +22,7 @@
   "dotenv": "~6",
   "fs-extra": "~7",
   "jsonschema": "~1",
+  "keyframe": "github:resin-io/keyframe-development#initial_cli",
   "lodash": "~4",
   "mkdirp": "~0.5",
   "mustache": "~2",
