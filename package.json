@@ -30,6 +30,7 @@
   "mv": "~2",
   "node-forge": "^0.7.6",
   "simple-git": "~1",
+  "tunnel-ssh": "~4",
   "yamljs": "~0.3"
  },
  "devDependencies": {
