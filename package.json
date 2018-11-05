@@ -19,6 +19,7 @@
   "@kubernetes/client-node": "~0.6",
   "bluebird": "~3",
   "capitano": "~1",
+  "dhparam": "~2",
   "dotenv": "~6",
   "fs-extra": "~7",
   "jsonschema": "~1",
