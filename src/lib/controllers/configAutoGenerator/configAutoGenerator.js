@@ -45,7 +45,8 @@ module.exports = class configAutoGenerator {
 				if (invalid){
 					promiseChain = promiseChain
 						.then(()=> {
-							return eval(formula)
+							console.log('Generating', name)
+							return eval(formula.split('\n').join(''))
 						})
 						.then(result => {
 							global[name] = result
