@@ -10,7 +10,10 @@ const {
 	GENERATE_CERT_CHAIN,
 	GENERATE_CHAIN,
 	GENERATE_PRIVATE_KEY,
-	GENERATE_PUBLIC_KEY
+	GENERATE_PUBLIC_KEY,
+	GENERATE_DH_PARAM,
+	base64decode,
+	base64
 } = require('./autoGeneratorPlugins/all')
 const { escape } = require('./filterFunctions')
 
@@ -42,7 +45,7 @@ module.exports = class configAutoGenerator {
 				if (invalid){
 					promiseChain = promiseChain
 						.then(()=> {
-							return eval(formula.split('\n').join(''))
+							return eval(formula)
 						})
 						.then(result => {
 							global[name] = result

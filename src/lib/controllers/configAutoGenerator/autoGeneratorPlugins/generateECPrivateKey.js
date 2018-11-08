@@ -1,5 +1,5 @@
 'use strict'
-'use strict'
+const crypto = require('crypto')
 
 module.exports = () => {
 	let ec = crypto.createECDH('prime256v1')
