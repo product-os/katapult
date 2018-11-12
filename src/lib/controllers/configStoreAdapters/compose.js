@@ -40,7 +40,8 @@ module.exports = class configStore {
 
 				})
 				return configString
-			}).then((configString) => {
+			})
+			.then((configString) => {
 				return writeFileAsync(this.configPath, configString)
 			})
 	}

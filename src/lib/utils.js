@@ -12,22 +12,18 @@ const path = require('path')
 const validateFilePath = (path) => {
 	return statAsync(path).then(stat => {
 		if (!stat.isFile()){
-			return 'Error: ' + path + ' is not a file'
+			throw new Error('Error: ' + path + ' is not a file')
 		}
-		return false
-	}).catch((err) => {
-		return err.message
+		return true
 	})
 }
 
 const validateDirectoryPath = (path) => {
 	return statAsync(path).then(stat => {
 		if (!stat.isDirectory()){
-			return 'Error: ' + path + ' is not a directory'
+			throw new Error('Error: ' + path + ' is not a directory')
 		}
-		return false
-	}).catch((err) => {
-		return err.message
+		return true
 	})
 }
 
@@ -63,10 +59,14 @@ const ymlString = (ymlObj) => {
 
 const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 	return loadFromFile(yamlPath).then(obj => {
-		if (!_.get(obj, name))return '\'' + name + '\' not defined in \'' + yamlPath +'\' \n Available options: ' + _.keys(obj)
-		return false
-	}).catch(() => {
-		return 'Error parsing \'' + yamlPath + '\''
+		if (!_.get(obj, name)){
+			throw new Error(
+				'Error parsing \'' + yamlPath + '\'\n' +
+				'\'' + name + '\' not defined in \'' + yamlPath +
+				'\' \n Available options: ' + _.keys(obj)
+			)
+		}
+		return true
 	})
 }
 
@@ -76,9 +76,6 @@ const moveFilesMatch = (pattern, dest) => {
 			return mvAsync(filePath, path.join(dest, filePath))
 		})
 	})
-		.catch(error => {
-			return error
-		})
 }
 
 const renameFilesMatch = (pathPattern, pattern, replacement) => {
@@ -87,9 +84,6 @@ const renameFilesMatch = (pathPattern, pattern, replacement) => {
 			return renameAsync(filePath, _.replace(filePath, pattern, replacement))
 		})
 	})
-		.catch(error => {
-			return error
-		})
 }
 
 const scrubk8sMetadata = (annotationPrefix, manifestPath) =>{
@@ -109,28 +103,24 @@ const scrubk8sMetadataMatch = (filesPattern, annotationPrefix) => {
 			return scrubk8sMetadata(annotationPrefix, manifestPath)
 		})
 	})
-		.catch(error => {
-			return error
-		})
 }
 
 const validateEnvironmentConfiguration = (configurationPath, environment) => {
 	// TODO: git validation.
 	return validateDirectoryPath(configurationPath)
-		.then((error) => {
-			if (error) return [null, error]
+		.then(() => {
 			return validateTopLevelDirectiveYaml(environment, path.join(configurationPath, 'environments.yml'))
-				.then(error => {
-					if (error) return [null, error]
-					else return parseEnvironmentConfiguration(configurationPath, environment)
+				.then(() => {
+					return parseEnvironmentConfiguration(configurationPath, environment)
 				})
 		})
 }
 
 const parseEnvironmentConfiguration = ((configurationPath, environmentName) => {
-	return loadFromFile(path.join(configurationPath, 'environments.yml')).then(conf => {
-		return [_.get(conf, environmentName), null]
-	})
+	return loadFromFile(path.join(configurationPath, 'environments.yml'))
+		.then(conf => {
+			return _.get(conf, environmentName)
+		})
 })
 
 const ensureRepoInPath = (repoURI, repoPath) => {

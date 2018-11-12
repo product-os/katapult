@@ -17,9 +17,5 @@ module.exports = class deployment {
 	run() {
 		console.log('Deploying ',this.deploySpecBasePath + '/docker-compose.yml')
 		return execAsync(`docker-compose -f ${this.deploySpecBasePath}/docker-compose.yml up -d `)
-			.catch(error => {
-				console.error(error.cause)
-				process.exit(1)
-			})
 	}
 }

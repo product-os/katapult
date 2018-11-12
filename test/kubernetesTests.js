@@ -1,5 +1,4 @@
 'use strict'
-const templateGenerator = require('../src/lib/controllers/deploySpec')
 const path = require('path')
 const Promise = require('bluebird')
 const { assert } = require('chai')

@@ -17,9 +17,5 @@ module.exports = class deployment {
 
 	run() {
 		return execAsync(`kubectl --kubeconfig=${this.kubeconfigPath} apply -f ${this.deploySpecBasePath}`)
-			.catch(error => {
-				console.error(error.cause)
-				process.exit(1)
-			})
 	}
 }

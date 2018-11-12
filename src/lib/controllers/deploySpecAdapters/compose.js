@@ -8,7 +8,7 @@ const configStore = require('../configStoreAdapters/all')['compose']
 const configValidator = require('../configValidator/configValidator')
 const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator')
 const configManifest = require('../configManifest/configManifest')
-const ensureRepoInPath = require('../../utils').ensureRepoInPath
+const { ensureRepoInPath } = require('../../utils')
 
 module.exports = class generateDeploySpecFile {
 	constructor(attrs, mode, basePath, archiveStore, version, environmentName, keyframe, target, buildComponents) {
@@ -44,11 +44,11 @@ module.exports = class generateDeploySpecFile {
 			.then(([config, cManifest]) => {
 				return new configValidator(config, cManifest).validate().then((errors) => {
 					if (errors.length){
-						let errorList = []
+						let errorString = ''
 						_.forEach(errors, err => {
-							errorList.push(err.stack)
+							errorString += err.stack + '\n'
 						})
-						return errorList
+						throw new Error(errorString)
 					}
 					else {
 						return readFileAsync(this.templatePath, 'utf8')
@@ -89,10 +89,6 @@ module.exports = class generateDeploySpecFile {
 							})
 					}
 				})
-					.catch(err => {
-						console.error(err)
-						return err.message
-					})
 			})
 	}
 }

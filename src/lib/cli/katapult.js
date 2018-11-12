@@ -5,7 +5,7 @@ const deploy = require('../commands/deploy')
 let _ = require('lodash')
 
 const help = () => {
-	console.log('Usage: katapult [COMMANDS] [OPTIONS]')
+	console.log('Usage: katapult [COMMAND] [OPTIONS]')
 	console.log('\nCommands:\n')
 
 	for (let command of capitano.state.commands) {
@@ -29,7 +29,7 @@ capitano.command({
 
 capitano.command({
 	signature: 'deploy',
-	description: 'Generate Deploy Spec from environment configuration.',
+	description: 'Generate Deploy Spec from environment configuration',
 	options: [{
 		signature: 'configuration',
 		parameter: 'configuration',

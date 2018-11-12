@@ -4,10 +4,10 @@ const _ = require('lodash')
 const Promise = require('bluebird')
 const path = require('path')
 const deploySpec = require('../controllers/deploySpec')
-const validateEnvironmentConfiguration = require('../utils').validateEnvironmentConfiguration
+const { validateEnvironmentConfiguration } = require('../utils')
 const deployAdapters = require('../controllers/deployAdapters/all')
 const deploySpecAdapters = require('../controllers/deploySpecAdapters/all')
-const loadFromJSONFileOrNull = require('../utils').loadFromJSONFileOrNull
+const { loadFromJSONFileOrNull } = require('../utils')
 
 module.exports = (args) => {
 	const {
@@ -23,18 +23,13 @@ module.exports = (args) => {
 
 	// Validate and process environment info
 	return validateEnvironmentConfiguration(configuration, environment)
-		.then(([environmentObj, error]) => {
-			if (error) {
-				console.error('Error validating environment configuration:', error)
-				process.exit(1)
-			}
+		.then((environmentObj) => {
 
 			if (target){
 				if (!_.has(deploySpecAdapters, target)){
-					console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
-					process.exit(1)
+					throw 'Target not implemented. \nAvailable options: ' + String(_.keys(deployAdapters))
 				}
-				environmentObj=_.pick(environmentObj, [target, 'archive-store', 'version'])
+				environmentObj = _.pick(environmentObj, [target, 'archive-store', 'version'])
 			}
 
 			return Promise.join(loadFromJSONFileOrNull(keyframe))
@@ -49,23 +44,14 @@ module.exports = (args) => {
 					)
 						.generate()
 						.then(yes ? () => {
-							if (!_.has(deployAdapters, target)){
-								console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
-								process.exit(1)
-							}
 							return new deployAdapters[target](environment, environmentObj).run()
 						} : Promise.resolve())
 				})
+		}).catch(error => {
+			console.error(error.message)
+			process.exit(1)
 		})
-		.then(errors => {
-			if (errors.length){
-				_.forEach(errors, error => {
-					console.error(error)
-				})
-				process.exit(1)
-			}
-			else{
-				console.log('Done')
-			}
+		.then(()=> {
+			console.log('Done...')
 		})
 }

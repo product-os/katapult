@@ -1,6 +1,5 @@
 'use strict'
 const { validateFilePath, validateDirectoryPath } = require('../src/lib/utils')
-const templateGenerator = require('../src/lib/controllers/deploySpec')
 const deploySpec = require('../src/lib/controllers/deploySpec')
 const { assertFilesEqual } = require('./testUtils')
 const Promise = require('bluebird')

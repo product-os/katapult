@@ -19,7 +19,6 @@ module.exports = class DeploySpec {
 
 	generate() {
 		let promises = []
-		let errors = []
 
 		_.forEach(this.targets, (attrs, target) => {
 			promises.push(
@@ -35,16 +34,8 @@ module.exports = class DeploySpec {
 					this.buildComponents
 				)
 					.generate()
-					.then( error => {
-						if (error instanceof Array){
-							errors = errors.concat(error)
-						}
-						else if (error) errors.push(error)
-					})
 			)
 		})
-		return Promise.all(promises).then(() => {
-			return _.without(errors, undefined)
-		})
+		return Promise.all(promises)
 	}
 }

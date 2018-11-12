@@ -41,18 +41,17 @@ module.exports = class generateDeploySpecFile {
 			})
 			.then(([config, cManifest]) => {
 				return new configValidator(config, cManifest).validate().then((errors) => {
-					if (errors.length) {
-						let errorList = []
+					if (errors.length){
+						let errorString = ''
 						_.forEach(errors, err => {
-							errorList.push(err.stack)
+							errorString += err.stack + '\n'
 						})
-						return errorList
+						throw new Error(errorString)
 					}
 					else {
 						return readdirAsync(this.templatePath)
 							.then((filenames) => {
 								let promises = []
-								let errors = []
 
 								_.forEach(filenames, templateFileName => {
 									promises.push(
@@ -72,15 +71,10 @@ module.exports = class generateDeploySpecFile {
 											})
 									)
 								})
-								return Promise.all(promises).then(() => {
-									return _.without(errors, undefined)
-								})
+								return Promise.all(promises)
 							})
 					}
 				})
-			})
-			.catch(err => {
-				return err.message
 			})
 	}
 }
