@@ -4,7 +4,7 @@ const _ = require('lodash')
 const forge = require('node-forge')
 const Promise = require('bluebird')
 const pki = Promise.promisifyAll(forge.pki)
-const generatePublicKey = require('./generatePublicKey')
+const generatePublicKey = require('./public-key')
 
 /**
  * @param attributes: Attribute object with the following properties:

@@ -1,9 +1,8 @@
 'use strict'
-const { validateFilePath, validateDirectoryPath } = require('../src/lib/utils')
-const deploySpec = require('../src/lib/controllers/deploySpec')
-const { assertFilesEqual } = require('./testUtils')
+const path = require('path')
 const Promise = require('bluebird')
 const { assert } = require('chai')
+const assertFilesEqual = require('./utils').assertFilesEqual
 const mkdirAsync = Promise.promisify(require('fs').mkdir)
+const readdirAsync = Promise.promisify(require('fs').readdir)
 const execAsync = Promise.promisify(require('child_process').exec)
-

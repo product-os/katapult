@@ -2,7 +2,7 @@
 
 const _ = require('lodash')
 const forge = require('node-forge')
-const generatePublicKey = require('./generatePublicKey')
+const generatePublicKey = require('./public-key')
 
 /**
  *

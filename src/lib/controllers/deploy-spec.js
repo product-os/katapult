@@ -2,7 +2,7 @@
 
 const _ = require('lodash')
 const Promise = require('bluebird')
-const deploySpecAdapters = require('./deploySpecAdapters/all')
+const deploySpecAdapters = require('./deploy-spec-adapters/all')
 
 module.exports = class DeploySpec {
 

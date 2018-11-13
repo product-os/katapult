@@ -11,11 +11,9 @@ const {
 	GENERATE_CHAIN,
 	GENERATE_PRIVATE_KEY,
 	GENERATE_PUBLIC_KEY,
-	GENERATE_DH_PARAM,
-	base64decode,
-	base64
-} = require('./autoGeneratorPlugins/all')
-const { escape } = require('./filterFunctions')
+	GENERATE_DH_PARAM
+} = require('./plugins/all')
+const { escape, base64decode, base64 } = require('./filter-functions')
 
 module.exports = class configAutoGenerator {
 	constructor(config, configManifest) {

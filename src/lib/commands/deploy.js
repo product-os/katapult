@@ -3,10 +3,10 @@
 const _ = require('lodash')
 const Promise = require('bluebird')
 const path = require('path')
-const deploySpec = require('../controllers/deploySpec')
+const deploySpec = require('../controllers/deploy-spec')
 const { validateEnvironmentConfiguration } = require('../utils')
-const deployAdapters = require('../controllers/deployAdapters/all')
-const deploySpecAdapters = require('../controllers/deploySpecAdapters/all')
+const deployAdapters = require('../controllers/deploy-adapters/all')
+const deploySpecAdapters = require('../controllers/deploy-spec-adapters/all')
 const { loadFromJSONFileOrNull } = require('../utils')
 
 module.exports = (args) => {

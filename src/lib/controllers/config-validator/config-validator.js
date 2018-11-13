@@ -1,6 +1,6 @@
 'use strict'
 const Validator = require('jsonschema').Validator
-const validationFormats = require('./validationFormats/all')
+const validationFormats = require('./validation-formats/all')
 const _ = require('lodash')
 
 
@@ -17,7 +17,7 @@ module.exports = class configValidator {
 				return configValidator.addFormatValidationRules(this.configManifest)
 			})
 			.then(() => {
-				// adapt config value types, according to configManifest, for validation.
+				// adapt config value types, according to config-manifest, for validation.
 				_.forEach(this.config, (value, name) => {
 					if (_.has(this.configManifest.properties, name)){
 						if (this.configManifest.properties[name].type === 'number'){

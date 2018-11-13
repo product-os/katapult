@@ -4,10 +4,10 @@ const { readFileAsync, writeFileAsync, ensureDirAsync } = Promise.promisifyAll(r
 const mustache = require('mustache')
 const path = require('path')
 const _ = require('lodash')
-const configStore = require('../configStoreAdapters/all')['compose']
-const configValidator = require('../configValidator/configValidator')
-const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator')
-const configManifest = require('../configManifest/configManifest')
+const configStore = require('../config-store-adapters/all')['compose']
+const configValidator = require('../config-validator/config-validator')
+const configAutoGenerator = require('../config-auto-generator/auto-generator')
+const configManifest = require('../config-manifest/config-manifest')
 const { ensureRepoInPath } = require('../../utils')
 
 module.exports = class generateDeploySpecFile {

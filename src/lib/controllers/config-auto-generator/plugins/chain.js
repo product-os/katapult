@@ -1,7 +1,7 @@
 'use strict'
 
-const generateCA = require('./generateCACert')
-const generateCert = require('./generateCert')
+const generateCA = require('./ca-cert')
+const generateCert = require('./cert')
 
 /**
  * @param attributes: Attribute object with the following properties:

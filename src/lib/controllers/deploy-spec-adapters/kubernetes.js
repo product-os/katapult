@@ -4,10 +4,10 @@ const { readFileAsync, readdirAsync, writeFileAsync, ensureDirAsync } = Promise.
 const mustache = require('mustache')
 const path = require('path')
 const _ = require('lodash')
-const configStore = require('../configStoreAdapters/all')['kubernetes']
-const configValidator = require('../configValidator/configValidator')
-const configAutoGenerator = require('../configAutoGenerator/configAutoGenerator')
-const configManifest = require('../configManifest/configManifest')
+const configStore = require('../config-store-adapters/all')['kubernetes']
+const configValidator = require('../config-validator/config-validator')
+const configAutoGenerator = require('../config-auto-generator/auto-generator')
+const configManifest = require('../config-manifest/config-manifest')
 
 module.exports = class generateDeploySpecFile {
 

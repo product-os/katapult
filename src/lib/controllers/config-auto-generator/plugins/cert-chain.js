@@ -1,7 +1,7 @@
 'use strict'
 
 const Promise = require('bluebird')
-const generateCert = require('./generateCert')
+const generateCert = require('./cert')
 
 /**
  * @param attributes: Attribute object with the following properties:
