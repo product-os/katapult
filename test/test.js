@@ -6,4 +6,3 @@ const Promise = require('bluebird')
 const { assert } = require('chai')
 const mkdirAsync = Promise.promisify(require('fs').mkdir)
 const execAsync = Promise.promisify(require('child_process').exec)
-

@@ -1,11 +1,7 @@
 'use strict'
 
 const lint = require('mocha-eslint')
-
-const paths = [
-	'src',
-	'bin/katapult'
-]
+const paths = ['src', 'bin/katapult']
 
 const options = {
 	formatter: 'compact',
@@ -14,7 +10,7 @@ const options = {
 	slow: 1000,
 	strict: true,
 	contextName: 'eslint',
-};
+}
 
 // Run the tests
 lint(paths, options)
