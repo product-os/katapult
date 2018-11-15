@@ -2,22 +2,35 @@
 
 const _ = require('lodash')
 const Promise = require('bluebird')
-const deploySpecAdapters = require('./deploySpecAdapters/all')
+const deploySpecAdapters = require('./deploy-spec-adapters/all')
 
 module.exports = class DeploySpec {
-
-	constructor(environmentName, environmentObj, basePath, mode) {
+	constructor(
+		environmentName,
+		environmentObj,
+		basePath,
+		keyframe,
+		mode,
+		buildComponents,
+	) {
 		this.mode = mode
-		this.targets = _.omit(environmentObj, ['version', 'archive-store', 'pubkey', 'test-target', 'test-image'])
+		this.targets = _.omit(environmentObj, [
+			'version',
+			'archive-store',
+			'pubkey',
+			'test-target',
+			'test-image',
+		])
 		this.version = environmentObj.version
 		this.environmentName = environmentName
 		this.basePath = basePath
+		this.keyframe = keyframe
+		this.buildComponents = buildComponents
 		this.archiveStore = environmentObj['archive-store']
 	}
 
 	generate() {
 		let promises = []
-		let errors = []
 
 		_.forEach(this.targets, (attrs, target) => {
 			promises.push(
@@ -28,19 +41,12 @@ module.exports = class DeploySpec {
 					this.archiveStore,
 					this.version,
 					this.environmentName,
-					target
-				)
-					.generate()
-					.then( error => {
-						if (error instanceof Array){
-							errors = errors.concat(error)
-						}
-						else if (error) errors.push(error)
-					})
+					this.keyframe,
+					target,
+					this.buildComponents,
+				).generate(),
 			)
 		})
-		return Promise.all(promises).then(() => {
-			return _.without(errors, undefined)
-		})
+		return Promise.all(promises)
 	}
 }
