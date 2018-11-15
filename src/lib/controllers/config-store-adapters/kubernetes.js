@@ -1,16 +1,67 @@
 'use strict'
-const k8s = require('@kubernetes/client-node')
+const { config, Client } = require('kubernetes-client')
+const Promise = require('bluebird')
 const _ = require('lodash')
 
 module.exports = class ConfigStore {
 	constructor(kubeconfigPath, namespace) {
-		this.kubeconfigPath = kubeconfigPath
+		let cfg = config.fromKubeconfig(kubeconfigPath)
 		this.namespace = namespace
-		this.k8sAPI = k8s.Config.fromFile(this.kubeconfigPath)
+		this.client = new Client({ config: cfg })
+	}
+
+	listSecrets() {
+		return this.client.loadSpec().then(() => {
+			return this.client.apis.v1.namespaces(this.namespace).secrets.get()
+		})
+	}
+
+	secretExists(secretName) {
+		return this.client.loadSpec().then(() => {
+			return this.client.apis.v1
+				.namespaces(this.namespace)
+				.secrets.get()
+				.then(secrets => {
+					return (
+						_.filter(secrets.body.items, { metadata: { name: secretName } })
+							.length > 0
+					)
+				})
+		})
+	}
+
+	deleteSecret(secretName) {
+		return this.secretExists(secretName).then(exists => {
+			if (exists) {
+				return this.client.apis.v1
+					.namespaces(this.namespace)
+					.secrets(secretName)
+					.delete()
+			}
+		})
+	}
+
+	updateSecret(k8sSecretName, name, value) {
+		let manifest = {
+			APIVersion: 'v1',
+			Kind: 'Secret',
+			metadata: {
+				name: k8sSecretName,
+			},
+			type: 'Opaque',
+			data: {
+				[name]: Buffer.from(value).toString('base64'),
+			},
+		}
+		return this.deleteSecret(k8sSecretName).then(() => {
+			return this.client.apis.v1
+				.namespaces(this.namespace)
+				.secrets.post({ body: manifest })
+		})
 	}
 
 	getConfig() {
-		return this.k8sAPI.listNamespacedSecret(this.namespace).then(res => {
+		return this.listSecrets().then(res => {
 			let ret = {}
 			_.forEach(res.body.items, secret => {
 				if (
@@ -26,33 +77,16 @@ module.exports = class ConfigStore {
 			})
 			return ret
 		})
+		return ret
 	}
 
 	update(envvars) {
+		let promises = []
 		_.forEach(envvars, pair => {
 			let [name, value] = pair
 			let k8sSecretName = name.toLowerCase().replace(/_/g, '-')
-			let secretObj = {
-				APIVersion: 'v1',
-				Kind: 'Secret',
-				metadata: {
-					name: k8sSecretName,
-				},
-				type: 'Opaque',
-				data: {
-					[name]: Buffer.from(value).toString('base64'),
-				},
-			}
-
-			return this.k8sAPI
-				.deleteNamespacedSecret(k8sSecretName, this.namespace, {})
-				.catch(e => {
-					if (e.body.reason !== 'NotFound') throw e
-				})
-				.finally(() => {
-					return this.k8sAPI.createNamespacedSecret(this.namespace, secretObj)
-				})
+			promises.push(this.updateSecret(k8sSecretName, name, value))
 		})
-		return envvars
+		return Promise.all(promises).return(envvars)
 	}
 }
