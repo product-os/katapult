@@ -9,49 +9,60 @@ const deployAdapters = require('../controllers/deploy-adapters/all')
 const deploySpecAdapters = require('../controllers/deploy-spec-adapters/all')
 const { loadFromJSONFileOrNull } = require('../utils')
 
-module.exports = (args) => {
+module.exports = args => {
 	const {
 		target,
 		configuration,
 		environment,
-		mode='defensive',
-		yes=false,
-		keyframe=path.join(process.cwd(), 'keyframe.json'),
+		mode = 'defensive',
+		yes = false,
+		keyframe = path.join(process.cwd(), 'keyframe.json'),
 		buildComponents,
-		verbose=false
+		verbose = false,
 	} = args
 
 	// Validate and process environment info
 	return validateEnvironmentConfiguration(configuration, environment)
-		.then((environmentObj) => {
-
-			if (target){
-				if (!_.has(deploySpecAdapters, target)){
-					throw 'Target not implemented. \nAvailable options: ' + String(_.keys(deployAdapters))
+		.then(environmentObj => {
+			if (target) {
+				if (!_.has(deploySpecAdapters, target)) {
+					throw new Error(
+						'Target not implemented. \nAvailable options: ' +
+							String(_.keys(deployAdapters)),
+					)
 				}
-				environmentObj = _.pick(environmentObj, [target, 'archive-store', 'version'])
+				environmentObj = _.pick(environmentObj, [
+					target,
+					'archive-store',
+					'version',
+				])
 			}
 
-			return Promise.join(loadFromJSONFileOrNull(keyframe))
-				.then(([kf]) => {
-					return new deploySpec(
-						environment,
-						environmentObj,
-						configuration,
-						kf,
-						mode,
-						buildComponents
-					)
-						.generate()
-						.then(yes ? () => {
-							return new deployAdapters[target](environment, environmentObj).run()
-						} : Promise.resolve())
-				})
-		}).catch(error => {
+			return loadFromJSONFileOrNull(keyframe).then(kf => {
+				return new deploySpec(
+					environment,
+					environmentObj,
+					configuration,
+					kf,
+					mode,
+					buildComponents,
+				)
+					.generate()
+					.then(() => {
+						if (yes) {
+							return new deployAdapters[target](
+								environment,
+								environmentObj,
+							).run()
+						}
+					})
+			})
+		})
+		.catch(error => {
 			console.error(error.message)
 			process.exit(1)
 		})
-		.then(()=> {
+		.then(() => {
 			console.log('Done...')
 		})
 }

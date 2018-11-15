@@ -28,8 +28,7 @@ const generatePublicKey = require('./public-key')
  *
  * 	@returns {string} Certificate PEM format string.
  */
-let generateCert = (attributes) => {
-
+const generateCert = attributes => {
 	const {
 		certAttrs,
 		caCertPEM,
@@ -37,7 +36,7 @@ let generateCert = (attributes) => {
 		altDomains,
 		validFrom,
 		validTo,
-		privateKeyPEM
+		privateKeyPEM,
 	} = attributes
 
 	// reformat caAttrs to list.
@@ -46,16 +45,16 @@ let generateCert = (attributes) => {
 		if (value) {
 			subjectAttrs.push({
 				shortName: key,
-				value: value
+				value: value,
 			})
 		}
 	})
 	// reformat altDomains to altNames list.
 	let altNames = []
-	_.forEach(altDomains, (domain) => {
+	_.forEach(altDomains, domain => {
 		altNames.push({
 			type: 2, // DNS
-			value: domain
+			value: domain,
 		})
 	})
 	let caCert = pki.certificateFromPem(caCertPEM)
@@ -68,19 +67,23 @@ let generateCert = (attributes) => {
 	cert.validity.notAfter = new Date(validTo)
 	cert.setSubject(subjectAttrs)
 	cert.setIssuer(caCert.subject.attributes)
-	cert.setExtensions([{
-		name: 'basicConstraints',
-		cA: false
-	}, {
-		name: 'keyUsage',
-		digitalSignature: true,
-		nonRepudiation: true,
-		keyEncipherment: true,
-		dataEncipherment: true
-	}, {
-		name: 'subjectAltName',
-		altNames: altNames
-	}])
+	cert.setExtensions([
+		{
+			name: 'basicConstraints',
+			cA: false,
+		},
+		{
+			name: 'keyUsage',
+			digitalSignature: true,
+			nonRepudiation: true,
+			keyEncipherment: true,
+			dataEncipherment: true,
+		},
+		{
+			name: 'subjectAltName',
+			altNames: altNames,
+		},
+	])
 	cert.sign(caPK, forge.md.sha256.create())
 	return Buffer.from(forge.pki.certificateToPem(cert)).toString()
 }

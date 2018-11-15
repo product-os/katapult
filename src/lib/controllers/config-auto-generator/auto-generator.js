@@ -11,11 +11,11 @@ const {
 	GENERATE_CHAIN,
 	GENERATE_PRIVATE_KEY,
 	GENERATE_PUBLIC_KEY,
-	GENERATE_DH_PARAM
+	GENERATE_DH_PARAM,
 } = require('./plugins/all')
 const { escape, base64decode, base64 } = require('./filter-functions')
 
-module.exports = class configAutoGenerator {
+module.exports = class ConfigAutoGenerator {
 	constructor(config, configManifest) {
 		this.config = config
 		this.configManifest = configManifest
@@ -27,22 +27,23 @@ module.exports = class configAutoGenerator {
 		let promiseChain = Promise.resolve()
 		_.forEach(this.configManifest.properties, (value, name) => {
 			let formula = _.get(value, ['default', 'eval'])
-			if (formula){
+			if (formula) {
 				let invalid =
 					(_.has(this.config, name) || _.get(value, 'required')) &&
 					validator.validate(
 						{
-							[name]: this.config[name]
+							[name]: this.config[name],
 						},
 						{
-							'type': 'object',
-							'properties': {[name]: value},
-							'required': [name]
-						}).errors.length
+							type: 'object',
+							properties: { [name]: value },
+							required: [name],
+						},
+					).errors.length
 
-				if (invalid){
+				if (invalid) {
 					promiseChain = promiseChain
-						.then(()=> {
+						.then(() => {
 							console.log('Generating', name)
 							return eval(formula.split('\n').join(''))
 						})

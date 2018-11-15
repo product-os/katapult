@@ -3,8 +3,7 @@ const Validator = require('jsonschema').Validator
 const validationFormats = require('./validation-formats/all')
 const _ = require('lodash')
 
-
-module.exports = class configValidator {
+module.exports = class ConfigValidator {
 	constructor(config, configManifest) {
 		this.config = config
 		this.configManifest = configManifest
@@ -12,15 +11,13 @@ module.exports = class configValidator {
 	}
 
 	validate() {
-		return Promise.resolve()
-			.then(() => {
-				return configValidator.addFormatValidationRules(this.configManifest)
-			})
+		return Promise.resolve(this.configManifest)
+			.then(ConfigValidator.addFormatValidationRules)
 			.then(() => {
 				// adapt config value types, according to config-manifest, for validation.
 				_.forEach(this.config, (value, name) => {
-					if (_.has(this.configManifest.properties, name)){
-						if (this.configManifest.properties[name].type === 'number'){
+					if (_.has(this.configManifest.properties, name)) {
+						if (this.configManifest.properties[name].type === 'number') {
 							this.config[name] = parseInt(value)
 						}
 					}
@@ -31,8 +28,12 @@ module.exports = class configValidator {
 
 	static addFormatValidationRules(configManifest) {
 		_.forEach(configManifest.properties, (value, name) => {
-			if (_.get(value, 'format')){
-				_.set(configManifest, ['properties', name, 'pattern'], validationFormats[value.format])
+			if (_.get(value, 'format')) {
+				_.set(
+					configManifest,
+					['properties', name, 'pattern'],
+					validationFormats[value.format],
+				)
 			}
 		})
 		return configManifest

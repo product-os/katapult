@@ -25,15 +25,11 @@ const generateCert = require('./cert')
  * 	bits: Integer. Defaults to 2048. RSA bits for generated key.
  * 	@returns {Promise<*String>} CertificateChainPEM, base64 encoded
  */
-let generateCertChain = (attributes) => {
-	const {
-		caCertPEM,
-		privateKeyPEM
-	} = attributes
-	return generateCert(attributes)
-		.then((certPEM) => {
-			return certPEM+caCertPEM+privateKeyPEM
-		})
+const generateCertChain = attributes => {
+	const { caCertPEM, privateKeyPEM } = attributes
+	return generateCert(attributes).then(certPEM => {
+		return certPEM + caCertPEM + privateKeyPEM
+	})
 }
 
 module.exports = generateCertChain

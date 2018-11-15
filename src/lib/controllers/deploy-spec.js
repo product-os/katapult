@@ -5,10 +5,22 @@ const Promise = require('bluebird')
 const deploySpecAdapters = require('./deploy-spec-adapters/all')
 
 module.exports = class DeploySpec {
-
-	constructor(environmentName, environmentObj, basePath, keyframe, mode, buildComponents) {
+	constructor(
+		environmentName,
+		environmentObj,
+		basePath,
+		keyframe,
+		mode,
+		buildComponents,
+	) {
 		this.mode = mode
-		this.targets = _.omit(environmentObj, ['version', 'archive-store', 'pubkey', 'test-target', 'test-image'])
+		this.targets = _.omit(environmentObj, [
+			'version',
+			'archive-store',
+			'pubkey',
+			'test-target',
+			'test-image',
+		])
 		this.version = environmentObj.version
 		this.environmentName = environmentName
 		this.basePath = basePath
@@ -31,9 +43,8 @@ module.exports = class DeploySpec {
 					this.environmentName,
 					this.keyframe,
 					target,
-					this.buildComponents
-				)
-					.generate()
+					this.buildComponents,
+				).generate(),
 			)
 		})
 		return Promise.all(promises)

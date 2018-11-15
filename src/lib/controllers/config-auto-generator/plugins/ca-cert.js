@@ -23,21 +23,21 @@ const generatePublicKey = require('./public-key')
  * @returns {string} CA certificate PEM format string.
  */
 
-let generateCACert = (attributes) => {
+const generateCACert = attributes => {
 	const {
 		caAttrs,
 		validFrom,
 		validTo,
-		caPrivateKeyPEM: caPrivateKeyPEM
+		caPrivateKeyPEM: caPrivateKeyPEM,
 	} = attributes
 
 	// reformat caAttrs to list.
 	let attrs = []
-	_.forEach(caAttrs, (value, key)=>{
-		if(value) {
+	_.forEach(caAttrs, (value, key) => {
+		if (value) {
 			attrs.push({
 				shortName: key,
-				value: value
+				value: value,
 			})
 		}
 	})
@@ -52,17 +52,20 @@ let generateCACert = (attributes) => {
 
 	caCert.setSubject(attrs)
 	caCert.setIssuer(attrs)
-	caCert.setExtensions([{
-		name: 'basicConstraints',
-		cA: true
-	}, {
-		name: 'keyUsage',
-		keyCertSign: true,
-		digitalSignature: true,
-		nonRepudiation: true,
-		keyEncipherment: true,
-		dataEncipherment: true
-	}])
+	caCert.setExtensions([
+		{
+			name: 'basicConstraints',
+			cA: true,
+		},
+		{
+			name: 'keyUsage',
+			keyCertSign: true,
+			digitalSignature: true,
+			nonRepudiation: true,
+			keyEncipherment: true,
+			dataEncipherment: true,
+		},
+	])
 	caCert.sign(privateKey, forge.md.sha256.create())
 	return Buffer.from(forge.pki.certificateToPem(caCert)).toString()
 }

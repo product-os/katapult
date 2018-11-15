@@ -2,50 +2,54 @@
 
 const _ = require('lodash')
 const Promise = require('bluebird')
-const { readFileAsync, writeFileAsync, statAsync, renameAsync } = Promise.promisifyAll(require('fs'))
+const {
+	readFileAsync,
+	writeFileAsync,
+	statAsync,
+	renameAsync,
+} = Promise.promisifyAll(require('fs'))
 const mvAsync = Promise.promisify(require('mv'))
 const execAsync = Promise.promisify(require('child_process').exec)
 const gitP = require('simple-git/promise')
 const yaml = require('yamljs')
 const path = require('path')
 
-const validateFilePath = (path) => {
+const validateFilePath = path => {
 	return statAsync(path).then(stat => {
-		if (!stat.isFile()){
+		if (!stat.isFile()) {
 			throw new Error('Error: ' + path + ' is not a file')
 		}
 		return true
 	})
 }
 
-const validateDirectoryPath = (path) => {
+const validateDirectoryPath = path => {
 	return statAsync(path).then(stat => {
-		if (!stat.isDirectory()){
+		if (!stat.isDirectory()) {
 			throw new Error('Error: ' + path + ' is not a directory')
 		}
 		return true
 	})
 }
 
-const loadFromFile = (filePath) => {
-	return readFileAsync(filePath, 'utf8')
-		.then(yaml.parse)
+const loadFromFile = filePath => {
+	return readFileAsync(filePath, 'utf8').then(yaml.parse)
 }
 
-const loadFromJSONFile = (filePath) => {
-	return readFileAsync(filePath, 'utf8')
-		.then(JSON.parse)
+const loadFromJSONFile = filePath => {
+	return readFileAsync(filePath, 'utf8').then(JSON.parse)
 }
 
-const loadFromJSONFileOrNull = (filePath) => {
-	if (filePath){
+const loadFromJSONFileOrNull = filePath => {
+	if (filePath) {
 		return statAsync(filePath)
 			.then(stat => {
 				if (!stat.isFile()) {
 					return null
 				}
 				return loadFromJSONFile(filePath)
-			}).catch(() => {
+			})
+			.catch(() => {
 				// ToDo: refine
 				return null
 			})
@@ -53,17 +57,23 @@ const loadFromJSONFileOrNull = (filePath) => {
 	return null
 }
 
-const ymlString = (ymlObj) => {
+const ymlString = ymlObj => {
 	return yaml.stringify(ymlObj, 40, 2)
 }
 
 const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 	return loadFromFile(yamlPath).then(obj => {
-		if (!_.get(obj, name)){
+		if (!_.get(obj, name)) {
 			throw new Error(
-				'Error parsing \'' + yamlPath + '\'\n' +
-				'\'' + name + '\' not defined in \'' + yamlPath +
-				'\' \n Available options: ' + _.keys(obj)
+				"Error parsing '" +
+					yamlPath +
+					"'\n" +
+					"'" +
+					name +
+					"' not defined in '" +
+					yamlPath +
+					"' \n Available options: " +
+					_.keys(obj),
 			)
 		}
 		return true
@@ -86,12 +96,15 @@ const renameFilesMatch = (pathPattern, pattern, replacement) => {
 	})
 }
 
-const scrubk8sMetadata = (annotationPrefix, manifestPath) =>{
+const scrubk8sMetadata = (annotationPrefix, manifestPath) => {
 	return loadFromFile(manifestPath).then(manifest => {
-		if (_.get(manifest, 'metadata.annotations', false)){
-			manifest.metadata.annotations = _.pickBy(manifest.metadata.annotations, function(value, key) {
-				return !_.startsWith(key, annotationPrefix)
-			})
+		if (_.get(manifest, 'metadata.annotations', false)) {
+			manifest.metadata.annotations = _.pickBy(
+				manifest.metadata.annotations,
+				function(value, key) {
+					return !_.startsWith(key, annotationPrefix)
+				},
+			)
 		}
 		return writeFileAsync(manifestPath, ymlString(manifest))
 	})
@@ -107,21 +120,23 @@ const scrubk8sMetadataMatch = (filesPattern, annotationPrefix) => {
 
 const validateEnvironmentConfiguration = (configurationPath, environment) => {
 	// TODO: git validation.
-	return validateDirectoryPath(configurationPath)
-		.then(() => {
-			return validateTopLevelDirectiveYaml(environment, path.join(configurationPath, 'environments.yml'))
-				.then(() => {
-					return parseEnvironmentConfiguration(configurationPath, environment)
-				})
+	return validateDirectoryPath(configurationPath).then(() => {
+		return validateTopLevelDirectiveYaml(
+			environment,
+			path.join(configurationPath, 'environments.yml'),
+		).then(() => {
+			return parseEnvironmentConfiguration(configurationPath, environment)
 		})
+	})
 }
 
-const parseEnvironmentConfiguration = ((configurationPath, environmentName) => {
-	return loadFromFile(path.join(configurationPath, 'environments.yml'))
-		.then(conf => {
+const parseEnvironmentConfiguration = (configurationPath, environmentName) => {
+	return loadFromFile(path.join(configurationPath, 'environments.yml')).then(
+		conf => {
 			return _.get(conf, environmentName)
-		})
-})
+		},
+	)
+}
 
 const ensureRepoInPath = (repoURI, repoPath) => {
 	repoURI = repoURI.trim()
@@ -129,23 +144,33 @@ const ensureRepoInPath = (repoURI, repoPath) => {
 		.then(stat => {
 			if (stat.isDirectory()) {
 				const repo = gitP(repoPath)
-				return repo.listRemote(['--get-url'])
-					.then((remote)=>{
-						// Validate remotes match
-						remote = remote.trim()
-						if( remote === repoURI ||
-							_.includes(remote, repoURI) && remote.replace(repoURI,'') === '.git' ||
-							_.includes(repoURI, remote) && repoURI.replace(remote,'') === '.git' ){
-							return true
-						}
-						else{
-							throw new Error('Git remote: ' + repoURI + ' doesn\'t match ' + repoPath + ' existing remote: ' + remote)
-						}
-					})
+				return repo.listRemote(['--get-url']).then(remote => {
+					// Validate remotes match
+					remote = remote.trim()
+					if (
+						remote === repoURI ||
+						(_.includes(remote, repoURI) &&
+							remote.replace(repoURI, '') === '.git') ||
+						(_.includes(repoURI, remote) &&
+							repoURI.replace(remote, '') === '.git')
+					) {
+						return true
+					} else {
+						throw new Error(
+							'Git remote: ' +
+								repoURI +
+								" doesn't match " +
+								repoPath +
+								' existing remote: ' +
+								remote,
+						)
+					}
+				})
 			}
 			return gitP().clone(repoURI, repoPath)
-		}).catch((err) => {
-			if (err.code === 'ENOENT'){
+		})
+		.catch(err => {
+			if (err.code === 'ENOENT') {
 				return gitP().clone(repoURI, repoPath)
 			}
 			throw err
