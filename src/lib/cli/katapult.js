@@ -1,8 +1,64 @@
 'use strict'
 
 const capitano = require('capitano')
-const deploy = require('../commands/deploy')
+const generateDeploy = require('../commands/generate-deploy')
 let _ = require('lodash')
+
+// Options for generate and deploy commands are the same
+const commonOptions = [
+	{
+		signature: 'configuration',
+		parameter: 'configuration',
+		description: 'URI to deploy-template folder/repo',
+		alias: ['c'],
+		required: false,
+	},
+	{
+		signature: 'environment',
+		parameter: 'environment',
+		alias: ['e'],
+		required: true,
+	},
+	{
+		signature: 'target',
+		parameter: 'target',
+		alias: ['t'],
+		required: false,
+	},
+	{
+		signature: 'mode',
+		parameter: 'mode',
+		alias: ['m'],
+	},
+	{
+		signature: 'keyframe',
+		parameter: 'keyframe',
+		alias: ['k'],
+		required: false,
+	},
+	{
+		signature: 'service-format',
+		parameter: 'format',
+		description:
+			'Service format for a component as: --service-format <component>=<format>. May be image or build',
+		alias: ['f'],
+		required: false,
+		type: 'array',
+	},
+	{
+		signature: 'build-path',
+		parameter: 'path',
+		description:
+			'build path for a component as: --build-path <component>=<path>',
+		alias: ['b'],
+		required: false,
+	},
+	{
+		signature: 'verbose',
+		alias: ['v'],
+		boolean: true,
+	},
+]
 
 const help = () => {
 	console.log('Usage: katapult [COMMAND] [OPTIONS]')
@@ -29,83 +85,45 @@ capitano.command({
 
 capitano.command({
 	signature: 'deploy',
-	description: 'Generate Deploy Spec from environment configuration',
-	options: [
-		{
-			signature: 'configuration',
-			parameter: 'configuration',
-			description: 'URI to deploy-template folder/repo',
-			alias: ['c'],
-			required: false,
-		},
-		{
-			signature: 'environment',
-			parameter: 'environment',
-			alias: ['e'],
-			required: true,
-		},
-		{
-			signature: 'target',
-			parameter: 'target',
-			alias: ['t'],
-			required: false,
-		},
-		{
-			signature: 'mode',
-			parameter: 'mode',
-			alias: ['m'],
-		},
-		{
-			signature: 'keyframe',
-			parameter: 'keyframe',
-			alias: ['k'],
-			required: false,
-		},
-		{
-			signature: 'service-format',
-			parameter: 'format',
-			description:
-				'Service format for a component as: --service-format <component>=<format>. May be image or build',
-			alias: ['f'],
-			required: false,
-			type: 'array',
-		},
-		{
-			signature: 'build-path',
-			parameter: 'path',
-			description:
-				'build path for a component as: --build-path <component>=<path>',
-			alias: ['b'],
-			required: false,
-		},
-		{
-			signature: 'verbose',
-			alias: ['v'],
-			boolean: true,
-		},
-		{
-			signature: 'yes',
-			description: 'Deploy to deploy adapter',
-			alias: ['y'],
-			boolean: true,
-		},
-	],
+	description: 'Generate Deploy Spec from environment configuration and deploy',
+	options: commonOptions,
 	action: (params, options) => {
 		options = parseOptions(options)
-		if (options.verbose) console.info(options)
-		return deploy(options).asCallback()
+		if (options.verbose) {
+			console.info(`input options:\n${options}`)
+		}
+		options['deploy'] = true
+		return generateDeploy(options).asCallback()
 	},
+})
+
+capitano.command({
+	signature: 'generate',
+	description: 'Generate Deploy Spec from environment configuration',
+	options: commonOptions,
+	action: (params, options) => {
+		options = parseOptions(options)
+		if (options.verbose) {
+			console.info(`input options:\n${options}`)
+		}
+		return generateDeploy(options).asCallback()
+	}
 })
 
 if (process.argv.length <= 2) {
 	help()
-	process.exit(1)
+	process.exitCode = 1
 }
 
 capitano.run(process.argv, err => {
 	if (err) {
-		console.error(err)
-		process.exit(1)
+		help()
+		if (process.argv.includes('-v') || process.argv.includes('--verbose')) {
+			throw err
+		} else {
+			console.error(err.message)
+		}
+		process.exitCode = 1
 	}
 })
 
