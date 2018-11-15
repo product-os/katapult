@@ -1,7 +1,7 @@
 'use strict'
 
-const generateCA = require('./generateCA')
-const generateCert = require('./generateCert')
+const generateCA = require('./ca-cert')
+const generateCert = require('./cert')
 
 /**
  * @param attributes: Attribute object with the following properties:
@@ -10,8 +10,8 @@ const generateCert = require('./generateCert')
  *    {
  *    	C:'GR',
  *    	L:'Athens',
- *    	O:'Resin Ltd.',
- *    	OU: 'NOC',
+ *    	O:'Balena Ltd.',
+ *    	OU: 'DevOps',
  *    	CN:'global-ca.io',
  *    	ST: ''
  *    	}
@@ -23,8 +23,8 @@ const generateCert = require('./generateCert')
  *    	C:'GR',
  *    	ST: 'Attiki',
  *    	L:'Athens',
- *    	O:'Resin Ltd.',
- *    	OU: 'NOC',
+ *    	O:'Balena Ltd.',
+ *    	OU: 'DevOps',
  *    	CN:'custom-domain.io'
  *    	}
  * 	altDomains: List of alt domains.
@@ -38,8 +38,7 @@ const generateCert = require('./generateCert')
  * 	caPKPem: The PEM CA private key. In case its needed for more certs signing, base64 encoded
  */
 
-// caAttrs, caValidFrom, caValidTo, certAttrs, altDomains, validFrom, validTo, bits=2048
-let generateChain = (attributes) => {
+const generateChain = attributes => {
 	const {
 		caAttrs,
 		caValidFrom,
@@ -48,29 +47,27 @@ let generateChain = (attributes) => {
 		altDomains,
 		validFrom,
 		validTo,
-		bits=2048
+		bits = 2048,
 	} = attributes
 
 	return generateCA({
 		caAttrs: caAttrs,
 		caValidFrom: caValidFrom,
 		caValidTo: caValidTo,
-		bits: bits
-	})
-		.then(([caCertPEM, caPrivateKeyPEM])=>{
-			return generateCert({
-				certAttrs: certAttrs,
-				caCertPEM: caCertPEM,
-				caPrivateKeyPEM: caPrivateKeyPEM,
-				altDomains: altDomains,
-				validFrom: validFrom,
-				validTo: validTo,
-				bits: bits
-			})
-				.then(([PemCert, PemPK]) => {
-					return [PemCert+caCertPEM+PemPK, caCertPEM, caPrivateKeyPEM]
-				})
+		bits: bits,
+	}).then(([caCertPEM, caPrivateKeyPEM]) => {
+		return generateCert({
+			certAttrs: certAttrs,
+			caCertPEM: caCertPEM,
+			caPrivateKeyPEM: caPrivateKeyPEM,
+			altDomains: altDomains,
+			validFrom: validFrom,
+			validTo: validTo,
+			bits: bits,
+		}).then(([PemCert, PemPK]) => {
+			return [PemCert + caCertPEM + PemPK, caCertPEM, caPrivateKeyPEM]
 		})
+	})
 }
 
 module.exports = generateChain

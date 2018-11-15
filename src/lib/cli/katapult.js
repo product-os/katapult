@@ -1,19 +1,11 @@
 'use strict'
 
 const capitano = require('capitano')
-
-const _ = require('lodash')
-
-const deploySpec = require('../controllers/deploySpec')
-
-const validateEnvironmentConfiguration = require('../utils').validateEnvironmentConfiguration
-
-const deployAdapters = require('../controllers/deployAdapters/all')
-
-const deploySpecAdapters = require('../controllers/deploySpecAdapters/all')
+const deploy = require('../commands/deploy')
+let _ = require('lodash')
 
 const help = () => {
-	console.log('Usage: compose-merger [COMMANDS] [OPTIONS]')
+	console.log('Usage: katapult [COMMAND] [OPTIONS]')
 	console.log('\nCommands:\n')
 
 	for (let command of capitano.state.commands) {
@@ -25,175 +17,84 @@ const help = () => {
 capitano.globalOption({
 	signature: 'verbose',
 	boolean: true,
-	alias: [ 'v' ],
-	required: false
+	alias: ['v'],
+	required: false,
 })
 
 capitano.command({
 	signature: 'help',
 	description: 'Output help',
-	action: help
-})
-
-capitano.command({
-	signature: 'generate-deploy',
-	description: 'Generate Deploy Spec from environment configuration.',
-	options: [{
-		signature: 'configuration',
-		parameter: 'configuration',
-		description: 'URI to deploy-template folder/repo',
-		alias: [ 'c' ],
-		required: true
-	}, {
-		signature: 'environment',
-		parameter: 'environment',
-		alias: [ 'e' ],
-		required: true
-	}, {
-		signature: 'target',
-		parameter: 'target',
-		alias: [ 't' ],
-		required: false
-	}, {
-		signature: 'mode',
-		parameter: 'mode',
-		alias: [ 'm' ]
-	}, {
-		signature: 'verbose',
-		alias: [ 'v' ],
-		boolean: true
-	}],
-	action: (params, options) => {
-		if (options.verbose) console.info(options)
-
-		const {
-			target,
-			configuration,
-			environment,
-			mode='defensive',
-			verbose=false,
-		} = options
-
-		// Validate and process environment info
-		return validateEnvironmentConfiguration(configuration, environment)
-			.then(([environmentObj, error]) => {
-				if (error) {
-					console.error(error)
-					process.exit(1)
-				}
-
-				if (target){
-					if (!_.has(deploySpecAdapters, target)){
-						console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
-						process.exit(1)
-					}
-					environmentObj=_.pick(environmentObj, [target, 'archive-store', 'version'])
-				}
-
-				return new deploySpec(
-					environment,
-					environmentObj,
-					configuration,
-					mode
-				).generate()
-			})
-			.then(errors => {
-				if (errors.length){
-					_.forEach(errors, error => {
-						console.error(error)
-					})
-					process.exit(1)
-				}
-				else{
-					console.log('Done')
-				}
-			})
-			.asCallback()
-	}
+	action: help,
 })
 
 capitano.command({
 	signature: 'deploy',
-	description: 'Deploy a Deploy Spec.',
-	options: [{
-		signature: 'configuration',
-		parameter: 'configuration',
-		description: 'URI to deploy-template folder/repo',
-		alias: [ 'c' ],
-		required: true
-	}, {
-		signature: 'environment',
-		parameter: 'environment',
-		alias: [ 'e' ],
-		required: true
-	}, {
-		signature: 'mode',
-		parameter: 'mode',
-		alias: [ 'm' ]
-	}, {
-		signature: 'target',
-		parameter: 'target',
-		alias: [ 't' ],
-		required: true
-	}, {
-		signature: 'verbose',
-		alias: [ 'v' ],
-		boolean: true
-	}],
+	description: 'Generate Deploy Spec from environment configuration',
+	options: [
+		{
+			signature: 'configuration',
+			parameter: 'configuration',
+			description: 'URI to deploy-template folder/repo',
+			alias: ['c'],
+			required: false,
+		},
+		{
+			signature: 'environment',
+			parameter: 'environment',
+			alias: ['e'],
+			required: true,
+		},
+		{
+			signature: 'target',
+			parameter: 'target',
+			alias: ['t'],
+			required: false,
+		},
+		{
+			signature: 'mode',
+			parameter: 'mode',
+			alias: ['m'],
+		},
+		{
+			signature: 'keyframe',
+			parameter: 'keyframe',
+			alias: ['k'],
+			required: false,
+		},
+		{
+			signature: 'service-format',
+			parameter: 'format',
+			description:
+				'Service format for a component as: --service-format <component>=<format>. May be image or build',
+			alias: ['f'],
+			required: false,
+			type: 'array',
+		},
+		{
+			signature: 'build-path',
+			parameter: 'path',
+			description:
+				'build path for a component as: --build-path <component>=<path>',
+			alias: ['b'],
+			required: false,
+		},
+		{
+			signature: 'verbose',
+			alias: ['v'],
+			boolean: true,
+		},
+		{
+			signature: 'yes',
+			description: 'Deploy to deploy adapter',
+			alias: ['y'],
+			boolean: true,
+		},
+	],
 	action: (params, options) => {
+		options = parseOptions(options)
 		if (options.verbose) console.info(options)
-
-		const {
-			configuration,
-			environment,
-			mode='defensive',
-			target,
-			verbose=false,
-		} = options
-
-		return validateEnvironmentConfiguration(configuration, environment)
-			.then(([environmentObj, error]) => {
-				if (error) {
-					console.error(error)
-					process.exit(1)
-				}
-				// sync deploySpec
-				return new deploySpec(
-					environment,
-					environmentObj,
-					configuration,
-					mode
-				)
-					.generate()
-					.then(errors => {
-						if (errors.length){
-							_.forEach(errors, error => {
-								console.error(error)
-							})
-							process.exit(1)
-						}
-					})
-					.then(() => {
-						if (!_.has(deployAdapters, target)){
-							console.error('Target not implemented. \nAvailable options:', _.keys(deployAdapters))
-							process.exit(1)
-						}
-						return new deployAdapters[target](environment, environmentObj).run()
-					})
-			})
-			.then(errors => {
-				if (errors.length){
-					_.forEach(errors, error => {
-						console.error(error)
-					})
-					process.exit(1)
-				}
-				else{
-					console.log('Done')
-				}
-			})
-			.asCallback()
-	}
+		return deploy(options).asCallback()
+	},
 })
 
 if (process.argv.length <= 2) {
@@ -201,10 +102,48 @@ if (process.argv.length <= 2) {
 	process.exit(1)
 }
 
-capitano.run(process.argv, (err) => {
-
+capitano.run(process.argv, err => {
 	if (err) {
 		console.error(err)
 		process.exit(1)
 	}
 })
+
+const parseOptions = options => {
+	// Parse 'service-format' as array
+	let serviceFormats = _.get(options, 'service-format')
+	if (typeof serviceFormats === 'string') {
+		serviceFormats = [serviceFormats]
+	}
+	// Parse 'build-path' as array
+	let buildPaths = _.get(options, 'build-path', [])
+	if (typeof buildPaths === 'string') {
+		buildPaths = [buildPaths]
+	}
+	// Convert buildPaths to obj
+	buildPaths = _.reduce(
+		buildPaths.map(value => {
+			return value.split('=')
+		}),
+		(obj, val) => {
+			return _.merge(obj, { [val[0]]: val[1] })
+		},
+		{},
+	)
+	// Default configuration to deploy-templates
+	let configuration = _.get(options, 'configuration')
+	if (typeof configuration !== 'string') {
+		options['configuration'] = 'deploy-templates'
+	}
+	// Combine service-format and build-path parameters into buildComponents
+	let buildComponents = {}
+	_.forEach(serviceFormats, value => {
+		let [component, format] = value.split('=')
+		if (format === 'build') {
+			buildComponents[component] = _.get(buildPaths, component, null)
+		}
+	})
+
+	options['buildComponents'] = buildComponents
+	return options
+}
