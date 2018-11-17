@@ -7,9 +7,9 @@ module.exports = () => {
 	return `-----BEGIN EC PRIVATE KEY-----
 ${Buffer.from(
 		`30770201010420${ec.getPrivateKey(
-			'hex',
+			'hex'
 		)}A00A06082A8648CE3D030107A14403420004${ec.getPublicKey('hex')}`,
-		'hex',
+		'hex'
 	).toString('base64')}
 -----END EC PRIVATE KEY-----`
 }

@@ -10,7 +10,7 @@ module.exports = class ConfigValidator {
 		this.validator = new Validator()
 	}
 
-	validate() {
+	validate(throwErrors = false) {
 		return Promise.resolve(this.configManifest)
 			.then(ConfigValidator.addFormatValidationRules)
 			.then(() => {
@@ -24,6 +24,17 @@ module.exports = class ConfigValidator {
 				})
 				return this.validator.validate(this.config, this.configManifest).errors
 			})
+			.then(errors => {
+				if (throwErrors && errors.length) {
+					let errorString = ''
+					_.forEach(errors, err => {
+						errorString += err.stack + '\n'
+					})
+					throw new Error(errorString)
+				} else {
+					return errors
+				}
+			})
 	}
 
 	static addFormatValidationRules(configManifest) {
@@ -32,7 +43,7 @@ module.exports = class ConfigValidator {
 				_.set(
 					configManifest,
 					['properties', name, 'pattern'],
-					validationFormats[value.format],
+					validationFormats[value.format]
 				)
 			}
 		})

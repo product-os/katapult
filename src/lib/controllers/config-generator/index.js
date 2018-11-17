@@ -11,7 +11,7 @@ const {
 	GENERATE_CHAIN,
 	GENERATE_PRIVATE_KEY,
 	GENERATE_PUBLIC_KEY,
-	GENERATE_DH_PARAM,
+	GENERATE_DH_PARAM
 } = require('./plugins/all')
 const { escape, base64decode, base64 } = require('./filter-functions')
 
@@ -32,13 +32,13 @@ module.exports = class ConfigAutoGenerator {
 					(_.has(this.config, name) || _.get(value, 'required')) &&
 					validator.validate(
 						{
-							[name]: this.config[name],
+							[name]: this.config[name]
 						},
 						{
 							type: 'object',
 							properties: { [name]: value },
-							required: [name],
-						},
+							required: [name]
+						}
 					).errors.length
 
 				if (invalid) {

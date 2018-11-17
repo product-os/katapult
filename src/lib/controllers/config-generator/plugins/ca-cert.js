@@ -28,7 +28,7 @@ const generateCACert = attributes => {
 		caAttrs,
 		validFrom,
 		validTo,
-		caPrivateKeyPEM: caPrivateKeyPEM,
+		caPrivateKeyPEM: caPrivateKeyPEM
 	} = attributes
 
 	// reformat caAttrs to list.
@@ -37,7 +37,7 @@ const generateCACert = attributes => {
 		if (value) {
 			attrs.push({
 				shortName: key,
-				value: value,
+				value: value
 			})
 		}
 	})
@@ -55,7 +55,7 @@ const generateCACert = attributes => {
 	caCert.setExtensions([
 		{
 			name: 'basicConstraints',
-			cA: true,
+			cA: true
 		},
 		{
 			name: 'keyUsage',
@@ -63,8 +63,8 @@ const generateCACert = attributes => {
 			digitalSignature: true,
 			nonRepudiation: true,
 			keyEncipherment: true,
-			dataEncipherment: true,
-		},
+			dataEncipherment: true
+		}
 	])
 	caCert.sign(privateKey, forge.md.sha256.create())
 	return Buffer.from(forge.pki.certificateToPem(caCert)).toString()

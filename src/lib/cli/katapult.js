@@ -11,30 +11,30 @@ const commonOptions = [
 		parameter: 'configuration',
 		description: 'URI to deploy-template folder/repo',
 		alias: ['c'],
-		required: false,
+		required: false
 	},
 	{
 		signature: 'environment',
 		parameter: 'environment',
 		alias: ['e'],
-		required: true,
+		required: true
 	},
 	{
 		signature: 'target',
 		parameter: 'target',
 		alias: ['t'],
-		required: false,
+		required: false
 	},
 	{
 		signature: 'mode',
 		parameter: 'mode',
-		alias: ['m'],
+		alias: ['m']
 	},
 	{
 		signature: 'keyframe',
 		parameter: 'keyframe',
 		alias: ['k'],
-		required: false,
+		required: false
 	},
 	{
 		signature: 'service-format',
@@ -43,7 +43,7 @@ const commonOptions = [
 			'Service format for a component as: --service-format <component>=<format>. May be image or build',
 		alias: ['f'],
 		required: false,
-		type: 'array',
+		type: 'array'
 	},
 	{
 		signature: 'build-path',
@@ -51,13 +51,13 @@ const commonOptions = [
 		description:
 			'build path for a component as: --build-path <component>=<path>',
 		alias: ['b'],
-		required: false,
+		required: false
 	},
 	{
 		signature: 'verbose',
 		alias: ['v'],
-		boolean: true,
-	},
+		boolean: true
+	}
 ]
 
 const help = () => {
@@ -74,13 +74,13 @@ capitano.globalOption({
 	signature: 'verbose',
 	boolean: true,
 	alias: ['v'],
-	required: false,
+	required: false
 })
 
 capitano.command({
 	signature: 'help',
 	description: 'Output help',
-	action: help,
+	action: help
 })
 
 capitano.command({
@@ -94,7 +94,7 @@ capitano.command({
 		}
 		options['deploy'] = true
 		return generateDeploy(options).asCallback()
-	},
+	}
 })
 
 capitano.command({
@@ -146,7 +146,7 @@ const parseOptions = options => {
 		(obj, val) => {
 			return _.merge(obj, { [val[0]]: val[1] })
 		},
-		{},
+		{}
 	)
 	// Default configuration to deploy-templates
 	let configuration = _.get(options, 'configuration')

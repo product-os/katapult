@@ -10,7 +10,7 @@ module.exports = class Deployment {
 			environmentObj['archive-store'],
 			environmentName,
 			environmentObj.version,
-			'balena',
+			'balena'
 		)
 		this.git = simpleGit(this.deploySpecBasePath)
 		this.remote = environmentObj['balena']['deploy-git-remote']

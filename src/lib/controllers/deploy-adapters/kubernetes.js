@@ -11,7 +11,7 @@ module.exports = class Deployment {
 			environmentObj['archive-store'],
 			environmentName,
 			environmentObj.version,
-			'kubernetes',
+			'kubernetes'
 		)
 		this.kubeconfigPath = environmentObj['kubernetes']['config-store']
 	}
@@ -20,7 +20,7 @@ module.exports = class Deployment {
 		return execAsync(
 			`kubectl --kubeconfig=${this.kubeconfigPath} apply -f ${
 				this.deploySpecBasePath
-			}`,
+			}`
 		)
 	}
 }

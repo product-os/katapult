@@ -6,7 +6,7 @@ const {
 	readFileAsync,
 	writeFileAsync,
 	statAsync,
-	renameAsync,
+	renameAsync
 } = Promise.promisifyAll(require('fs'))
 const mvAsync = Promise.promisify(require('mv'))
 const execAsync = Promise.promisify(require('child_process').exec)
@@ -65,15 +65,15 @@ const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 	return loadFromFile(yamlPath).then(obj => {
 		if (!_.get(obj, name)) {
 			throw new Error(
-				"Error parsing '" +
+				'Error parsing "' +
 					yamlPath +
-					"'\n" +
-					"'" +
+					'"\n' +
+					'"' +
 					name +
-					"' not defined in '" +
+					'" not defined in "' +
 					yamlPath +
-					"' \n Available options: " +
-					_.keys(obj),
+					'" \n Available options: ' +
+					_.keys(obj)
 			)
 		}
 		return true
@@ -103,7 +103,7 @@ const scrubk8sMetadata = (annotationPrefix, manifestPath) => {
 				manifest.metadata.annotations,
 				function(value, key) {
 					return !_.startsWith(key, annotationPrefix)
-				},
+				}
 			)
 		}
 		return writeFileAsync(manifestPath, ymlString(manifest))
@@ -123,7 +123,7 @@ const validateEnvironmentConfiguration = (configurationPath, environment) => {
 	return validateDirectoryPath(configurationPath).then(() => {
 		return validateTopLevelDirectiveYaml(
 			environment,
-			path.join(configurationPath, 'environments.yml'),
+			path.join(configurationPath, 'environments.yml')
 		).then(() => {
 			return parseEnvironmentConfiguration(configurationPath, environment)
 		})
@@ -134,7 +134,7 @@ const parseEnvironmentConfiguration = (configurationPath, environmentName) => {
 	return loadFromFile(path.join(configurationPath, 'environments.yml')).then(
 		conf => {
 			return _.get(conf, environmentName)
-		},
+		}
 	)
 }
 
@@ -162,7 +162,7 @@ const ensureRepoInPath = (repoURI, repoPath) => {
 								" doesn't match " +
 								repoPath +
 								' existing remote: ' +
-								remote,
+								remote
 						)
 					}
 				})

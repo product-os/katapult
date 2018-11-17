@@ -26,7 +26,7 @@ module.exports = class ConfigManifest {
 					(o, v) => {
 						return _.merge(o, v)
 					},
-					{},
+					{}
 				)
 				obj['additionalProperties'] = false
 			}

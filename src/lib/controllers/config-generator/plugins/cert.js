@@ -36,7 +36,7 @@ const generateCert = attributes => {
 		altDomains,
 		validFrom,
 		validTo,
-		privateKeyPEM,
+		privateKeyPEM
 	} = attributes
 
 	// reformat caAttrs to list.
@@ -45,7 +45,7 @@ const generateCert = attributes => {
 		if (value) {
 			subjectAttrs.push({
 				shortName: key,
-				value: value,
+				value: value
 			})
 		}
 	})
@@ -54,7 +54,7 @@ const generateCert = attributes => {
 	_.forEach(altDomains, domain => {
 		altNames.push({
 			type: 2, // DNS
-			value: domain,
+			value: domain
 		})
 	})
 	let caCert = pki.certificateFromPem(caCertPEM)
@@ -70,19 +70,19 @@ const generateCert = attributes => {
 	cert.setExtensions([
 		{
 			name: 'basicConstraints',
-			cA: false,
+			cA: false
 		},
 		{
 			name: 'keyUsage',
 			digitalSignature: true,
 			nonRepudiation: true,
 			keyEncipherment: true,
-			dataEncipherment: true,
+			dataEncipherment: true
 		},
 		{
 			name: 'subjectAltName',
-			altNames: altNames,
-		},
+			altNames: altNames
+		}
 	])
 	cert.sign(caPK, forge.md.sha256.create())
 	return Buffer.from(forge.pki.certificateToPem(cert)).toString()
