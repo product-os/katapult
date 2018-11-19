@@ -4,7 +4,10 @@ const capitano = require('capitano')
 const generateDeploy = require('../commands/generate-deploy')
 let _ = require('lodash')
 
-// Options for generate and deploy commands are the same
+/**
+ * Options for generate and deploy commands are the same
+ * @type {*[]}
+ */
 const commonOptions = [
 	{
 		signature: 'configuration',
@@ -60,13 +63,25 @@ const commonOptions = [
 	}
 ]
 
+/**
+ * Generate and display help text
+ */
 const help = () => {
-	console.log('Usage: katapult [COMMAND] [OPTIONS]')
+	console.log('Usage: katapult <command> [OPTIONS] <params>')
 	console.log('\nCommands:\n')
 
 	for (let command of capitano.state.commands) {
 		if (command.isWildcard()) continue
-		console.log(`\t${command.signature}\t\t\t${command.description}`)
+
+		console.log('\t' + command.signature + '\t\t\t' + command.description)
+		for (const option of command.options) {
+			console.log(
+				'\t  ',
+				option.alias ? '-' + option.alias + ',' : '',
+				'--' + option.signature
+			)
+			if (option.description) console.log(`\t\t${option.description}`)
+		}
 	}
 }
 
