@@ -10,9 +10,9 @@ const {
 	readdirAsync,
 	ensureDirAsync
 } = Promise.promisifyAll(require('fs-extra'))
-const configValidator = require('./config-validator/config-validator')
-const configGenerator = require('./config-generator')
-const configManifest = require('./config-manifest/config-manifest')
+const ConfigValidator = require('./config-validator')
+const ConfigGenerator = require('./config-generator')
+const ConfigManifest = require('./config-manifest/config-manifest')
 const { kubernetes, balena, compose } = require('./config-store-adapters')
 const { ensureRepoInPath } = require('../utils')
 
@@ -70,17 +70,33 @@ module.exports = class DeploySpec {
 		} else if (target === 'kubernetes') {
 			cs = new kubernetes(configPath)
 		}
-		let cm = new configManifest(configManifestPath)
+		let cm = new ConfigManifest(configManifestPath)
 		return Promise.all([cs.getConfig(), cm.getConfigManifest()])
 			.tap(([config, cManifest]) => {
 				let input_config = _.cloneDeep(config)
-				return new configGenerator(config, cManifest, this.mode)
+				return new ConfigGenerator({
+					config,
+					configManifest: cManifest,
+					mode: this.mode
+				})
 					.generate()
 					.then(config => {
-						if (this.mode) {
+						if (this.mode !== 'defensive') {
+							console.log(
+								'updating',
+								_.differenceWith(
+									_.map(_.toPairs(config), o => {
+										return _.map(o, String)
+									}),
+									_.toPairs(input_config),
+									_.isEqual
+								)
+							)
 							return cs.update(
 								_.differenceWith(
-									_.toPairs(config),
+									_.map(_.toPairs(config), o => {
+										return _.map(o, String)
+									}),
 									_.toPairs(input_config),
 									_.isEqual
 								)
@@ -89,7 +105,7 @@ module.exports = class DeploySpec {
 					})
 			})
 			.then(([config, cManifest]) => {
-				return new configValidator(config, cManifest)
+				return new ConfigValidator(config, cManifest)
 					.validate(true)
 					.then(this.extendConfig(config, buildComponents))
 					.then(config => {
