@@ -12,7 +12,7 @@ module.exports = args => {
 		target,
 		configuration,
 		environment,
-		mode = 'defensive',
+		mode = 'interactive',
 		deploy = false,
 		keyframe = path.join(process.cwd(), 'keyframe.json'),
 		buildComponents,
