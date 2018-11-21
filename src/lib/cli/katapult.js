@@ -19,31 +19,40 @@ const commonOptions = [
 	{
 		signature: 'environment',
 		parameter: 'environment',
+		description: 'Name of the selected environment',
 		alias: ['e'],
 		required: true
 	},
 	{
 		signature: 'target',
 		parameter: 'target',
+		description: 'Name of the selected target',
 		alias: ['t'],
 		required: false
 	},
 	{
 		signature: 'mode',
 		parameter: 'mode',
+		description:
+			"* interactive (default): When required values aren't available or valid an interactive prompt accepts user input.\n" +
+			'\t\t* defensive: No action is taken when configuration validation errors occur.Fails with an informative error message.\n' +
+			'\t\t* aggressive: If configuration validation fails, we fallback to auto-generating the missing/invalid value.n',
 		alias: ['m']
 	},
 	{
 		signature: 'keyframe',
 		parameter: 'keyframe',
 		alias: ['k'],
+		description:
+			'Path to keyframe file, if available. Defaults to ./keyframe.yml',
 		required: false
 	},
 	{
 		signature: 'service-format',
 		parameter: 'format',
 		description:
-			'Service format for a component as: --service-format <component>=<format>. May be image or build',
+			'Service format for a component as: --service-format <component>=<format>. Format may be image or build. ' +
+			'Defaults to image for all components',
 		alias: ['f'],
 		required: false,
 		type: 'array'
@@ -52,12 +61,13 @@ const commonOptions = [
 		signature: 'build-path',
 		parameter: 'path',
 		description:
-			'build path for a component as: --build-path <component>=<path>',
+			'Build path for a component as: --build-path <component>=<path>',
 		alias: ['b'],
 		required: false
 	},
 	{
 		signature: 'verbose',
+		description: 'Enable verbose mode',
 		alias: ['v'],
 		boolean: true
 	}
