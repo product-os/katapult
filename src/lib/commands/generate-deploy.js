@@ -43,7 +43,8 @@ module.exports = args => {
 					keyframe: kf,
 					mode,
 					buildComponents,
-					environmentObj
+					environmentObj,
+					verbose
 				})
 					.generate()
 					.then(() => {

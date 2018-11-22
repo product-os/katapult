@@ -23,7 +23,8 @@ module.exports = class DeploySpec {
 		configBasePath,
 		keyframe,
 		mode,
-		buildComponents
+		buildComponents,
+		verbose
 	}) {
 		this.mode = mode
 		this.targets = _.omit(environmentObj, [
@@ -39,6 +40,7 @@ module.exports = class DeploySpec {
 		this.keyframe = keyframe
 		this.buildComponents = buildComponents
 		this.archiveStore = environmentObj['archive-store']
+		this.verbose = verbose
 	}
 
 	generate() {
@@ -86,26 +88,16 @@ module.exports = class DeploySpec {
 				})
 					.generate()
 					.then(config => {
+						let configDiffPairs = _.differenceWith(
+							_.map(_.toPairs(config), o => {
+								return _.map(o, String)
+							}),
+							_.toPairs(input_config),
+							_.isEqual
+						)
 						if (this.mode !== 'defensive') {
-							console.log(
-								'updating',
-								_.differenceWith(
-									_.map(_.toPairs(config), o => {
-										return _.map(o, String)
-									}),
-									_.toPairs(input_config),
-									_.isEqual
-								)
-							)
-							return cs.update(
-								_.differenceWith(
-									_.map(_.toPairs(config), o => {
-										return _.map(o, String)
-									}),
-									_.toPairs(input_config),
-									_.isEqual
-								)
-							)
+							if (this.verbose) console.info('updating: ', configDiffPairs)
+							return cs.update(configDiffPairs)
 						}
 					})
 			})

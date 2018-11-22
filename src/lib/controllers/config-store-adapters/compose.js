@@ -27,7 +27,7 @@ module.exports = class ConfigStore {
 						.join('')
 						.split('\n')
 						.join('\\n')
-					let re = new RegExp(`^.*${name}.*$`, 'm')
+					let re = new RegExp(`^\s*${name}=.*$`, 'm')
 					let dotenvEntry = `${name}="${value}"`
 					let replaced_string = configString.replace(re, dotenvEntry)
 					if (configString === replaced_string) {
