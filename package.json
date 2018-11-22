@@ -16,6 +16,7 @@
  "author": "",
  "license": "Apache-2.0",
  "dependencies": {
+  "balena-universe-cli-demo": "0.0.1",
   "bluebird": "~3",
   "capitano": "~1",
   "dhparam": "~2",
