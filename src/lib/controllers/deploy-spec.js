@@ -106,8 +106,10 @@ module.exports = class DeploySpec {
 			.then(([config, cManifest]) => {
 				return new ConfigValidator(config, cManifest)
 					.validate(true)
-					.then(this.extendConfig(config, buildComponents))
-					.then(config => {
+					.then(() => {
+						return this.extendConfig(config, buildComponents)
+					})
+					.then(() => {
 						return readdirAsync(templatePath).then(filenames => {
 							let promises = []
 
@@ -141,6 +143,7 @@ module.exports = class DeploySpec {
 		if (this.keyframe && _.get(this.keyframe, 'components')) {
 			_.forEach(this.keyframe['components'], (value, name) => {
 				config[`${name}-image`] = _.get(value, 'image')
+				config[`${name}-version`] = _.get(value, 'version')
 			})
 		}
 		let promises = []

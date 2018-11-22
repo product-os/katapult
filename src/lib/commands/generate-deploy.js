@@ -3,9 +3,8 @@
 const _ = require('lodash')
 const path = require('path')
 const DeploySpec = require('../controllers/deploy-spec')
-const { validateEnvironmentConfiguration } = require('../utils')
+const { validateEnvironmentConfiguration, unwrapKeyframe } = require('../utils')
 const deployAdapters = require('../controllers/deploy-adapters')
-const { loadFromJSONFileOrNull } = require('../utils')
 
 module.exports = args => {
 	const {
@@ -14,7 +13,7 @@ module.exports = args => {
 		environment,
 		mode = 'interactive',
 		deploy = false,
-		keyframe = path.join(process.cwd(), 'keyframe.json'),
+		keyframe,
 		buildComponents,
 		verbose = false
 	} = args
@@ -35,8 +34,16 @@ module.exports = args => {
 					'version'
 				])
 			}
+			// keyframe paths in asc priority order. The first available is used
+			let kfPaths = [
+				keyframe,
+				path.join(process.cwd(), 'keyframe.yml'),
+				path.join(process.cwd(), 'keyframe.yaml'),
+				path.join(process.cwd(), '..', 'deploy-templates', 'keyframe.yml'),
+				path.join(process.cwd(), '..', 'deploy-templates', 'keyframe.yaml')
+			]
 
-			return loadFromJSONFileOrNull(keyframe).then(kf => {
+			return unwrapKeyframe(kfPaths).then(kf => {
 				return new DeploySpec({
 					environmentName: environment,
 					configBasePath: configuration,
