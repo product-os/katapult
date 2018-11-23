@@ -34,9 +34,9 @@ const commonOptions = [
 		signature: 'mode',
 		parameter: 'mode',
 		description:
-			"* interactive (default): When required values aren't available or valid an interactive prompt accepts user input.\n" +
-			'\t\t* defensive: No action is taken when configuration validation errors occur.Fails with an informative error message.\n' +
-			'\t\t* aggressive: If configuration validation fails, we fallback to auto-generating the missing/invalid value.',
+			'* interactive (default): When required values are not available or valid, prompt the user for input.\n' +
+			'\t\t* defensive: No action is taken when configuration validation errors occur. Fails with an informative error message.\n' +
+			'\t\t* aggressive: Automatically generates missing or invalid values when configuration validation fails.',
 		alias: ['m']
 	},
 	{
@@ -51,7 +51,8 @@ const commonOptions = [
 		signature: 'service-format',
 		parameter: 'format',
 		description:
-			'Service format for a component as: --service-format <component>=<format>. Format may be image or build. ' +
+			'Format could be either "image" (component will use a pre-built Docker image) or "build" ' +
+			'(component will build the Docker image from local sources) ' +
 			'Defaults to image for all components',
 		alias: ['f'],
 		required: false,

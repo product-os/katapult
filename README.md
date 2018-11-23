@@ -101,17 +101,19 @@ Generates the deploy spec from environment configuration
 `--target`: Target name
 
 `--mode`: There are 3 valid values for mode:
-- interactive (default): When required values aren't available or valid an
-interactive prompt accepts user input.
+- interactive (default): When required values are not available or valid,
+prompt the user for input.
 - defensive: No action is taken when configuration validation errors occur.
 We fail with an informative error message.
-- aggressive: If configuration validation fails, we fallback to
-auto-generating the missing/invalid value.
+- aggressive: Automatically generates missing or invalid values when
+configuration validation fails.
 
 `--keyframe`: path to keyframe file, if available. Defaults to `./keyframe.yml`.
 
 `--service-format`: Service format for a component as: --service-format
-`<component>=<format>`. May be `image` or `build`. Defaults to `image`
+`<component>=<format>`. Format could be either 'image' (component will use a
+pre-built Docker image) or 'build' (component will build the Docker image from
+local sources). Defaults to image for all components.
 
 `--build-path`: build path for a component as: --build-path
 `<component>=<path>`. Defaults to `./component-name`

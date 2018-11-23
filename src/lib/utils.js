@@ -19,8 +19,10 @@ const validateFilePath = (path, raise = true) => {
 	return statAsync(path)
 		.then(stat => {
 			if (!stat.isFile()) {
-				if (raise) throw new Error('Error: ' + path + ' is not a file')
-				else return false
+				if (raise) {
+					throw new Error('Error: ' + path + ' is not a file')
+				}
+				return false
 			}
 			return true
 		})
@@ -34,8 +36,10 @@ const validateDirectoryPath = (path, raise = true) => {
 	return statAsync(path)
 		.then(stat => {
 			if (!stat.isDirectory()) {
-				if (raise) throw new Error('Error: ' + path + ' is not a directory')
-				else return false
+				if (raise) {
+					throw new Error('Error: ' + path + ' is not a directory')
+				}
+				return false
 			}
 			return true
 		})
