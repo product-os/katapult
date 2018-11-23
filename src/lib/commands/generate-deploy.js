@@ -1,7 +1,6 @@
 'use strict'
 
 const _ = require('lodash')
-const Promise = require('bluebird')
 const path = require('path')
 const deploySpec = require('../controllers/deploy-spec')
 const { validateEnvironmentConfiguration } = require('../utils')
@@ -15,7 +14,7 @@ module.exports = args => {
 		configuration,
 		environment,
 		mode = 'defensive',
-		yes = false,
+		deploy = false,
 		keyframe = path.join(process.cwd(), 'keyframe.json'),
 		buildComponents,
 		verbose = false,
@@ -49,7 +48,7 @@ module.exports = args => {
 				)
 					.generate()
 					.then(() => {
-						if (yes) {
+						if (deploy) {
 							return new deployAdapters[target](
 								environment,
 								environmentObj,
@@ -57,10 +56,6 @@ module.exports = args => {
 						}
 					})
 			})
-		})
-		.catch(error => {
-			console.error(error.message)
-			process.exit(1)
 		})
 		.then(() => {
 			console.log('Done...')
