@@ -10,14 +10,14 @@ module.exports = class Deployment {
 			environmentObj['archive-store'],
 			environmentName,
 			environmentObj.version,
-			'docker-compose',
+			'docker-compose'
 		)
 	}
 
 	run() {
 		console.log('Deploying ', this.deploySpecBasePath + '/docker-compose.yml')
 		return execAsync(
-			`docker-compose -f ${this.deploySpecBasePath}/docker-compose.yml up -d `,
+			`docker-compose -f ${this.deploySpecBasePath}/docker-compose.yml up -d `
 		)
 	}
 }

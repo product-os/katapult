@@ -1,7 +1,7 @@
 'use strict'
 const Promise = require('bluebird')
 const { readFileAsync, writeFileAsync } = Promise.promisifyAll(
-	require('fs-extra'),
+	require('fs-extra')
 )
 const dotenv = require('dotenv')
 const _ = require('lodash')
@@ -28,14 +28,12 @@ module.exports = class ConfigStore {
 						.split('\n')
 						.join('\\n')
 					let re = new RegExp(`^.*${name}.*$`, 'm')
-					let replaced_string = configString.replace(
-						re,
-						name + "='" + value + "'",
-					)
+					let dotenvEntry = `${name}="${value}"`
+					let replaced_string = configString.replace(re, dotenvEntry)
 					if (configString === replaced_string) {
-						configString = configString + '\n' + name + "='" + value + "'"
+						configString += `\n${dotenvEntry}`
 					} else {
-						configString = configString.replace(re, name + "='" + value + "'")
+						configString = configString.replace(re, dotenvEntry)
 					}
 				})
 				return configString

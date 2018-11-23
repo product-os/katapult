@@ -46,12 +46,12 @@ module.exports = class ConfigStore {
 			APIVersion: 'v1',
 			Kind: 'Secret',
 			metadata: {
-				name: k8sSecretName,
+				name: k8sSecretName
 			},
 			type: 'Opaque',
 			data: {
-				[name]: Buffer.from(value).toString('base64'),
-			},
+				[name]: Buffer.from(value).toString('base64')
+			}
 		}
 		return this.deleteSecret(k8sSecretName).then(() => {
 			return this.client.apis.v1
@@ -67,7 +67,7 @@ module.exports = class ConfigStore {
 				if (
 					_.has(
 						secret.data,
-						secret.metadata.name.toUpperCase().replace(/-/g, '_'),
+						secret.metadata.name.toUpperCase().replace(/-/g, '_')
 					)
 				)
 					_.forEach(secret.data, (value, name) => {
@@ -77,7 +77,6 @@ module.exports = class ConfigStore {
 			})
 			return ret
 		})
-		return ret
 	}
 
 	update(envvars) {

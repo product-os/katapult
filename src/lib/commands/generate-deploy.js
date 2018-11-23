@@ -2,10 +2,9 @@
 
 const _ = require('lodash')
 const path = require('path')
-const deploySpec = require('../controllers/deploy-spec')
+const DeploySpec = require('../controllers/deploy-spec')
 const { validateEnvironmentConfiguration } = require('../utils')
-const deployAdapters = require('../controllers/deploy-adapters/all')
-const deploySpecAdapters = require('../controllers/deploy-spec-adapters/all')
+const deployAdapters = require('../controllers/deploy-adapters')
 const { loadFromJSONFileOrNull } = require('../utils')
 
 module.exports = args => {
@@ -13,45 +12,45 @@ module.exports = args => {
 		target,
 		configuration,
 		environment,
-		mode = 'defensive',
+		mode = 'interactive',
 		deploy = false,
 		keyframe = path.join(process.cwd(), 'keyframe.json'),
 		buildComponents,
-		verbose = false,
+		verbose = false
 	} = args
 
 	// Validate and process environment info
 	return validateEnvironmentConfiguration(configuration, environment)
 		.then(environmentObj => {
 			if (target) {
-				if (!_.has(deploySpecAdapters, target)) {
+				if (!_.has(deployAdapters, target)) {
 					throw new Error(
 						'Target not implemented. \nAvailable options: ' +
-							String(_.keys(deployAdapters)),
+							String(_.keys(deployAdapters))
 					)
 				}
 				environmentObj = _.pick(environmentObj, [
 					target,
 					'archive-store',
-					'version',
+					'version'
 				])
 			}
 
 			return loadFromJSONFileOrNull(keyframe).then(kf => {
-				return new deploySpec(
-					environment,
-					environmentObj,
-					configuration,
-					kf,
+				return new DeploySpec({
+					environmentName: environment,
+					configBasePath: configuration,
+					keyframe: kf,
 					mode,
 					buildComponents,
-				)
+					environmentObj
+				})
 					.generate()
 					.then(() => {
 						if (deploy) {
 							return new deployAdapters[target](
 								environment,
-								environmentObj,
+								environmentObj
 							).run()
 						}
 					})

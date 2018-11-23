@@ -47,14 +47,14 @@ const generateChain = attributes => {
 		altDomains,
 		validFrom,
 		validTo,
-		bits = 2048,
+		bits = 2048
 	} = attributes
 
 	return generateCA({
 		caAttrs: caAttrs,
 		caValidFrom: caValidFrom,
 		caValidTo: caValidTo,
-		bits: bits,
+		bits: bits
 	}).then(([caCertPEM, caPrivateKeyPEM]) => {
 		return generateCert({
 			certAttrs: certAttrs,
@@ -63,7 +63,7 @@ const generateChain = attributes => {
 			altDomains: altDomains,
 			validFrom: validFrom,
 			validTo: validTo,
-			bits: bits,
+			bits: bits
 		}).then(([PemCert, PemPK]) => {
 			return [PemCert + caCertPEM + PemPK, caCertPEM, caPrivateKeyPEM]
 		})
