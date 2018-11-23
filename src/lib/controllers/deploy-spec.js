@@ -63,13 +63,18 @@ module.exports = class DeploySpec {
 			'config-manifest.yml'
 		)
 		let cs
-		if (target === 'docker-compose') {
-			cs = new compose(configPath)
-		} else if (target === 'balena') {
-			cs = new balena(configPath)
-		} else if (target === 'kubernetes') {
-			cs = new kubernetes(configPath)
+		switch (target) {
+			case 'docker-compose':
+				cs = new compose(configPath)
+				break
+			case 'balena':
+				cs = new balena(configPath)
+				break
+			case 'kubernetes':
+				cs = new kubernetes(configPath)
+				break
 		}
+
 		let cm = new ConfigManifest(configManifestPath)
 		return Promise.all([cs.getConfig(), cm.getConfigManifest()])
 			.tap(([config, cManifest]) => {
@@ -141,21 +146,19 @@ module.exports = class DeploySpec {
 	extendConfig(config, buildComponents) {
 		if (this.keyframe && _.get(this.keyframe, 'components')) {
 			_.forEach(this.keyframe['components'], (value, name) => {
-				config[name + '-image'] = _.get(value, 'image')
+				config[`${name}-image`] = _.get(value, 'image')
 			})
 		}
 		let promises = []
 		_.forEach(buildComponents, (buildPath, name) => {
 			buildPath = buildPath || path.join(process.cwd(), name)
-			config['build-' + name] = true
-			config[name + '-build-path'] = buildPath
+			config[`build-${name}`] = true
+			config[`${name}-build-path`] = buildPath
 			if (!_.get(this.keyframe['components'], name)) {
-				throw new Error('Build component: ' + name + ' not defined in keyframe')
+				throw new Error(`Build component: ${name} not defined in keyframe`)
 			}
 			if (!_.get(this.keyframe['components'], [name, 'repo'], '')) {
-				throw new Error(
-					'Build component: ' + name + ' repo not defined in keyframe'
-				)
+				throw new Error(`Build component: ${name} repo not defined in keyframe`)
 			}
 			promises.push(
 				ensureRepoInPath(

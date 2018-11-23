@@ -45,8 +45,10 @@ module.exports = class ConfigGenerator {
 				required: [name]
 			}
 		)
-		if (schemaErrors.valid) return true
-		else return schemaErrors.errors[0].stack
+		if (schemaErrors.valid) {
+			return true
+		}
+		return schemaErrors.errors[0].stack
 	}
 
 	generate() {

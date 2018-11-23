@@ -65,15 +65,9 @@ const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 	return loadFromFile(yamlPath).then(obj => {
 		if (!_.get(obj, name)) {
 			throw new Error(
-				'Error parsing "' +
-					yamlPath +
-					'"\n' +
-					'"' +
-					name +
-					'" not defined in "' +
-					yamlPath +
-					'" \n Available options: ' +
-					_.keys(obj)
+				`Error parsing "${yamlPath}"\n` +
+					`"${name}" not defined in "${yamlPath}"\n` +
+					`Available options: ${_.keys(obj)}`
 			)
 		}
 		return true
@@ -157,12 +151,7 @@ const ensureRepoInPath = (repoURI, repoPath) => {
 						return true
 					} else {
 						throw new Error(
-							'Git remote: ' +
-								repoURI +
-								" doesn't match " +
-								repoPath +
-								' existing remote: ' +
-								remote
+							`Git remote: ${repoURI} doesn't match ${repoPath} existing remote: ${remote}`
 						)
 					}
 				})

@@ -28,7 +28,7 @@ module.exports = class ConfigValidator {
 				if (throwErrors && errors.length) {
 					let errorString = ''
 					_.forEach(errors, err => {
-						errorString += err.stack + '\n'
+						errorString += `${err.stack}\n`
 					})
 					throw new Error(errorString)
 				} else {

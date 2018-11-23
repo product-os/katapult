@@ -67,20 +67,19 @@ const commonOptions = [
  * Generate and display help text
  */
 const help = () => {
-	console.log('Usage: katapult <command> [OPTIONS] <params>')
-	console.log('\nCommands:\n')
+	console.log('Usage: katapult <command> [OPTIONS] <params>\n')
+	console.log('Commands:\n')
 
 	for (let command of capitano.state.commands) {
-		if (command.isWildcard()) continue
-
-		console.log('\t' + command.signature + '\t\t\t' + command.description)
-		for (const option of command.options) {
-			console.log(
-				'\t  ',
-				option.alias ? '-' + option.alias + ',' : '',
-				'--' + option.signature
-			)
-			if (option.description) console.log(`\t\t${option.description}`)
+		if (!command.isWildcard()) {
+			console.log(`\t${command.signature}\t\t\t${command.description}`)
+			for (const option of command.options) {
+				console.log(
+					`\t  ${option.alias ? '-' + option.alias + ', ' : ''}--${
+						option.signature
+					} ${option.description ? '\n\t\t' + option.description : ''}`
+				)
+			}
 		}
 	}
 }
