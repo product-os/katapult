@@ -13,23 +13,40 @@ const execAsync = Promise.promisify(require('child_process').exec)
 const gitP = require('simple-git/promise')
 const yaml = require('yamljs')
 const path = require('path')
+const { unwrap } = require('balena-universe-cli-demo')
 
-const validateFilePath = path => {
-	return statAsync(path).then(stat => {
-		if (!stat.isFile()) {
-			throw new Error('Error: ' + path + ' is not a file')
-		}
-		return true
-	})
+const validateFilePath = (path, raise = true) => {
+	return statAsync(path)
+		.then(stat => {
+			if (!stat.isFile()) {
+				if (raise) {
+					throw new Error('Error: ' + path + ' is not a file')
+				}
+				return false
+			}
+			return true
+		})
+		.catch(error => {
+			if (raise) throw error
+			else return false
+		})
 }
 
-const validateDirectoryPath = path => {
-	return statAsync(path).then(stat => {
-		if (!stat.isDirectory()) {
-			throw new Error('Error: ' + path + ' is not a directory')
-		}
-		return true
-	})
+const validateDirectoryPath = (path, raise = true) => {
+	return statAsync(path)
+		.then(stat => {
+			if (!stat.isDirectory()) {
+				if (raise) {
+					throw new Error('Error: ' + path + ' is not a directory')
+				}
+				return false
+			}
+			return true
+		})
+		.catch(error => {
+			if (raise) throw error
+			else return false
+		})
 }
 
 const loadFromFile = filePath => {
@@ -166,17 +183,41 @@ const ensureRepoInPath = (repoURI, repoPath) => {
 		})
 }
 
-module.exports.validateEnvironmentConfiguration = validateEnvironmentConfiguration
-module.exports.parseEnvironmentConfiguration = parseEnvironmentConfiguration
-module.exports.validateTopLevelDirectiveYaml = validateTopLevelDirectiveYaml
-module.exports.loadFromJSONFileOrNull = loadFromJSONFileOrNull
-module.exports.validateDirectoryPath = validateDirectoryPath
-module.exports.scrubk8sMetadataMatch = scrubk8sMetadataMatch
-module.exports.ensureRepoInPath = ensureRepoInPath
-module.exports.validateFilePath = validateFilePath
-module.exports.renameFilesMatch = renameFilesMatch
-module.exports.scrubk8sMetadata = scrubk8sMetadata
-module.exports.moveFilesMatch = moveFilesMatch
-module.exports.loadFromJSONFile = loadFromJSONFile
-module.exports.loadFromFile = loadFromFile
-module.exports.ymlString = ymlString
+/**
+ * Wrapper of keyframe unwrapper.
+ * @param keyframePaths: A list of paths for searching for a keyframe file.
+ * @returns {Promise<Object | undefined>} Keyframe object
+ */
+const unwrapKeyframe = keyframePaths => {
+	return Promise.map(keyframePaths, kfPath => {
+		return validateFilePath(kfPath, false)
+	}).then(validPaths => {
+		const keyframe = keyframePaths[validPaths.indexOf(true)]
+		if (keyframe) {
+			let kf = unwrap({ logLevel: 'info' }, keyframe)
+			kf = _.filter(_.get(kf, 'consists_of', []), i => {
+				return i.type === 'sw.containerized-application'
+			})
+			kf = _.mapValues(_.keyBy(kf, 'slug'), o => {
+				return _.merge(o.assets, { version: o.version })
+			})
+			return kf
+		}
+	})
+}
+
+exports.validateEnvironmentConfiguration = validateEnvironmentConfiguration
+exports.parseEnvironmentConfiguration = parseEnvironmentConfiguration
+exports.validateTopLevelDirectiveYaml = validateTopLevelDirectiveYaml
+exports.loadFromJSONFileOrNull = loadFromJSONFileOrNull
+exports.validateDirectoryPath = validateDirectoryPath
+exports.scrubk8sMetadataMatch = scrubk8sMetadataMatch
+exports.ensureRepoInPath = ensureRepoInPath
+exports.validateFilePath = validateFilePath
+exports.renameFilesMatch = renameFilesMatch
+exports.scrubk8sMetadata = scrubk8sMetadata
+exports.loadFromJSONFile = loadFromJSONFile
+exports.unwrapKeyframe = unwrapKeyframe
+exports.moveFilesMatch = moveFilesMatch
+exports.loadFromFile = loadFromFile
+exports.ymlString = ymlString
