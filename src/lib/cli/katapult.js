@@ -36,7 +36,7 @@ const commonOptions = [
 		description:
 			"* interactive (default): When required values aren't available or valid an interactive prompt accepts user input.\n" +
 			'\t\t* defensive: No action is taken when configuration validation errors occur.Fails with an informative error message.\n' +
-			'\t\t* aggressive: If configuration validation fails, we fallback to auto-generating the missing/invalid value.n',
+			'\t\t* aggressive: If configuration validation fails, we fallback to auto-generating the missing/invalid value.',
 		alias: ['m']
 	},
 	{

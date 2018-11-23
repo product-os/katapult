@@ -2,12 +2,12 @@
 
 A tool for launching!
 
-Aim of this tool, is to produce final deployable artifacts (`deploy-spec`),
+The aim of this tool, is to produce final deployable artifacts (`deploy-spec`),
 tightly specifying all components and configuration, as well as anything else
 required to be directly deployable with no further processing. To that end,
-katapult uses `deploy-templates` folder containing definitions of environments
+katapult uses a `deploy-templates` folder containing definitions of environments
 along with their deploy-targets, and target-specific deploy-manifest templates
-and configuration specs. References to config-store containing values for an
+and configuration specs. References to a config-store containing values for an
 actual environment deployment instantiation are also included. Values from the
 `config-store` are used for transforming `deploy-templates` definitions to
 `deploy-specs`.
@@ -51,7 +51,7 @@ environment-name:
 ```
 Paths declared in `environments.yml` may be absolute or relative to that file.
 
-sample `environments.yml` content, for declaring a `development` environment
+Sample `environments.yml` content, for declaring a `development` environment
 with a `docker-compose` target:
 ```
 development:
@@ -62,7 +62,7 @@ development:
   archive-store: /path/to/archive/store
 ```
 
-sample `docker-compose` environment folder:
+Sample `docker-compose` environment folder:
 ```
 ├── config-manifest.yml
 ├── environment.env
@@ -75,7 +75,7 @@ anywhere.
 
 ###### `config-manifest.yml`
 
-Config manifest defines the spec for an environment configuration, in DSL
+The config manifest defines the spec for an environment configuration, in a DSL
 schema. Generators under `default` keyword may be included, for allowing
 auto-generating values.
 [More info link TBA](#)
@@ -89,7 +89,8 @@ The path/URI for storing the product deploy artifacts.
 Usage: `katapult <command> [OPTIONS] <params>`
 
 ##### generate
-Generates Deploy Spec from environment configuration
+
+Generates the deploy spec from environment configuration
 
 ###### generate options
 
@@ -118,7 +119,7 @@ auto-generating the missing/invalid value.
 `--verbose`: Enable verbose mode
 
 ##### deploy
-Generates Deploy Spec from environment configuration, and invokes a deployment
+Generates deploy spec from environment configuration, and invokes a deployment
 to the specified `--target`.
 
 ###### deploy options

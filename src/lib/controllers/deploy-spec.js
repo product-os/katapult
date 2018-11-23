@@ -96,7 +96,9 @@ module.exports = class DeploySpec {
 							_.isEqual
 						)
 						if (this.mode !== 'defensive') {
-							if (this.verbose) console.info('updating: ', configDiffPairs)
+							if (this.verbose) {
+								console.info('updating: ', configDiffPairs)
+							}
 							return cs.update(configDiffPairs)
 						}
 					})
