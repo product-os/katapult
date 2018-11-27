@@ -1,11 +1,9 @@
 import * as capitano from "capitano";
 import * as _ from "lodash";
-
-const generateDeploy = require("../commands/generate-deploy");
+import { generateDeploy } from "../commands/generate-deploy";
 
 /**
  * Options for generate and deploy commands are the same
- * @type {*[]}
  */
 const commonOptions = [
 	{

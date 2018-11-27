@@ -1,38 +1,39 @@
-'use strict'
+import * as _ from "lodash";
+import * as path from "path";
+const DeploySpec = require("../controllers/deploy-spec");
+const {
+	validateEnvironmentConfiguration,
+	unwrapKeyframe
+} = require("../utils");
+const deployAdapters = require("../controllers/deploy-adapters");
 
-const _ = require('lodash')
-const path = require('path')
-const DeploySpec = require('../controllers/deploy-spec')
-const { validateEnvironmentConfiguration, unwrapKeyframe } = require('../utils')
-const deployAdapters = require('../controllers/deploy-adapters')
-
-module.exports = args => {
+export function generateDeploy(args: any) {
 	const {
 		target,
 		configuration,
 		environment,
-		mode = 'interactive',
+		mode = "interactive",
 		deploy = false,
 		keyframe,
 		buildComponents,
 		verbose = false
-	} = args
+	} = args;
 
 	// Validate and process environment info
 	return validateEnvironmentConfiguration(configuration, environment)
-		.then(environmentObj => {
+		.then((environmentObj: any) => {
 			if (target) {
 				if (!_.has(deployAdapters, target)) {
 					throw new Error(
-						'Target not implemented. \nAvailable options: ' +
+						"Target not implemented. \nAvailable options: " +
 							String(_.keys(deployAdapters))
-					)
+					);
 				}
 				environmentObj = _.pick(environmentObj, [
 					target,
-					'archive-store',
-					'version'
-				])
+					"archive-store",
+					"version"
+				]);
 			}
 			// keyframe paths in asc priority order. The first available is used
 			let kfPaths = [
@@ -43,7 +44,7 @@ module.exports = args => {
 				path.join(configuration, 'keyframe.yaml')
 			]
 
-			return unwrapKeyframe(kfPaths).then(kf => {
+			return unwrapKeyframe(kfPaths).then((kf: any) => {
 				return new DeploySpec({
 					environmentName: environment,
 					configBasePath: configuration,
@@ -61,10 +62,12 @@ module.exports = args => {
 								environmentObj
 							}).run()
 						}
-					})
-			})
+					});
+			});
 		})
 		.then(() => {
-			console.log('Done...')
-		})
+			console.log("Done...");
+		});
 }
+
+module.exports = generateDeploy;
