@@ -1,0 +1,30 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es2015",
+		// "declaration": true,
+		"outDir": "out/",
+		"rootDir": "src/",
+		"noImplicitAny": true,
+		"noUnusedParameters": true,
+		"noUnusedLocals": true,
+		"preserveConstEnums": true,
+		"removeComments": true,
+		"sourceMap": true,
+		"strictNullChecks": true,
+		"skipLibCheck": true,
+		"allowJs": true,
+		"lib": [
+			"es6",
+			"es2016.array.include"
+		]
+	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.js",
+		"typings/**/*.d.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}
