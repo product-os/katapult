@@ -5,7 +5,8 @@
 	"private": true,
 	"scripts": {
 		"test": "nyc mocha",
-		"prepair": "tsc"
+		"prepare": "npm run compile",
+		"compile": "tsc"
 	},
 	"bin": {
 		"katapult": "./bin/katapult"
