@@ -4,11 +4,12 @@ const { readFileAsync, writeFileAsync } = Promise.promisifyAll(
 	require('fs-extra')
 )
 const dotenv = require('dotenv')
+const path = require('path')
 const _ = require('lodash')
 
 module.exports = class ConfigStore {
-	constructor(configPath) {
-		this.configPath = configPath
+	constructor(attrs, configBasePath) {
+		this.configPath = path.join(configBasePath, attrs['config-store'])
 	}
 
 	getConfig() {

@@ -21,3 +21,4 @@ rules:
     - never
   no-console: 'off'
   no-unused-vars: 'off'
+  no-useless-escape: 'off'
