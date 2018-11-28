@@ -56,11 +56,10 @@ module.exports = args => {
 					.generate()
 					.then(() => {
 						if (deploy) {
-							return new deployAdapters[target](
-								environment,
-								environmentObj,
-								configuration
-							).run()
+							return new deployAdapters[target]({
+								environmentName: environment,
+								environmentObj
+							}).run()
 						}
 					})
 			})

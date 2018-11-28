@@ -53,7 +53,6 @@ module.exports = class DeploySpec {
 	}
 
 	generateTarget(attrs, target) {
-		const templatePath = path.join(this.configBasePath, attrs.template)
 		const buildComponents =
 			this.buildComponents || _.get(attrs, 'build-components', [])
 		const configManifestPath = path.join(
@@ -66,16 +65,13 @@ module.exports = class DeploySpec {
 		let cs
 		switch (target) {
 			case 'docker-compose':
-				cs = new compose(
-					attrs,
-					this.configBasePath
-				)
+				cs = new compose(attrs)
 				break
 			case 'balena':
-				cs = new balena(attrs, this.configBasePath)
+				cs = new balena(attrs)
 				break
 			case 'kubernetes':
-				cs = new kubernetes(attrs, this.configBasePath)
+				cs = new kubernetes(attrs)
 				break
 		}
 
@@ -112,13 +108,13 @@ module.exports = class DeploySpec {
 						return this.extendConfig(config, buildComponents)
 					})
 					.then(() => {
-						return readdirAsync(templatePath).then(filenames => {
+						return readdirAsync(attrs.template).then(filenames => {
 							let promises = []
 
 							_.forEach(filenames, templateFileName => {
 								promises.push(
 									readFileAsync(
-										path.join(templatePath, templateFileName),
+										path.join(attrs.template, templateFileName),
 										'utf8'
 									).then(template => {
 										let output = mustache.render(template, config)

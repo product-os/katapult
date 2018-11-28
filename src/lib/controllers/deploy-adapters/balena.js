@@ -5,7 +5,7 @@ const simpleGit = require('simple-git')
 const fs = require('fs-extra')
 
 module.exports = class Deployment {
-	constructor(environmentName, environmentObj, configBasePath) {
+	constructor({ environmentName, environmentObj }) {
 		this.deploySpecBasePath = path.join(
 			environmentObj['archive-store'],
 			environmentName,

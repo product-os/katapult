@@ -1,13 +1,28 @@
 'use strict'
 const { config, Client } = require('kubernetes-client')
 const Promise = require('bluebird')
+const tunnelAsync = Promise.promisify(require('tunnel-ssh'))
+const fs = require('fs')
 const _ = require('lodash')
+const { runInTunnel } = require('../../utils')
 
 module.exports = class ConfigStore {
-	constructor(kubeconfigPath, namespace) {
-		let cfg = config.fromKubeconfig(kubeconfigPath)
-		this.namespace = namespace
-		this.client = new Client({ config: cfg })
+	constructor(attrs) {
+		let kubeconfig = config.fromKubeconfig(_.get(attrs, attrs.kubeconfig))
+		this.namespace = _.get(attrs, 'namespace')
+		this.bastion = _.get(attrs, 'bastion')
+		this.client = new Client({ config: kubeconfig })
+		this.tnlConfig = {
+			username: _.get(attrs, 'bastion-username'),
+			host: this.bastion,
+			dstHost: _.get(attrs, 'api'),
+			port: 22,
+			dstPort: 443,
+			privateKey: fs.readFileSync(_.get(attrs, 'bastion-key'), 'utf8'),
+			localHost: '127.0.0.1',
+			localPort: 8443,
+			passphrase: _.get(attrs, 'bastion-key-pass')
+		}
 	}
 
 	listSecrets() {
@@ -61,6 +76,13 @@ module.exports = class ConfigStore {
 	}
 
 	getConfig() {
+		if (this.bastion) {
+			return runInTunnel(this.tnlConfig, this.readConfig())
+		}
+		return this.readConfig()
+	}
+
+	readConfig() {
 		return this.listSecrets().then(res => {
 			let ret = {}
 			_.forEach(res.body.items, secret => {
@@ -80,6 +102,13 @@ module.exports = class ConfigStore {
 	}
 
 	update(envvars) {
+		if (this.bastion) {
+			return runInTunnel(this.tnlConfig, this.updateEnvvars(envvars))
+		}
+		return this.updateEnvvars(envvars)
+	}
+
+	updateEnvvars(envvars) {
 		let promises = []
 		_.forEach(envvars, pair => {
 			let [name, value] = pair

@@ -8,8 +8,8 @@ const path = require('path')
 const _ = require('lodash')
 
 module.exports = class ConfigStore {
-	constructor(attrs, configBasePath) {
-		this.configPath = path.join(configBasePath, attrs['config-store'])
+	constructor(attrs) {
+		this.configPath = path.join(_.get(attrs, 'config-store'))
 	}
 
 	getConfig() {

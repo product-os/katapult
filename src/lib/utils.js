@@ -9,6 +9,7 @@ const {
 	renameAsync
 } = Promise.promisifyAll(require('fs'))
 const mvAsync = Promise.promisify(require('mv'))
+const tunnelAsync = Promise.promisify(require('tunnel-ssh'))
 const execAsync = Promise.promisify(require('child_process').exec)
 const gitP = require('simple-git/promise')
 const yaml = require('yamljs')
@@ -141,10 +142,49 @@ const validateEnvironmentConfiguration = (configurationPath, environment) => {
 	})
 }
 
+/**
+ * Creates an ssh tunnel for executing a promise
+ * @param tnlConfig: ssh2 tunnel configuration object
+ * @param prom: promise
+ * @returns {Promise<T>}
+ */
+const runInTunnel = (tnlConfig, prom) => {
+	return tunnelAsync(tnlConfig).then(tnl => {
+		return prom.then(ret => {
+			if (tnl) {
+				tnl.close()
+			}
+			return ret
+		})
+	})
+}
+
+/**
+ * Converts paths of configuration in relative to basePath paths
+ * @param basePath
+ * @param configuration
+ * @returns {*}
+ */
+const pathsRelativeTo = (basePath, configuration) => {
+	console.log(path.join(basePath, configuration['archive-store']))
+	_.forEach(configuration, (attrs, target) => {
+		_.map(['template', 'config-store', 'bastion-key', 'kubeconfig'], key => {
+			if (_.get(attrs, key, false)) {
+				configuration[target][key] = path.join(basePath, attrs[key])
+			}
+		})
+	})
+	configuration['archive-store'] = path.join(
+		basePath,
+		configuration['archive-store']
+	)
+	return configuration
+}
+
 const parseEnvironmentConfiguration = (configurationPath, environmentName) => {
 	return loadFromFile(path.join(configurationPath, 'environments.yml')).then(
 		conf => {
-			return _.get(conf, environmentName)
+			return pathsRelativeTo(configurationPath, _.get(conf, environmentName))
 		}
 	)
 }
@@ -220,4 +260,5 @@ exports.loadFromJSONFile = loadFromJSONFile
 exports.unwrapKeyframe = unwrapKeyframe
 exports.moveFilesMatch = moveFilesMatch
 exports.loadFromFile = loadFromFile
+exports.runInTunnel = runInTunnel
 exports.ymlString = ymlString
