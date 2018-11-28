@@ -17,6 +17,7 @@
 	"author": "",
 	"license": "Apache-2.0",
 	"dependencies": {
+		"@types/yamljs": "^0.2.30",
 		"balena-universe-cli-demo": "0.0.1",
 		"bluebird": "~3",
 		"capitano": "~1",
