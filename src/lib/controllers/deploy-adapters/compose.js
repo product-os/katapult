@@ -5,7 +5,7 @@ const path = require('path')
 const { execAsync } = Promise.promisifyAll(require('child_process'))
 const _ = require('lodash')
 module.exports = class Deployment {
-	constructor(environmentName, environmentObj) {
+	constructor({ environmentName, environmentObj }) {
 		this.deploySpecBasePath = path.join(
 			environmentObj['archive-store'],
 			environmentName,

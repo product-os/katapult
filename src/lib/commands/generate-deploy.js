@@ -39,8 +39,8 @@ module.exports = args => {
 				keyframe,
 				path.join(process.cwd(), 'keyframe.yml'),
 				path.join(process.cwd(), 'keyframe.yaml'),
-				path.join(process.cwd(), '..', 'deploy-templates', 'keyframe.yml'),
-				path.join(process.cwd(), '..', 'deploy-templates', 'keyframe.yaml')
+				path.join(configuration, 'keyframe.yml'),
+				path.join(configuration, 'keyframe.yaml')
 			]
 
 			return unwrapKeyframe(kfPaths).then(kf => {
@@ -56,10 +56,10 @@ module.exports = args => {
 					.generate()
 					.then(() => {
 						if (deploy) {
-							return new deployAdapters[target](
-								environment,
+							return new deployAdapters[target]({
+								environmentName: environment,
 								environmentObj
-							).run()
+							}).run()
 						}
 					})
 			})

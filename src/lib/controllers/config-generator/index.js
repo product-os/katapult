@@ -16,7 +16,7 @@ const {
 const { escape, base64decode, base64 } = require('./filter-functions')
 
 module.exports = class ConfigAutoGenerator {
-	constructor(config, configManifest) {
+	constructor({ config, configManifest, mode }) {
 		this.config = config
 		this.configManifest = configManifest
 	}
