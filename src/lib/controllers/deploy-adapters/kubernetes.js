@@ -34,7 +34,7 @@ module.exports = class Deployment {
 
 	run() {
 		if (this.bastion) {
-			return runInTunnel(this.tnlConfig, this.deploy)
+			return runInTunnel(this.tnlConfig, this.deploy())
 		}
 		return this.deploy()
 	}
