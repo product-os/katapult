@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-require('../out/lib/cli/katapult')
+require('../build/lib/cli/katapult')

@@ -1,5 +1,5 @@
 'use strict'
-const { loadFromFile } = require('../src/lib/utils')
+const { loadFromFile } = require('../out/lib/utils')
 const { assert } = require('chai')
 
 const assertFilesEqual = (path1, path2) => {

@@ -70,4 +70,5 @@ Thumbs.db
 .settings
 .vscode
 
-out/
+# TS transpiled output
+build/

@@ -1,91 +1,91 @@
-import * as capitano from "capitano";
-import * as _ from "lodash";
-import { generateDeploy } from "../commands/generate-deploy";
+import * as capitano from 'capitano';
+import * as _ from 'lodash';
+import { generateDeploy } from '../commands/generate-deploy';
 
 /**
  * Options for generate and deploy commands are the same
  */
 const commonOptions = [
 	{
-		signature: "configuration",
-		parameter: "configuration",
-		description: "URI to deploy-template folder/repo",
-		alias: ["c"],
-		required: false
+		signature: 'configuration',
+		parameter: 'configuration',
+		description: 'URI to deploy-template folder/repo',
+		alias: ['c'],
+		required: false,
 	},
 	{
-		signature: "environment",
-		parameter: "environment",
-		description: "Name of the selected environment",
-		alias: ["e"],
-		required: true
+		signature: 'environment',
+		parameter: 'environment',
+		description: 'Name of the selected environment',
+		alias: ['e'],
+		required: true,
 	},
 	{
-		signature: "target",
-		parameter: "target",
-		description: "Name of the selected target",
-		alias: ["t"],
-		required: false
+		signature: 'target',
+		parameter: 'target',
+		description: 'Name of the selected target',
+		alias: ['t'],
+		required: false,
 	},
 	{
-		signature: "mode",
-		parameter: "mode",
+		signature: 'mode',
+		parameter: 'mode',
 		description:
-			"* interactive (default): When required values are not available or valid, prompt the user for input.\n" +
-			"\t\t* defensive: No action is taken when configuration validation errors occur. Fails with an informative error message.\n" +
-			"\t\t* aggressive: Automatically generates missing or invalid values when configuration validation fails.",
-		alias: ["m"]
+			'* interactive (default): When required values are not available or valid, prompt the user for input.\n' +
+			'\t\t* defensive: No action is taken when configuration validation errors occur. Fails with an informative error message.\n' +
+			'\t\t* aggressive: Automatically generates missing or invalid values when configuration validation fails.',
+		alias: ['m'],
 	},
 	{
-		signature: "keyframe",
-		parameter: "keyframe",
-		alias: ["k"],
+		signature: 'keyframe',
+		parameter: 'keyframe',
+		alias: ['k'],
 		description:
-			"Path to keyframe file, if available. Defaults to ./keyframe.yml",
-		required: false
+			'Path to keyframe file, if available. Defaults to ./keyframe.yml',
+		required: false,
 	},
 	{
-		signature: "service-format",
-		parameter: "format",
+		signature: 'service-format',
+		parameter: 'format',
 		description:
 			'Format could be either "image" (component will use a pre-built Docker image) or "build" ' +
-			"(component will build the Docker image from local sources) " +
-			"Defaults to image for all components",
-		alias: ["f"],
+			'(component will build the Docker image from local sources) ' +
+			'Defaults to image for all components',
+		alias: ['f'],
 		required: false,
-		type: "array"
+		type: 'array',
 	},
 	{
-		signature: "build-path",
-		parameter: "path",
+		signature: 'build-path',
+		parameter: 'path',
 		description:
-			"Build path for a component as: --build-path <component>=<path>",
-		alias: ["b"],
-		required: false
+			'Build path for a component as: --build-path <component>=<path>',
+		alias: ['b'],
+		required: false,
 	},
 	{
-		signature: "verbose",
-		description: "Enable verbose mode",
-		alias: ["v"],
-		boolean: true
-	}
+		signature: 'verbose',
+		description: 'Enable verbose mode',
+		alias: ['v'],
+		boolean: true,
+	},
 ];
 
 /**
  * Generate and display help text
  */
 const help = () => {
-	console.log("Usage: katapult <command> [OPTIONS] <params>\n");
-	console.log("Commands:\n");
+	console.log('Usage: katapult <command> [OPTIONS] <params>\n');
+	console.log('Commands:\n');
 
 	for (const command of capitano.state.commands) {
 		if (!command.isWildcard()) {
 			console.log(`\t${command.signature}\t\t\t${command.description}`);
 			for (const option of command.options || []) {
 				console.log(
-					`\t  ${option.alias ? "-" + option.alias + ", " : ""}--${
+					`\t  ${option.alias ? '-' + option.alias + ', ' : ''}--${
 						option.signature
-					} ${option.description ? "\n\t\t" + option.description : ""}`
+					} ${option.description ? '\n\t\t' + option.description : ''}`,
 				);
 			}
 		}
@@ -93,35 +93,35 @@ const help = () => {
 };
 
 capitano.globalOption({
-	signature: "verbose",
+	signature: 'verbose',
 	boolean: true,
-	alias: ["v"],
-	required: false
+	alias: ['v'],
+	required: false,
 });
 
 capitano.command({
-	signature: "help",
-	description: "Output help",
-	action: help
+	signature: 'help',
+	description: 'Output help',
+	action: help,
 });
 
 capitano.command({
-	signature: "deploy",
-	description: "Generate Deploy Spec from environment configuration and deploy",
+	signature: 'deploy',
+	description: 'Generate Deploy Spec from environment configuration and deploy',
 	options: commonOptions,
 	action: (_params, options) => {
 		options = parseOptions(options);
 		if (options.verbose) {
 			console.info(`input options:\n${options}`);
 		}
-		options["deploy"] = true;
+		options['deploy'] = true;
 		return generateDeploy(options).asCallback();
-	}
+	},
 });
 
 capitano.command({
-	signature: "generate",
-	description: "Generate Deploy Spec from environment configuration",
+	signature: 'generate',
+	description: 'Generate Deploy Spec from environment configuration',
 	options: commonOptions,
 	action: (_params, options) => {
 		options = parseOptions(options);
@@ -129,7 +129,7 @@ capitano.command({
 			console.info(`input options:\n${options}`);
 		}
 		return generateDeploy(options).asCallback();
-	}
+	},
 });
 
 if (process.argv.length <= 2) {
@@ -140,7 +140,7 @@ if (process.argv.length <= 2) {
 capitano.run(process.argv, err => {
 	if (err) {
 		help();
-		if (process.argv.includes("-v") || process.argv.includes("--verbose")) {
+		if (process.argv.includes('-v') || process.argv.includes('--verbose')) {
 			throw err;
 		} else {
 			console.error(err.message);
@@ -151,39 +151,39 @@ capitano.run(process.argv, err => {
 
 const parseOptions = (options: any) => {
 	// Parse 'service-format' as array
-	let serviceFormats = _.get(options, "service-format");
-	if (typeof serviceFormats === "string") {
+	let serviceFormats = _.get(options, 'service-format');
+	if (typeof serviceFormats === 'string') {
 		serviceFormats = [serviceFormats];
 	}
 	// Parse 'build-path' as array
-	let buildPaths = _.get(options, "build-path", []);
-	if (typeof buildPaths === "string") {
+	let buildPaths = _.get(options, 'build-path', []);
+	if (typeof buildPaths === 'string') {
 		buildPaths = [buildPaths];
 	}
 	// Convert buildPaths to obj
 	buildPaths = _.reduce(
 		buildPaths.map((value: any) => {
-			return value.split("=");
+			return value.split('=');
 		}),
 		(obj: any, val: any) => {
 			return _.merge(obj, { [val[0]]: val[1] });
 		},
-		{}
+		{},
 	);
 	// Default configuration to deploy-templates
-	let configuration = _.get(options, "configuration");
-	if (typeof configuration !== "string") {
-		options["configuration"] = "deploy-templates";
+	let configuration = _.get(options, 'configuration');
+	if (typeof configuration !== 'string') {
+		options['configuration'] = 'deploy-templates';
 	}
 	// Combine service-format and build-path parameters into buildComponents
 	const buildComponents: any = {};
 	_.forEach(serviceFormats, (value: any) => {
-		let [component, format] = value.split("=");
-		if (format === "build") {
+		let [component, format] = value.split('=');
+		if (format === 'build') {
 			buildComponents[component] = _.get(buildPaths, component, null);
 		}
 	});
 
-	options["buildComponents"] = buildComponents;
+	options['buildComponents'] = buildComponents;
 	return options;
 };

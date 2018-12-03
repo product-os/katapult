@@ -4,9 +4,11 @@
 	"description": "A tool for launching!",
 	"private": true,
 	"scripts": {
-		"test": "nyc mocha",
-		"prepare": "npm run compile",
-		"compile": "tsc"
+		"build": "tsc",
+		"lint": "resin-lint --typescript src/ test/ && tsc --noEmit",
+		"prepare": "npm run build",
+		"prettify": "prettier --config ./node_modules/resin-lint/config/.prettierrc --write \"src/**/*.ts\" \"typings/**/*.ts\" \"test/**/*.ts\"",
+		"test": "nyc mocha"
 	},
 	"bin": {
 		"katapult": "./bin/katapult"
@@ -18,31 +20,51 @@
 	"author": "",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@types/yamljs": "^0.2.30",
 		"balena-universe-cli-demo": "0.0.1",
-		"bluebird": "~3",
-		"capitano": "~1",
-		"dhparam": "~2",
-		"dotenv": "~6",
-		"fs-extra": "~7",
-		"inquirer": "~6",
-		"jsonschema": "~1",
-		"kubernetes-client": "^6.4.0",
+		"bluebird": "^3.5.3",
+		"capitano": "^1.8.2",
+		"dhparam": "^2.0.0",
+		"dotenv": "^6.1.0",
+		"fs-extra": "^7.0.1",
+		"inquirer": "^6.2.1",
+		"jsonschema": "^1.2.4",
+		"kubernetes-client": "^6.4.1",
 		"lodash": "^4.17.11",
-		"mustache": "~2",
-		"mv": "~2",
+		"mustache": "^3.0.1",
+		"mv": "^2.1.1",
 		"node-forge": "^0.7.6",
-		"simple-git": "~1",
-		"yamljs": "~0.3"
+		"rimraf": "^2.6.2",
+		"simple-git": "^1.107.0",
+		"tunnel-ssh": "^4.1.4",
+		"yamljs": "^0.3.0"
 	},
 	"devDependencies": {
 		"@types/bluebird": "^3.5.24",
 		"@types/lodash": "^4.14.118",
 		"@types/node": "^10.12.10",
-		"chai": "~4",
-		"mocha": "~5",
-		"mocha-eslint": "~4",
-		"nyc": "~12",
+		"@types/rimraf": "^2.0.2",
+		"@types/yamljs": "^0.2.30",
+		"chai": "^4.2.0",
+		"husky": "^1.2.0",
+		"lint-staged": "^8.1.0",
+		"mocha": "^5.2.0",
+		"mocha-eslint": "^4.1.0",
+		"nyc": "^13.1.0",
+		"resin-lint": "^2.0.1",
+		"ts-node": "^7.0.1",
 		"typescript": "^3.1.6"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged",
+			"pre-push": "npm run lint"
+		}
+	},
+	"lint-staged": {
+		"*.ts": [
+			"prettier --config ./node_modules/resin-lint/config/.prettierrc --write",
+			"resin-lint --typescript --no-prettier",
+			"git add"
+		]
 	}
 }
