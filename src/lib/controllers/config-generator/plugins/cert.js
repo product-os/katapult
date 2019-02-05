@@ -25,6 +25,8 @@ const generatePublicKey = require('./public-key')
  * 		Example: ['*.custom-domain.io', '*.devices.custom-domain.io']
  * 	validFrom: Date parsable string for cert validFrom field.
  * 	validTo: Date parsable string for cert validTo field.
+ * 	extKeyUsage: List of extended usages.
+ * 		Example: ['serverAuth', 'clientAuth']
  *
  * 	@returns {string} Certificate PEM format string.
  */
@@ -36,7 +38,8 @@ const generateCert = attributes => {
 		altDomains,
 		validFrom,
 		validTo,
-		privateKeyPEM
+		privateKeyPEM,
+		extKeyUsage
 	} = attributes
 
 	// reformat caAttrs to list.
@@ -82,6 +85,14 @@ const generateCert = attributes => {
 		{
 			name: 'subjectAltName',
 			altNames: altNames
+		},
+		{
+			name: 'extKeyUsage',
+			serverAuth: _.includes(extKeyUsage, 'serverAuth'),
+			clientAuth: _.includes(extKeyUsage, 'clientAuth'),
+			codeSigning: _.includes(extKeyUsage, 'codeSigning'),
+			emailProtection: _.includes(extKeyUsage, 'emailProtection'),
+			timeStamping: _.includes(extKeyUsage, 'timeStamping'),
 		}
 	])
 	cert.sign(caPK, forge.md.sha256.create())

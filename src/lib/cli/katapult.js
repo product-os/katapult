@@ -129,7 +129,7 @@ capitano.command({
 	action: (params, options) => {
 		options = parseOptions(options)
 		if (options.verbose) {
-			console.info(`input options:\n${options}`)
+			console.info(`input options:\n${JSON.stringify(options, null, 2)}`)
 		}
 		return generateDeploy(options).asCallback()
 	}
