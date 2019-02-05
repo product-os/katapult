@@ -64,13 +64,14 @@ const generateCert = attributes => {
 	let caPK = forge.pki.privateKeyFromPem(caPrivateKeyPEM)
 	let publicKey = forge.pki.publicKeyFromPem(generatePublicKey(privateKeyPEM))
 	let cert = forge.pki.createCertificate()
+	
 	cert.publicKey = publicKey
 	cert.serialNumber = '05'
 	cert.validity.notBefore = new Date(validFrom)
 	cert.validity.notAfter = new Date(validTo)
 	cert.setSubject(subjectAttrs)
 	cert.setIssuer(caCert.subject.attributes)
-	cert.setExtensions([
+	let extensions = [
 		{
 			name: 'basicConstraints',
 			cA: false
@@ -83,10 +84,6 @@ const generateCert = attributes => {
 			dataEncipherment: true
 		},
 		{
-			name: 'subjectAltName',
-			altNames: altNames
-		},
-		{
 			name: 'extKeyUsage',
 			serverAuth: _.includes(extKeyUsage, 'serverAuth'),
 			clientAuth: _.includes(extKeyUsage, 'clientAuth'),
@@ -94,7 +91,15 @@ const generateCert = attributes => {
 			emailProtection: _.includes(extKeyUsage, 'emailProtection'),
 			timeStamping: _.includes(extKeyUsage, 'timeStamping'),
 		}
-	])
+	]
+
+	if (altNames.length > 0) {
+		extensions.push({
+			name: 'subjectAltName',
+			altNames: altNames
+		})
+	}
+	cert.setExtensions(extensions)
 	cert.sign(caPK, forge.md.sha256.create())
 	return Buffer.from(forge.pki.certificateToPem(cert)).toString()
 }
