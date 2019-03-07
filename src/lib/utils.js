@@ -14,7 +14,7 @@ const execAsync = Promise.promisify(require('child_process').exec)
 const gitP = require('simple-git/promise')
 const yaml = require('yamljs')
 const path = require('path')
-const { unwrap } = require('balena-universe-cli-demo')
+const { unwrap } = require('@balena/keyframe')
 
 const validateFilePath = (path, raise = true) => {
 	return statAsync(path)
