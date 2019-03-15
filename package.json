@@ -1,42 +1,42 @@
 {
-	"name": "katapult",
-	"version": "0.0.1",
-	"description": "A tool for launching!",
-	"private": true,
-	"scripts": {
-		"test": "nyc mocha"
-	},
-	"bin": {
-		"katapult": "./bin/katapult"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/resin-io/katapult"
-	},
-	"author": "Michael Angelos Simos <michalis@balena.io>",
-	"license": "Apache-2.0",
-	"dependencies": {
-		"base32-encode": "^1.1.0",
-		"bluebird": "^3.5.3",
-		"capitano": "^1.8.2",
-		"dhparam": "^2.0.0",
-		"dotenv": "^6.1.0",
-		"fs-extra": "^7.0.1",
-		"inquirer": "^6.2.0",
-		"jsonschema": "^1.2.4",
-		"kubernetes-client": "^6.4.0",
-		"lodash": "^4.17.11",
-		"mustache": "^2.3.2",
-		"mv": "^2.1.1",
-		"node-forge": "^0.7.6",
-		"simple-git": "^1.107.0",
-		"tunnel-ssh": "^4.1.4",
-		"yamljs": "^0.3.0"
-	},
-	"devDependencies": {
-		"chai": "^4.2.0",
-		"mocha": "^5.2.0",
-		"mocha-eslint": "^4.1.0",
-		"nyc": "^12.0.2"
-	}
+  "name": "katapult",
+  "version": "1.5.4",
+  "description": "A tool for launching!",
+  "private": true,
+  "scripts": {
+    "test": "nyc mocha"
+  },
+  "bin": {
+    "katapult": "./bin/katapult"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/balena-io/katapult"
+  },
+  "author": "Michael Angelos Simos <michalis@balena.io>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "base32-encode": "^1.1.1",
+    "bluebird": "^3.5.3",
+    "capitano": "^1.9.0",
+    "dhparam": "^2.0.0",
+    "dotenv": "^7.0.0",
+    "fs-extra": "^7.0.1",
+    "inquirer": "^6.2.2",
+    "jsonschema": "^1.2.4",
+    "kubernetes-client": "^6.11.0",
+    "lodash": "^4.17.11",
+    "mustache": "^3.0.1",
+    "mv": "^2.1.1",
+    "node-forge": "^0.8.1",
+    "simple-git": "^1.107.0",
+    "tunnel-ssh": "^4.1.4",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.0.2",
+    "mocha-eslint": "^5.0.0",
+    "nyc": "^13.3.0"
+  }
 }
