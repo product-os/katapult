@@ -6,7 +6,7 @@ const {
 	readFileAsync,
 	writeFileAsync,
 	statAsync,
-	renameAsync
+	renameAsync,
 } = Promise.promisifyAll(require('fs'))
 const mvAsync = Promise.promisify(require('mv'))
 const tunnelAsync = Promise.promisify(require('tunnel-ssh'))
@@ -14,7 +14,6 @@ const execAsync = Promise.promisify(require('child_process').exec)
 const gitP = require('simple-git/promise')
 const yaml = require('yamljs')
 const path = require('path')
-const { unwrap } = require('@balena/keyframe')
 
 const validateFilePath = (path, raise = true) => {
 	return statAsync(path)
@@ -224,26 +223,30 @@ const ensureRepoInPath = (repoURI, repoPath) => {
 }
 
 /**
- * Wrapper of keyframe unwrapper.
+ * Keyframe unwrapper.
  * @param keyframePaths: A list of paths for searching for a keyframe file.
  * @returns {Promise<Object | undefined>} Keyframe object
  */
-const unwrapKeyframe = keyframePaths => {
-	return Promise.map(keyframePaths, kfPath => {
+const unwrapKeyframe = async keyframePaths => {
+	const validPaths = await Promise.map(keyframePaths, kfPath => {
 		return validateFilePath(kfPath, false)
-	}).then(validPaths => {
-		const keyframe = keyframePaths[validPaths.indexOf(true)]
-		if (keyframe) {
-			let kf = unwrap({ logLevel: 'info' }, keyframe)
-			kf = _.filter(_.get(kf, 'consists_of', []), i => {
-				return i.type === 'sw.containerized-application'
-			})
-			kf = _.mapValues(_.keyBy(kf, 'slug'), o => {
-				return _.merge(o.assets, { version: o.version })
-			})
-			return kf
-		}
 	})
+	const keyframePath = keyframePaths[validPaths.indexOf(true)]
+	if (keyframePath) {
+		let keyframe = await loadFromFile(keyframePath)
+		keyframe = _.filter(
+			_.get(keyframe, ['children', 'sw', 'containerized-application'], []),
+			component => {
+				return component.type === 'sw.containerized-application'
+			}
+		)
+		keyframe = _.mapValues(_.keyBy(keyframe, 'slug'), o => {
+			return _.merge(o.assets, { version: o.version })
+		})
+		return keyframe
+	} else {
+		throw new Error('Error: Keyframe not found in ' + keyframePaths)
+	}
 }
 
 exports.validateEnvironmentConfiguration = validateEnvironmentConfiguration
