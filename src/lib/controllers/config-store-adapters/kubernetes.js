@@ -1,7 +1,6 @@
 'use strict'
 const { config, Client } = require('kubernetes-client')
 const Promise = require('bluebird')
-const tunnelAsync = Promise.promisify(require('tunnel-ssh'))
 const fs = require('fs')
 const _ = require('lodash')
 const { runInTunnel } = require('../../utils')
@@ -21,58 +20,53 @@ module.exports = class ConfigStore {
 			privateKey: fs.readFileSync(_.get(attrs, 'bastion-key'), 'utf8'),
 			localHost: '127.0.0.1',
 			localPort: 8443,
-			passphrase: _.get(attrs, 'bastion-key-pass')
+			passphrase: _.get(attrs, 'bastion-key-pass'),
 		}
 	}
 
-	listSecrets() {
-		return this.client.loadSpec().then(() => {
-			return this.client.apis.v1.namespaces(this.namespace).secrets.get()
-		})
+	async listSecrets() {
+		await this.client.loadSpec()
+		const secrets = await this.client.api.v1
+			.namespaces(this.namespace)
+			.secrets.get()
+		return secrets
 	}
 
-	secretExists(secretName) {
-		return this.client.loadSpec().then(() => {
-			return this.client.apis.v1
+	async deleteSecret(secretName) {
+		await this.client.loadSpec()
+		try {
+			await this.client.api.v1
 				.namespaces(this.namespace)
-				.secrets.get()
-				.then(secrets => {
-					return (
-						_.filter(secrets.body.items, { metadata: { name: secretName } })
-							.length > 0
-					)
-				})
-		})
+				.secrets(secretName)
+				.delete()
+			return true
+		} catch (err) {
+			return false
+		}
 	}
 
-	deleteSecret(secretName) {
-		return this.secretExists(secretName).then(exists => {
-			if (exists) {
-				return this.client.apis.v1
-					.namespaces(this.namespace)
-					.secrets(secretName)
-					.delete()
-			}
-		})
-	}
-
-	updateSecret(k8sSecretName, name, value) {
-		let manifest = {
+	async updateSecret(k8sSecretName, name, value) {
+		await this.client.loadSpec()
+		const patchManifest = {
 			APIVersion: 'v1',
 			Kind: 'Secret',
 			metadata: {
-				name: k8sSecretName
+				name: k8sSecretName,
 			},
 			type: 'Opaque',
 			data: {
-				[name]: Buffer.from(value).toString('base64')
-			}
+				[name]: Buffer.from(value).toString('base64'),
+			},
 		}
-		return this.deleteSecret(k8sSecretName).then(() => {
-			return this.client.apis.v1
+		try {
+			await this.client.api.v1
 				.namespaces(this.namespace)
-				.secrets.post({ body: manifest })
-		})
+				.secrets(k8sSecretName)
+				.patch({ body: patchManifest })
+			return true
+		} catch (err) {
+			return false
+		}
 	}
 
 	getConfig() {
@@ -82,23 +76,22 @@ module.exports = class ConfigStore {
 		return this.readConfig()
 	}
 
-	readConfig() {
-		return this.listSecrets().then(res => {
-			let ret = {}
-			_.forEach(res.body.items, secret => {
-				if (
-					_.has(
-						secret.data,
-						secret.metadata.name.toUpperCase().replace(/-/g, '_')
-					)
+	async readConfig() {
+		const secrets = await this.listSecrets()
+		let ret = {}
+		_.forEach(secrets.body.items, secret => {
+			if (
+				_.has(
+					secret.data,
+					secret.metadata.name.toUpperCase().replace(/-/g, '_')
 				)
-					_.forEach(secret.data, (value, name) => {
-						if (value === null) ret[name] = ''
-						else ret[name] = Buffer.from(value, 'base64').toString()
-					})
-			})
-			return ret
+			)
+				_.forEach(secret.data, (value, name) => {
+					if (value === null) ret[name] = ''
+					else ret[name] = Buffer.from(value, 'base64').toString()
+				})
 		})
+		return ret
 	}
 
 	update(envvars) {
@@ -109,12 +102,9 @@ module.exports = class ConfigStore {
 	}
 
 	updateEnvvars(envvars) {
-		let promises = []
-		_.forEach(envvars, pair => {
-			let [name, value] = pair
+		return Promise.map(envvars, ([name, value]) => {
 			let k8sSecretName = name.toLowerCase().replace(/_/g, '-')
-			promises.push(this.updateSecret(k8sSecretName, name, value))
-		})
-		return Promise.all(promises).return(envvars)
+			this.updateSecret(k8sSecretName, name, value)
+		}).return(envvars)
 	}
 }
