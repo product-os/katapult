@@ -16,7 +16,6 @@
 	"author": "Michael Angelos Simos <michalis@balena.io>",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@balena/keyframe": "0.1.0-initial-cli-2a67d24a38873868608052c7d55767c2b8a4d097",
 		"base32-encode": "^1.1.0",
 		"bluebird": "^3.5.3",
 		"capitano": "^1.8.2",
