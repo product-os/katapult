@@ -69,3 +69,8 @@ Thumbs.db
 .project
 .settings
 .vscode
+
+# Other
+/dist
+/tmp
+/yarn.lock

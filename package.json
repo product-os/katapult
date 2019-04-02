@@ -1,42 +1,77 @@
 {
   "name": "katapult",
-  "version": "1.5.4",
-  "description": "A tool for launching!",
-  "private": true,
-  "scripts": {
-    "test": "nyc mocha"
-  },
-  "bin": {
-    "katapult": "./bin/katapult"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/balena-io/katapult"
-  },
+  "description": "A tool for launching container-based products",
+  "version": "1.5.6",
   "author": "Michael Angelos Simos <michalis@balena.io>",
-  "license": "Apache-2.0",
+  "bin": {
+    "katapult": "./bin/run"
+  },
+  "bugs": "https://github.com/balena-io/katapult/issues",
   "dependencies": {
+    "@oclif/command": "^1.5.12",
+    "@oclif/config": "^1.12.10",
+    "@oclif/plugin-help": "^2.1.6",
+    "@types/bluebird": "^3.5.26",
     "base32-encode": "^1.1.1",
     "bluebird": "^3.5.3",
-    "capitano": "^1.9.0",
     "dhparam": "^2.0.0",
     "dotenv": "^7.0.0",
-    "fs-extra": "^7.0.1",
     "inquirer": "^6.2.2",
     "jsonschema": "^1.2.4",
     "kubernetes-client": "^6.11.0",
-    "lodash": "^4.17.11",
     "mustache": "^3.0.1",
     "mv": "^2.1.1",
     "node-forge": "^0.8.1",
     "simple-git": "^1.107.0",
+    "tslib": "^1.9.3",
     "tunnel-ssh": "^4.1.4",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@oclif/dev-cli": "^1.21.3",
+    "@oclif/test": "^1.2.4",
+    "@oclif/tslint": "^3.1.1",
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^10.14.1",
     "chai": "^4.2.0",
-    "mocha": "^6.0.2",
-    "mocha-eslint": "^5.0.0",
-    "nyc": "^13.3.0"
-  }
+    "globby": "^8.0.2",
+    "mocha": "^5.2.0",
+    "nyc": "^13.3.0",
+    "ts-node": "^8.0.3",
+    "tslint": "^5.14.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.3.3333"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "homepage": "https://github.com/balena-io/katapult",
+  "keywords": [
+    "oclif"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "oclif": {
+    "commands": "./lib/commands",
+    "bin": "katapult",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
+  },
+  "repository": "balena-io/katapult",
+  "scripts": {
+    "postpack": "rm -f oclif.manifest.json",
+    "posttest": "tslint -p test -t stylish",
+    "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
+    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif-dev readme && git add README.md"
+  },
+  "types": "lib/index.d.ts"
 }

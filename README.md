@@ -1,132 +1,89 @@
-## katapult
+katapult
+========
 
-A tool for launching!
+A tool for launching container-based products
 
-The aim of this tool, is to produce final deployable artifacts (`deploy-spec`),
-tightly specifying all components and configuration, as well as anything else
-required to be directly deployable with no further processing. To that end,
-katapult uses a `deploy-templates` folder containing definitions of environments
-along with their deploy-targets, and target-specific deploy-manifest templates
-and configuration specs. References to a config-store containing values for an
-actual environment deployment instantiation are also included. Values from the
-`config-store` are used for transforming `deploy-templates` definitions to
-`deploy-specs`.
+[![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
+[![Version](https://img.shields.io/npm/v/katapult.svg)](https://npmjs.org/package/katapult)
+[![CircleCI](https://circleci.com/gh/balena-io/katapult/tree/master.svg?style=shield)](https://circleci.com/gh/balena-io/katapult/tree/master)
+[![Downloads/week](https://img.shields.io/npm/dw/katapult.svg)](https://npmjs.org/package/katapult)
+[![License](https://img.shields.io/npm/l/katapult.svg)](https://github.com/balena-io/katapult/blob/master/package.json)
 
-
-This cli tool consumes a `deploy-templates` folder with the following example
-structure:
+<!-- toc -->
+* [Usage](#usage)
+* [Commands](#commands)
+<!-- tocstop -->
+# Usage
+<!-- usage -->
+```sh-session
+$ npm install -g katapult
+$ katapult COMMAND
+running command...
+$ katapult (-v|--version|version)
+katapult/0.0.0 linux-x64 node-v11.9.0
+$ katapult --help [COMMAND]
+USAGE
+  $ katapult COMMAND
+...
 ```
-deploy-templates/
-├── environment-name/
-│   └── version/
-│       └── target/
-│           ├── config-manifest.yml
-│           └── templates/
-│               └── docker-compose.tpl.yml
-└── environments.yml
+<!-- usagestop -->
+# Commands
+<!-- commands -->
+* [`katapult deploy [FILE]`](#katapult-deploy-file)
+* [`katapult generate`](#katapult-generate)
+* [`katapult help [COMMAND]`](#katapult-help-command)
+
+## `katapult deploy [FILE]`
+
+describe the command here
+
 ```
+USAGE
+  $ katapult deploy [FILE]
 
-- `environment-name/`: Folder containing environment deployment and
-configuration specs.
-- `target/`: Contains deployment and configuration specs for a specific target.
-- `config-manifest.yml`: Specifies the schema of the environment configuration.
-- `templates/`:  Folder containing deployment spec templates in
-[mustache](https://mustache.github.io/) format, bearing extension `.tpl.ext`
-(ext may be `.yml` for example for docker-compose or kubernetes targets).
-- `environment.yml`: A file declaring available environments.
-
-
-###### `environment.yml`
-
-Current format of the file follows:
-
-`environments.yml`:
-```
-environment-name:
-  version: vX.Y.Z
-  target-name:
-    template: /path/to/folder/containing/deploy-templates
-    config-store: /path/to/config/store
-  archive-store: /path/to/archive/store
-```
-Paths declared in `environments.yml` may be absolute or relative to that file.
-
-Sample `environments.yml` content, for declaring a `development` environment
-with a `docker-compose` target:
-```
-development:
-  version: v1.0.0
-  docker-compose:
-    template: development/v1.0.0/docker-compose/templates/
-    config-store: development/v1.0.0/docker-compose/environment.env
-  archive-store: /path/to/archive/store
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
 ```
 
-Sample `docker-compose` environment folder:
+_See code: [src/commands/deploy.ts](https://github.com/balena-io/katapult/blob/v0.0.0/src/commands/deploy.ts)_
+
+## `katapult generate`
+
+Generate Deploy Spec from environment configuration
+
 ```
-├── config-manifest.yml
-├── environment.env
-└── templates
-    └── docker-compose.tpl.yml
+USAGE
+  $ katapult generate
+
+OPTIONS
+  -c, --configuration=configuration            [default: ./] URI to deploy-template folder/repo
+  -e, --environment=environment                (required) Name of the selected environment
+  -k, --keyframe=keyframe                      [default: ./keyframe.yml] Path to keyframe file, if available
+
+  -m, --mode=interactive|defensive|aggressive  [default: interactive] Determine how to resolve data which is missing at
+                                               runtime.
+
+  -t, --target=target                          Name of the selected target
 ```
 
-In this example, environment.env is included in target folder, but could be
-anywhere.
+_See code: [src/commands/generate.ts](https://github.com/balena-io/katapult/blob/v0.0.0/src/commands/generate.ts)_
 
-###### `config-manifest.yml`
+## `katapult help [COMMAND]`
 
-The config manifest defines the spec for an environment configuration, in a DSL
-schema. Generators under `default` keyword may be included, for allowing
-auto-generating values.
-[More info link TBA](#)
+display help for katapult
 
-###### `archive-store`
+```
+USAGE
+  $ katapult help [COMMAND]
 
-The path/URI for storing the product deploy artifacts.
+ARGUMENTS
+  COMMAND  command to show help for
 
-### Commands
+OPTIONS
+  --all  see all commands in CLI
+```
 
-Usage: `katapult <command> [OPTIONS] <params>`
-
-##### generate
-
-Generates the deploy spec from environment configuration
-
-###### generate options
-
-`--configuration`: URI to deploy-template folder/repo
-
-`--environment`: Name of the environment to act on.
-
-`--target`: Target name
-
-`--mode`: There are 3 valid values for mode:
-- interactive (default): When required values are not available or valid,
-prompt the user for input.
-- defensive: No action is taken when configuration validation errors occur.
-We fail with an informative error message.
-- aggressive: Automatically generates missing or invalid values when
-configuration validation fails.
-
-`--keyframe`: path to keyframe file, if available. Defaults to `./keyframe.yml`.
-
-`--service-format`: Service format for a component as: --service-format
-`<component>=<format>`. Format could be either 'image' (component will use a
-pre-built Docker image) or 'build' (component will build the Docker image from
-local sources). Defaults to image for all components.
-
-`--build-path`: build path for a component as: --build-path
-`<component>=<path>`. Defaults to `./component-name`
-
-`--verbose`: Enable verbose mode
-
-##### deploy
-Generates deploy spec from environment configuration, and invokes a deployment
-to the specified `--target`.
-
-###### deploy options
-They are same with [generate command options](./README.md#generate-options)
-above
-
-##### help
-Outputs help
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.1.6/src/commands/help.ts)_
+<!-- commandsstop -->
