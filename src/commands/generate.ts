@@ -37,7 +37,7 @@ export const GenerateDeployFlags = {
     name: 'service-format',
     description:
       "Determine how a component should be acquired; build or image. Formated as 'component=format', eg 'haproxy=build'",
-    char: 'k',
+    char: 'f',
     multiple: true
   }),
 
@@ -47,6 +47,12 @@ export const GenerateDeployFlags = {
       'Build path for a component as: --build-path <component>=<path>',
     char: 'b',
     multiple: true
+  }),
+
+  verbose: flags.boolean({
+    description: 'Enable verbose mode',
+    char: 'v',
+    default: false
   }),
 
   deploy: flags.boolean({
