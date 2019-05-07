@@ -1,3 +1,5 @@
 #!/usr/bin/env node
 
-require('../src/lib/cli/katapult')
+require('@oclif/command').run()
+	.then(require('@oclif/command/flush'))
+	.catch(require('@oclif/errors/handle'))
