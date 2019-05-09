@@ -6,8 +6,9 @@ const {
 	readFileAsync,
 	writeFileAsync,
 	statAsync,
-	renameAsync
+	renameAsync,
 } = Promise.promisifyAll(require('fs'))
+
 const mvAsync = Promise.promisify(require('mv'))
 const tunnelAsync = Promise.promisify(require('tunnel-ssh'))
 const execAsync = Promise.promisify(require('child_process').exec)

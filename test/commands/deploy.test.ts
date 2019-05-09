@@ -1,1 +1,1 @@
-describe("deploy", () => {})
+describe('deploy', () => {});

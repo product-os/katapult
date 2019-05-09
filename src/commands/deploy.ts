@@ -1,21 +1,18 @@
-import { Command } from '@oclif/command'
+import { Command } from '@oclif/command';
 
-import generateDeploy = require('../lib/commands/generate-deploy')
+import generateDeploy = require('../lib/commands/generate-deploy');
 
-import { GenerateDeployFlags } from './generate'
+import { GenerateDeployFlags } from './generate';
 
 export default class Deploy extends Command {
-  static description =
-    'Generate Deploy Spec from environment configuration and deploy'
+	static description = 'Generate Deploy Spec from environment configuration and deploy';
 
-  static flags = GenerateDeployFlags
+	static flags = GenerateDeployFlags;
 
-  static args = []
+	async run() {
+		const { flags } = this.parse(Deploy);
+		flags.deploy = true;
 
-  async run() {
-    const { flags } = this.parse(Deploy)
-    flags.deploy = true
-
-    return generateDeploy(flags).asCallback()
-  }
+		return generateDeploy(flags).asCallback();
+	}
 }

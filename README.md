@@ -29,22 +29,27 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`katapult deploy [FILE]`](#katapult-deploy-file)
-* [`katapult generate`](#katapult-generate)
+* [`katapult deploy -e <environment_name> -t <target_name>`](#katapult-deploy-file)
+* [`katapult generate -e <environment_name> -t <target_name>`](#katapult-generate)
 * [`katapult help [COMMAND]`](#katapult-help-command)
 
 ## `katapult deploy [FILE]`
 
-describe the command here
+Generate and deploy Deploy Spec from environment configuration
 
 ```
 USAGE
-  $ katapult deploy [FILE]
+  $ katapult deploy -e <environment_name> -t <target_name>
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -c, --configuration=configuration            [default: ./] URI to deploy-template folder/repo
+  -e, --environment=environment                (required) Name of the selected environment
+  -k, --keyframe=keyframe                      [default: ./keyframe.yml] Path to keyframe file, if available
+
+  -m, --mode=interactive|defensive|aggressive  [default: interactive] Determine how to resolve data which is missing at
+                                               runtime.
+
+  -t, --target=target                          Name of the selected target
 ```
 
 _See code: [src/commands/deploy.ts](https://github.com/balena-io/katapult/blob/v0.0.0/src/commands/deploy.ts)_
@@ -55,7 +60,7 @@ Generate Deploy Spec from environment configuration
 
 ```
 USAGE
-  $ katapult generate
+  $ katapult generate -e <environment_name> -t <target_name>
 
 OPTIONS
   -c, --configuration=configuration            [default: ./] URI to deploy-template folder/repo
@@ -72,7 +77,7 @@ _See code: [src/commands/generate.ts](https://github.com/balena-io/katapult/blob
 
 ## `katapult help [COMMAND]`
 
-display help for katapult
+Display help for katapult
 
 ```
 USAGE
