@@ -8,6 +8,7 @@ const {
 	statAsync,
 	renameAsync,
 } = Promise.promisifyAll(require('fs'))
+
 const mvAsync = Promise.promisify(require('mv'))
 const tunnelAsync = Promise.promisify(require('tunnel-ssh'))
 const execAsync = Promise.promisify(require('child_process').exec)
@@ -82,8 +83,8 @@ const validateTopLevelDirectiveYaml = (name, yamlPath) => {
 	return loadFromFile(yamlPath).then(obj => {
 		if (!_.get(obj, name)) {
 			throw new Error(
-				`Error parsing "${yamlPath}"\n` +
-					`"${name}" not defined in "${yamlPath}"\n` +
+				`Error parsing '${yamlPath}'\n` +
+					`'${name}' not defined in '${yamlPath}'\n` +
 					`Available options: ${_.keys(obj)}`
 			)
 		}
@@ -245,7 +246,8 @@ const unwrapKeyframe = async keyframePaths => {
 		})
 		return keyframe
 	} else {
-		throw new Error('Error: Keyframe not found in ' + keyframePaths)
+		return {}
+		// throw new Error('Error: Keyframe not found in ' + keyframePaths)
 	}
 }
 
