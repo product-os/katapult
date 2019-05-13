@@ -43,7 +43,11 @@
     "ts-node": "^8.0.3",
     "tslint": "^5.14.0",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.3.3333"
+    "typescript": "^3.4.5",
+    "husky": "^2.2.0",
+    "lint-staged": "^8.1.6",
+    "prettier": "^1.17.0",
+    "resin-lint": "^3.0.2"
   },
   "engines": {
     "node": ">=8.0.0"
@@ -67,8 +71,29 @@
       "@oclif/plugin-help"
     ]
   },
+  "nyc": {
+    "extension": [
+      ".ts"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run lint"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier --config ./node_modules/resin-lint/config/.prettierrc --write",
+      "resin-lint --typescript --no-prettier",
+      "git add"
+    ]
+  },
   "repository": "balena-io/katapult",
   "scripts": {
+    "build": "tsc",
+    "prettify": "prettier --config ./node_modules/resin-lint/config/.prettierrc --write \"src/**/*.ts\" \"typings/**/*.ts\"",
+    "lint": "resin-lint --typescript src/ && tsc --noEmit",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "tslint -p test -t stylish",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
