@@ -1,0 +1,46 @@
+export declare interface Bastion {
+	bastionHost: string;
+	bastionPort?: string;
+	bastionUsername: string;
+	bastionKey: string;
+	bastionKeyPassword?: string;
+}
+
+export declare interface BastionTarget {
+	bastion?: Bastion;
+}
+
+export declare interface KubernetesDeployTarget extends BastionTarget {
+	kubernetesNamespace: string;
+	kubernetesAPI: string;
+}
+
+export declare interface DockerDeployTarget extends BastionTarget {
+	dockerSocket: string;
+}
+
+export declare interface KubernetesConfigStore extends BastionTarget {
+	kubernetesNamespace: string;
+	kubernetesAPI: string;
+}
+
+export declare interface EnvConfigStore extends BastionTarget {
+	path: string;
+}
+
+export type DeployTarget = KubernetesDeployTarget | DockerDeployTarget;
+export type ConfigStore = KubernetesConfigStore | EnvConfigStore;
+
+export declare interface EnvironmentObject {
+	name: string;
+	templates: string;
+	archiveStore: string;
+	deployTarget: DeployTarget;
+	configStore: ConfigStore;
+}
+
+export declare interface EnvironmentEditorArgs {
+	environment?: EnvironmentObject;
+	configurationPath: string;
+	verbose?: boolean;
+}
