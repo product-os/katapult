@@ -27,6 +27,6 @@ export default class Init extends Command {
 		const editor = await new EnvironmentEditor(flags);
 		await editor.inquire();
 		await editor.save();
-		return editor.environment;
+		return true;
 	}
 }

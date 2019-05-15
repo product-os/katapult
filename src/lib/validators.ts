@@ -1,6 +1,8 @@
 'use strict';
 import * as Bluebird from 'bluebird';
-import { stat, statSync } from 'fs';
+import { stat } from 'fs';
+import { isFQDN, isPort } from 'validator';
+
 const statAsync = Bluebird.promisify(stat);
 
 export async function validateDirectoryPath(
@@ -10,24 +12,6 @@ export async function validateDirectoryPath(
 	try {
 		const stat = await statAsync(path);
 		if (!stat.isDirectory()) {
-			if (raise) {
-				throw new Error('Error: ' + path + ' is not a directory');
-			}
-			return false;
-		}
-		return true;
-	} catch (error) {
-		if (raise) {
-			throw error;
-		}
-		return false;
-	}
-}
-
-export function validateDirectoryPathSync(path: string, raise = true): boolean {
-	try {
-		const st = statSync(path);
-		if (!st.isDirectory()) {
 			if (raise) {
 				throw new Error('Error: ' + path + ' is not a directory');
 			}
@@ -63,28 +47,8 @@ export async function validateFilePath(
 	}
 }
 
-export function validateFilePathSync(path: string, raise = true): boolean {
-	try {
-		const stat = statSync(path);
-		if (!stat.isFile()) {
-			if (raise) {
-				throw new Error('Error: ' + path + ' is not a file');
-			}
-			return false;
-		}
-		return true;
-	} catch (error) {
-		if (raise) {
-			throw error;
-		}
-		return false;
-	}
-}
-
 export function validateFQDN(value: any, raise = true): boolean {
-	const rex = /^[\w\.]+$/;
-
-	if (value.match(rex)) {
+	if (isFQDN(value)) {
 		return true;
 	}
 	if (raise) {
@@ -94,9 +58,7 @@ export function validateFQDN(value: any, raise = true): boolean {
 }
 
 export function validatePort(value: any, raise = true): boolean {
-	const rex = /^\d+$/;
-
-	if (value.match(rex) && Number(value) > 0 && Number(value) < 65536) {
+	if (isPort(value)) {
 		return true;
 	}
 	if (raise) {
@@ -117,22 +79,22 @@ export function validateString(value: any, raise = true) {
 	return false;
 }
 
-export function inquirerValidatePath(value: any): boolean {
-	return validateFilePathSync(value, true);
+export async function inquirerValidatePath(value: any): Promise<boolean> {
+	return await validateFilePath(value, true);
 }
 
-export function inquirerValidateDirectory(value: any): boolean {
-	return validateDirectoryPathSync(value, true);
+export async function inquirerValidateDirectory(value: any): Promise<boolean> {
+	return await validateDirectoryPath(value, true);
 }
 
-export function inquirerValidateFQDN(value: any): boolean {
+export async function inquirerValidateFQDN(value: any): Promise<boolean> {
 	return validateFQDN(value, true);
 }
 
-export function inquirerValidatePort(value: any): boolean {
+export async function inquirerValidatePort(value: any): Promise<boolean> {
 	return validatePort(value, true);
 }
 
-export function inquirerValidateString(value: any): boolean {
+export async function inquirerValidateString(value: any): Promise<boolean> {
 	return validateString(value, true);
 }

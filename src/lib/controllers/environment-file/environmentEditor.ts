@@ -6,14 +6,14 @@ import {
 	Bastion,
 	ConfigStore,
 	DeployTarget,
+	Environment,
 	EnvironmentEditorArgs,
-	EnvironmentObject,
 } from '.';
 import {
 	configStoreTypes,
 	deployTargetTypes,
 	loadFromFileSync,
-	writeYamlSync,
+	writeYaml,
 } from '../../tools';
 import {
 	inquirerValidateDirectory,
@@ -23,10 +23,8 @@ import {
 	inquirerValidateString,
 } from '../../validators';
 
-import { Environment } from './environment';
-
 export class EnvironmentEditor {
-	static async inquireBastion(defaultBastion?: Bastion): Promise<object> {
+	static async inquireBastion(defaultBastion?: Bastion): Promise<Bastion> {
 		const questions = [
 			{
 				message: 'Please enter your bastion hostname',
@@ -63,12 +61,13 @@ export class EnvironmentEditor {
 				default: get(defaultBastion, 'bastionKeyPassword'),
 			},
 		];
-		return inquirer.prompt(questions);
+		const answers = await inquirer.prompt(questions);
+		return answers as Bastion;
 	}
 
 	verbose: boolean;
-	environment: Environment;
-	configurationPath: string;
+	private environment: Environment;
+	private readonly configurationPath: string;
 
 	public constructor(args: EnvironmentEditorArgs) {
 		const { configurationPath, verbose = false } = args;
@@ -76,7 +75,7 @@ export class EnvironmentEditor {
 		this.verbose = verbose;
 
 		// A default environment for some default suggestions It might be replaced below.
-		this.environment = new Environment({
+		this.environment = {
 			name: 'my-environment',
 			templates: './deploy-templates/',
 			archiveStore: './archive-store',
@@ -88,14 +87,11 @@ export class EnvironmentEditor {
 				kubernetesNamespace: 'default',
 				kubernetesAPI: 'kubernetes',
 			},
-		});
+		};
 
 		try {
 			if (configurationPath) {
 				this.environment = loadFromFileSync(configurationPath) as Environment;
-				if (this.verbose) {
-					console.log('loaded:', configurationPath);
-				}
 			} else if (args.environment) {
 				this.environment = args.environment;
 			}
@@ -143,14 +139,16 @@ export class EnvironmentEditor {
 		const deployTarget = await this.inquireDeployTarget(
 			get(this.environment, 'deployTarget'),
 		);
-		this.environment = new Environment(merge(answers, {
+		this.environment = merge(answers, {
 			configStore,
 			deployTarget,
-		}) as EnvironmentObject);
+		}) as Environment;
 		return this.environment;
 	}
 
-	async inquireConfigStore(defaultConfigStore: ConfigStore): Promise<object> {
+	async inquireConfigStore(
+		defaultConfigStore: ConfigStore,
+	): Promise<ConfigStore> {
 		const questions = [
 			{
 				message: 'Please select config-store type',
@@ -212,18 +210,16 @@ export class EnvironmentEditor {
 			const bastion = await EnvironmentEditor.inquireBastion(
 				get(defaultConfigStore, 'bastion'),
 			);
-			return {
-				configStore: merge(omit(answers, ['getBastion', 'configStoreType']), {
-					bastion,
-				}),
-			};
+			return merge(omit(answers, ['getBastion', 'configStoreType']), {
+				bastion,
+			}) as ConfigStore;
 		}
-		return answers;
+		return answers as ConfigStore;
 	}
 
 	async inquireDeployTarget(
 		defaultDeployTarget: DeployTarget,
-	): Promise<object> {
+	): Promise<DeployTarget> {
 		function kubernetesDeployTarget(response: object): boolean {
 			return get(response, 'deployTargetType') === 'kubernetes';
 		}
@@ -285,16 +281,15 @@ export class EnvironmentEditor {
 			const bastion = await EnvironmentEditor.inquireBastion(
 				get(defaultDeployTarget, 'bastion'),
 			);
-			return {
-				configStore: merge(omit(answers, ['getBastion', 'deployTargetType']), {
-					bastion,
-				}),
-			};
+			return merge(omit(answers, ['getBastion', 'deployTargetType']), {
+				bastion,
+			}) as DeployTarget;
 		}
-		return answers;
+		return answers as DeployTarget;
 	}
-	save(): Environment {
-		writeYamlSync(this.environment, this.configurationPath);
+
+	async save(): Promise<Environment> {
+		await writeYaml(this.environment, this.configurationPath);
 		return this.environment;
 	}
 }

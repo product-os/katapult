@@ -1,7 +1,7 @@
 'use strict';
 
 import * as Bluebird from 'bluebird';
-import { readFile, readFileSync, writeFileSync } from 'fs';
+import { readFile, readFileSync, writeFile } from 'fs';
 import * as yamljs from 'yamljs';
 
 export const configStoreTypes = [
@@ -16,11 +16,11 @@ export const deployTargetTypes = [
 ];
 
 const readFileAsync = Bluebird.promisify(readFile);
+const writeFileAsync = Bluebird.promisify(writeFile);
 
-function loadFromFile(filePath: string): Bluebird<any> {
-	return readFileAsync(filePath).then(buffer => {
-		return yamljs.parse(buffer.toString('utf8'));
-	});
+export async function loadFromFile(filePath: string): Promise<object> {
+	const buffer = await readFileAsync(filePath);
+	return yamljs.parse(buffer.toString('utf8'));
 }
 
 export function loadFromFileSync(filePath: string): object {
@@ -28,8 +28,15 @@ export function loadFromFileSync(filePath: string): object {
 	return yamljs.parse(buffer.toString());
 }
 
-export function writeYamlSync(obj: object, filePath: string): object {
+export async function writeYaml(
+	obj: object,
+	filePath: string,
+): Promise<object> {
 	const data = yamljs.stringify(obj, 40, 2);
-	writeFileSync(filePath, data);
+	await writeFileAsync(filePath, data, err => {
+		if (err) {
+			throw err;
+		}
+	});
 	return obj;
 }
