@@ -31,6 +31,12 @@ export declare interface EnvConfigStore extends BastionTarget {
 export type DeployTarget = KubernetesDeployTarget | DockerDeployTarget;
 export type ConfigStore = KubernetesConfigStore | EnvConfigStore;
 
+export declare interface DeployTargetSelections {
+	name: string;
+	value: string;
+	short?: string;
+}
+
 export declare interface Environment {
 	name: string;
 	templates: string;

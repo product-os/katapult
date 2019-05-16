@@ -1,20 +1,18 @@
 import inquirer = require('inquirer');
 
-import { get, merge, omit } from 'lodash';
+import { filter, get, merge, omit } from 'lodash';
 
 import {
 	Bastion,
 	ConfigStore,
 	DeployTarget,
+	DeployTargetSelections,
 	Environment,
 	EnvironmentEditorArgs,
 } from '.';
-import {
-	configStoreTypes,
-	deployTargetTypes,
-	loadFromFileSync,
-	writeYaml,
-} from '../../tools';
+
+import { getDirectories, loadFromFileSync, writeYaml } from '../../tools';
+
 import {
 	inquirerValidateDirectory,
 	inquirerValidateFQDN,
@@ -23,8 +21,37 @@ import {
 	inquirerValidateString,
 } from '../../validators';
 
+const configStoreSelections = [
+	{ name: 'Kubernetes (secrets in namespace)', value: 'kubernetes' },
+	{ name: 'Local environment file', value: 'envfile' },
+];
+
 export class EnvironmentEditor {
-	static async inquireBastion(defaultBastion?: Bastion): Promise<Bastion> {
+	private static async getDeployTargetSelections(
+		templatesPath: string,
+	): Promise<DeployTargetSelections[]> {
+		const directories = await getDirectories(templatesPath);
+		const availableTargets = filter(
+			[
+				{ name: 'Kubernetes', value: 'kubernetes' },
+				{ name: 'Docker Socket', value: 'docker' },
+				{ name: 'Balena Cloud', value: 'balena' },
+			],
+			i => directories.includes(i.value),
+		) as DeployTargetSelections[];
+
+		if (availableTargets.length < 1) {
+			throw new Error(
+				`No available deploy targets were found in: ${templatesPath}`,
+			);
+		}
+
+		return availableTargets;
+	}
+
+	private static async inquireBastion(
+		defaultBastion?: Bastion,
+	): Promise<Bastion> {
 		const questions = [
 			{
 				message: 'Please enter your bastion hostname',
@@ -132,17 +159,27 @@ export class EnvironmentEditor {
 				validate: inquirerValidateDirectory, // TODO: support git
 			},
 		];
+
 		const answers = await inquirer.prompt(questions);
+
+		const availableTargets = await EnvironmentEditor.getDeployTargetSelections(
+			get(answers, 'templates'),
+		);
+
+		const deployTarget = await this.inquireDeployTarget(
+			get(this.environment, 'deployTarget'),
+			availableTargets,
+		);
+
 		const configStore = await this.inquireConfigStore(
 			get(this.environment, 'configStore'),
 		);
-		const deployTarget = await this.inquireDeployTarget(
-			get(this.environment, 'deployTarget'),
-		);
+
 		this.environment = merge(answers, {
 			configStore,
 			deployTarget,
 		}) as Environment;
+
 		return this.environment;
 	}
 
@@ -154,7 +191,7 @@ export class EnvironmentEditor {
 				message: 'Please select config-store type',
 				type: 'list',
 				name: 'configStoreType',
-				choices: configStoreTypes,
+				choices: configStoreSelections,
 			},
 			{
 				when(response: object): boolean {
@@ -214,11 +251,13 @@ export class EnvironmentEditor {
 				bastion,
 			}) as ConfigStore;
 		}
+
 		return answers as ConfigStore;
 	}
 
 	async inquireDeployTarget(
 		defaultDeployTarget: DeployTarget,
+		targetTypes: DeployTargetSelections[],
 	): Promise<DeployTarget> {
 		function kubernetesDeployTarget(response: object): boolean {
 			return get(response, 'deployTargetType') === 'kubernetes';
@@ -233,7 +272,7 @@ export class EnvironmentEditor {
 				message: 'Please select deploy-target type',
 				type: 'list',
 				name: 'deployTargetType',
-				choices: deployTargetTypes,
+				choices: targetTypes,
 			},
 			{
 				when: kubernetesDeployTarget,
@@ -285,6 +324,7 @@ export class EnvironmentEditor {
 				bastion,
 			}) as DeployTarget;
 		}
+
 		return answers as DeployTarget;
 	}
 

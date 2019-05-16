@@ -1,22 +1,24 @@
 'use strict';
 
 import * as Bluebird from 'bluebird';
-import { readFile, readFileSync, writeFile } from 'fs';
+import { lstat, readdir, readFile, readFileSync, stat, writeFile } from 'fs';
+import { join } from 'path';
 import * as yamljs from 'yamljs';
 
-export const configStoreTypes = [
-	{ name: 'Kubernetes (secrets in namespace)', value: 'kubernetes' },
-	{ name: 'Local environment file', value: 'envfile' },
-];
-
-export const deployTargetTypes = [
-	{ name: 'Kubernetes', value: 'kubernetes' },
-	{ name: 'Docker Socket', value: 'docker' },
-	{ name: 'Balena Cloud', value: 'balena' },
-];
-
+const lstatAsync = Bluebird.promisify(lstat);
+const readdirAsync = Bluebird.promisify(readdir);
 const readFileAsync = Bluebird.promisify(readFile);
 const writeFileAsync = Bluebird.promisify(writeFile);
+
+export async function getDirectories(path: string): Promise<string[]> {
+	const directories = (await readdirAsync(path)) as string[];
+	return directories.filter((name: string) => {
+		const itemPath = join(path, name);
+		return lstatAsync(itemPath).then(itemStat => {
+			return itemStat.isDirectory();
+		});
+	});
+}
 
 export async function loadFromFile(filePath: string): Promise<object> {
 	const buffer = await readFileAsync(filePath);
