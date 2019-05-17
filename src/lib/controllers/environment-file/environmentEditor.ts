@@ -11,7 +11,7 @@ import {
 	EnvironmentEditorArgs,
 } from '.';
 
-import { getDirectories, loadFromFileSync, writeYaml } from '../../tools';
+import { getDirectories, loadFromFile, writeYaml } from '../../tools';
 
 import {
 	inquirerValidateDirectory,
@@ -27,6 +27,43 @@ const configStoreSelections = [
 ];
 
 export class EnvironmentEditor {
+	static async createEnvironmentEditor(
+		args: EnvironmentEditorArgs,
+	): Promise<EnvironmentEditor> {
+		const { configurationPath } = args;
+
+		try {
+			if (!args.environment && configurationPath) {
+				const environment = (await loadFromFile(
+					configurationPath,
+				)) as Environment;
+				if (environment) {
+					args.environment = environment;
+				} else {
+					args.environment = {
+						name: 'my-environment',
+						templates: './deploy-templates/',
+						archiveStore: './archive-store',
+						deployTarget: {
+							kubernetesNamespace: 'default',
+							kubernetesAPI: 'kubernetes.local',
+						},
+						configStore: {
+							kubernetesNamespace: 'default',
+							kubernetesAPI: 'kubernetes.local',
+						},
+					} as Environment;
+				}
+			}
+			return new EnvironmentEditor(args);
+		} catch (err) {
+			if (err.code !== 'ENOENT') {
+				throw err;
+			}
+		}
+		return new EnvironmentEditor(args);
+	}
+
 	private static async getDeployTargetSelections(
 		templatesPath: string,
 	): Promise<DeployTargetSelections[]> {
@@ -97,40 +134,10 @@ export class EnvironmentEditor {
 	private readonly configurationPath: string;
 
 	public constructor(args: EnvironmentEditorArgs) {
-		const { configurationPath, verbose = false } = args;
+		const { configurationPath, environment, verbose = false } = args;
+		this.environment = environment;
 		this.configurationPath = configurationPath;
 		this.verbose = verbose;
-
-		// A default environment for some default suggestions It might be replaced below.
-		this.environment = {
-			name: 'my-environment',
-			templates: './deploy-templates/',
-			archiveStore: './archive-store',
-			deployTarget: {
-				kubernetesNamespace: 'default',
-				kubernetesAPI: 'kubernetes',
-			},
-			configStore: {
-				kubernetesNamespace: 'default',
-				kubernetesAPI: 'kubernetes',
-			},
-		};
-
-		try {
-			if (configurationPath) {
-				this.environment = loadFromFileSync(configurationPath) as Environment;
-			} else if (args.environment) {
-				this.environment = args.environment;
-			}
-		} catch (err) {
-			if (err.code === 'ENOENT') {
-				if (this.verbose) {
-					console.debug(err.message);
-				}
-			} else {
-				throw err;
-			}
-		}
 	}
 
 	async inquire() {

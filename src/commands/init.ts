@@ -1,5 +1,6 @@
 import { Command, flags } from '@oclif/command';
 
+import { EnvironmentEditorArgs } from '../lib/controllers/environment-file';
 import { EnvironmentEditor } from '../lib/controllers/environment-file/environmentEditor';
 
 export const initializeFlags = {
@@ -24,7 +25,9 @@ export default class Init extends Command {
 
 	async run() {
 		const { flags } = this.parse(Init);
-		const editor = await new EnvironmentEditor(flags);
+		const editor = await EnvironmentEditor.createEnvironmentEditor(
+			flags as EnvironmentEditorArgs,
+		);
 		await editor.inquire();
 		await editor.save();
 		return true;

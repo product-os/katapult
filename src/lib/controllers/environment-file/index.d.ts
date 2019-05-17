@@ -46,7 +46,7 @@ export declare interface Environment {
 }
 
 export declare interface EnvironmentEditorArgs {
-	environment?: Environment;
+	environment: Environment;
 	configurationPath: string;
 	verbose?: boolean;
 }

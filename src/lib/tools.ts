@@ -21,8 +21,12 @@ export async function getDirectories(path: string): Promise<string[]> {
 }
 
 export async function loadFromFile(filePath: string): Promise<object> {
-	const buffer = await readFileAsync(filePath);
-	return yamljs.parse(buffer.toString('utf8'));
+	try {
+		const buffer = await readFileAsync(filePath);
+		return yamljs.parse(buffer.toString('utf8'));
+	} catch (e) {
+		return {};
+	}
 }
 
 export function loadFromFileSync(filePath: string): object {
