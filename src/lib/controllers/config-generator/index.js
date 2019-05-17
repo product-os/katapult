@@ -18,7 +18,8 @@ const {
 	GENERATE_PRIVATE_KEY,
 	GENERATE_PUBLIC_KEY,
 	GENERATE_DH_PARAM,
-	GENERATE_RSA_TOKENAUTH_KEYID
+	GENERATE_RSA_TOKENAUTH_KEYID,
+	GENERATE_SSH_PUBLIC_KEY,
 } = require('./plugins/all')
 const { escape, base64decode, base64 } = require('./filter-functions')
 
