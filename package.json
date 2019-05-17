@@ -13,11 +13,14 @@
     "@oclif/config": "^1.12.10",
     "@oclif/plugin-help": "^2.1.6",
     "@types/bluebird": "^3.5.26",
+    "@types/inquirer": "^6.0.1",
+    "@types/validator": "^10.11.0",
+    "@types/yamljs": "^0.2.30",
     "base32-encode": "^1.1.1",
     "bluebird": "^3.5.3",
     "dhparam": "^2.0.0",
     "dotenv": "^7.0.0",
-    "inquirer": "^6.2.2",
+    "inquirer": "^6.3.1",
     "jsonschema": "^1.2.4",
     "kubernetes-client": "^6.11.0",
     "lodash": "^4.17.11",
@@ -27,6 +30,7 @@
     "simple-git": "^1.107.0",
     "tslib": "^1.9.3",
     "tunnel-ssh": "^4.1.4",
+    "validator": "^10.11.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
@@ -63,9 +67,9 @@
     "oclif"
   ],
   "license": "MIT",
-  "main": "lib/index.js",
+  "main": "src/index.js",
   "oclif": {
-    "commands": "./lib/commands",
+    "commands": "./src/commands",
     "bin": "katapult",
     "plugins": [
       "@oclif/plugin-help"
