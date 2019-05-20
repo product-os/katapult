@@ -1,7 +1,7 @@
 import inquirer = require('inquirer');
 
 import { Questions } from 'inquirer';
-import { filter, get, merge, omit } from 'lodash';
+import { filter, get, isEmpty, merge, omit } from 'lodash';
 
 import {
 	Bastion,
@@ -38,13 +38,14 @@ export class EnvironmentEditor {
 				const environment = (await loadFromFile(
 					configurationPath,
 				)) as Environment;
-				if (environment) {
+				if (!isEmpty(environment)) {
 					args.environment = environment;
 				} else {
 					args.environment = {
 						name: 'my-environment',
 						templates: './deploy-templates/',
 						archiveStore: './archive-store',
+						encryptionKeyPath: './encryption_key_pub',
 						deployTarget: {
 							kubernetesNamespace: 'default',
 							kubernetesAPI: 'kubernetes.local',
@@ -165,6 +166,13 @@ export class EnvironmentEditor {
 				default: this.environment.archiveStore,
 				name: 'archiveStore',
 				validate: inquirerValidateDirectory, // TODO: support git
+			},
+			{
+				message: 'Please enter the archive-store encryption key',
+				type: 'input',
+				name: 'encryptionKeyPath',
+				default: this.environment.encryptionKeyPath,
+				validate: inquirerValidatePath, // TODO: improve validation of key
 			},
 		] as Questions;
 

@@ -43,6 +43,7 @@ export declare interface Environment {
 	archiveStore: string;
 	deployTarget: DeployTarget;
 	configStore: ConfigStore;
+	encryptionKeyPath: string;
 }
 
 export declare interface EnvironmentEditorArgs {
