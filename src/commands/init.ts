@@ -23,13 +23,15 @@ export default class Init extends Command {
 
 	static flags = initializeFlags;
 
-	async run() {
-		const { flags } = this.parse(Init);
-		const editor = await EnvironmentEditor.createEnvironmentEditor(
-			flags as EnvironmentEditorArgs,
-		);
+	static async initializeEnvironment(args: EnvironmentEditorArgs) {
+		const editor = await EnvironmentEditor.createEnvironmentEditor(args);
 		await editor.inquire();
 		await editor.save();
 		return true;
+	}
+
+	async run() {
+		const { flags } = this.parse(Init);
+		return Init.initializeEnvironment(flags as EnvironmentEditorArgs);
 	}
 }

@@ -47,12 +47,16 @@ export class EnvironmentEditor {
 						archiveStore: './archive-store',
 						encryptionKeyPath: './encryption_key_pub',
 						deployTarget: {
-							kubernetesNamespace: 'default',
-							kubernetesAPI: 'kubernetes.local',
+							kubernetes: {
+								namespace: 'default',
+								endpoint: 'kubernetes.local',
+							},
 						},
 						configStore: {
-							kubernetesNamespace: 'default',
-							kubernetesAPI: 'kubernetes.local',
+							kubernetes: {
+								namespace: 'default',
+								endpoint: 'kubernetes.local',
+							},
 						},
 					} as Environment;
 				}
@@ -66,22 +70,34 @@ export class EnvironmentEditor {
 		return new EnvironmentEditor(args);
 	}
 
+	private static filterPromptAnswers(answers: object): object {
+		const intermediatePromptKeys = [
+			'getBastion',
+			'configStoreType',
+			'deployTargetType',
+		];
+
+		return omit(answers, intermediatePromptKeys);
+	}
+
 	private static async getDeployTargetSelections(
 		templatesPath: string,
 	): Promise<DeployTargetSelections[]> {
 		const directories = await getDirectories(templatesPath);
-		const availableTargets = filter(
-			[
-				{ name: 'Kubernetes', value: 'kubernetes' },
-				{ name: 'Docker Socket', value: 'docker' },
-				{ name: 'Balena Cloud', value: 'balena' },
-			],
-			i => directories.includes(i.value),
+		const targets = [
+			{ name: 'Kubernetes', value: 'kubernetes' },
+			{ name: 'Docker Socket', value: 'docker' },
+			{ name: 'Balena Cloud', value: 'balena' },
+		];
+		const availableTargets = filter(targets, i =>
+			directories.includes(i.value),
 		) as DeployTargetSelections[];
 
 		if (availableTargets.length < 1) {
 			throw new Error(
-				`No available deploy targets were found in: ${templatesPath}`,
+				`No available deploy targets were found in: ${templatesPath}.` +
+					`\nAt least one folder with a deploy target name should exist in ${templatesPath}.` +
+					`\nAvailable options:\n${targets.map(v => v.value)}`,
 			);
 		}
 
@@ -232,8 +248,8 @@ export class EnvironmentEditor {
 				},
 				message: 'Please enter config-store kubernetes api endpoint',
 				type: 'input',
-				name: 'kubernetesAPI',
-				default: get(defaultConfigStore, 'kubernetesAPI'),
+				name: 'kubernetes.endpoint',
+				default: get(defaultConfigStore, ['kubernetes', 'endpoint']),
 				validate: inquirerValidateFQDN,
 			},
 			{
@@ -242,18 +258,18 @@ export class EnvironmentEditor {
 				},
 				message: 'Please enter config-store kubernetes namespace',
 				type: 'input',
-				name: 'kubernetesNamespace',
-				default: get(defaultConfigStore, 'kubernetesNamespace'),
+				name: 'kubernetes.namespace',
+				default: get(defaultConfigStore, ['kubernetes', 'namespace']),
 				validate: inquirerValidateString,
 			},
 			{
 				when(response: object): boolean {
-					return get(response, 'configStoreType') === 'envfile';
+					return get(response, 'configStoreType') === 'envFile';
 				},
-				message: 'Please enter config-store envfile path',
+				message: 'Please enter config-store envFile path',
 				type: 'input',
-				name: 'path',
-				default: get(defaultConfigStore, 'path'),
+				name: 'envFile.path',
+				default: get(defaultConfigStore, ['envFile', 'path']),
 				validate: inquirerValidatePath,
 			},
 		] as Questions;
@@ -263,12 +279,12 @@ export class EnvironmentEditor {
 			const bastion = await EnvironmentEditor.inquireBastion(
 				get(defaultConfigStore, 'bastion'),
 			);
-			return merge(omit(answers, ['getBastion', 'configStoreType']), {
+			return merge(EnvironmentEditor.filterPromptAnswers(answers), {
 				bastion,
 			}) as ConfigStore;
 		}
 
-		return answers as ConfigStore;
+		return EnvironmentEditor.filterPromptAnswers(answers) as ConfigStore;
 	}
 
 	async inquireDeployTarget(
@@ -279,8 +295,8 @@ export class EnvironmentEditor {
 			return get(response, 'deployTargetType') === 'kubernetes';
 		}
 
-		function envDeployTarget(response: object): boolean {
-			return get(response, 'deployTargetType') === 'envfile';
+		function dockerDeployTarget(response: object): boolean {
+			return ['docker', 'compose'].includes(get(response, 'deployTargetType'));
 		}
 
 		const questions = [
@@ -307,26 +323,26 @@ export class EnvironmentEditor {
 			},
 			{
 				when: kubernetesDeployTarget,
-				message: 'Please enter config-store kubernetes api endpoint',
+				message: 'Please enter deploy-target kubernetes api endpoint',
 				type: 'input',
-				name: 'kubernetesAPI',
-				default: get(defaultDeployTarget, 'kubernetesAPI'),
+				name: 'kubernetes.endpoint',
+				default: get(defaultDeployTarget, ['kubernetes', 'endpoint']),
 				validate: inquirerValidateFQDN,
 			},
 			{
 				when: kubernetesDeployTarget,
-				message: 'Please enter config-store kubernetes namespace',
+				message: 'Please enter deploy-target kubernetes namespace',
 				type: 'input',
-				name: 'kubernetesNamespace',
-				default: get(defaultDeployTarget, 'kubernetesNamespace'),
+				name: 'kubernetes.namespace',
+				default: get(defaultDeployTarget, ['kubernetes', 'namespace']),
 				validate: inquirerValidateString,
 			},
 			{
-				when: envDeployTarget,
-				message: 'Please enter config-store envfile path',
+				when: dockerDeployTarget,
+				message: 'Please enter deploy-target docker-socket path',
 				type: 'input',
-				name: 'path',
-				default: get(defaultDeployTarget, 'path'),
+				name: 'docker.socket',
+				default: get(defaultDeployTarget, ['docker', 'socket']),
 				validate: inquirerValidatePath,
 			},
 		] as Questions;
@@ -336,12 +352,12 @@ export class EnvironmentEditor {
 			const bastion = await EnvironmentEditor.inquireBastion(
 				get(defaultDeployTarget, 'bastion'),
 			);
-			return merge(omit(answers, ['getBastion', 'deployTargetType']), {
+			return merge(EnvironmentEditor.filterPromptAnswers(answers), {
 				bastion,
 			}) as DeployTarget;
 		}
 
-		return answers as DeployTarget;
+		return EnvironmentEditor.filterPromptAnswers(answers) as DeployTarget;
 	}
 
 	async save(): Promise<Environment> {

@@ -11,25 +11,32 @@ export declare interface BastionTarget {
 }
 
 export declare interface KubernetesDeployTarget extends BastionTarget {
-	kubernetesNamespace: string;
-	kubernetesAPI: string;
+	namespace: string;
+	endpoint: string;
 }
 
 export declare interface DockerDeployTarget extends BastionTarget {
-	dockerSocket: string;
+	socket: string;
 }
 
 export declare interface KubernetesConfigStore extends BastionTarget {
-	kubernetesNamespace: string;
-	kubernetesAPI: string;
+	namespace: string;
+	endpoint: string;
 }
 
 export declare interface EnvConfigStore extends BastionTarget {
 	path: string;
 }
 
-export type DeployTarget = KubernetesDeployTarget | DockerDeployTarget;
-export type ConfigStore = KubernetesConfigStore | EnvConfigStore;
+export declare interface DeployTarget {
+	kubernetes?: KubernetesDeployTarget;
+	compose?: DockerDeployTarget;
+}
+
+export declare interface ConfigStore {
+	kubernetes?: KubernetesConfigStore;
+	envFile?: EnvConfigStore;
+}
 
 export declare interface DeployTargetSelections {
 	name: string;
