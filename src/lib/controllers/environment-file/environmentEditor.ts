@@ -43,7 +43,7 @@ export class EnvironmentEditor {
 				} else {
 					args.environment = {
 						name: 'my-environment',
-						templates: './deploy-templates/',
+						productRepo: './deploy',
 						archiveStore: './archive-store',
 						encryptionKeyPath: './encryption_key_pub',
 						deployTarget: {
@@ -70,6 +70,13 @@ export class EnvironmentEditor {
 		return new EnvironmentEditor(args);
 	}
 
+	static async initializeEnvironment(args: EnvironmentEditorArgs) {
+		const editor = await EnvironmentEditor.createEnvironmentEditor(args);
+		await editor.inquire();
+		await editor.save();
+		return true;
+	}
+
 	private static filterPromptAnswers(answers: object): object {
 		const intermediatePromptKeys = [
 			'getBastion',
@@ -81,9 +88,9 @@ export class EnvironmentEditor {
 	}
 
 	private static async getDeployTargetSelections(
-		templatesPath: string,
+		productRepoPath: string,
 	): Promise<DeployTargetSelections[]> {
-		const directories = await getDirectories(templatesPath);
+		const directories = await getDirectories(productRepoPath);
 		const targets = [
 			{ name: 'Kubernetes', value: 'kubernetes' },
 			{ name: 'Docker Socket', value: 'docker' },
@@ -95,8 +102,8 @@ export class EnvironmentEditor {
 
 		if (availableTargets.length < 1) {
 			throw new Error(
-				`No available deploy targets were found in: ${templatesPath}.` +
-					`\nAt least one folder with a deploy target name should exist in ${templatesPath}.` +
+				`No available deploy targets were found in: ${productRepoPath}.` +
+					`\nAt least one folder with a deploy target name should exist in ${productRepoPath}.` +
 					`\nAvailable options:\n${targets.map(v => v.value)}`,
 			);
 		}
@@ -169,10 +176,10 @@ export class EnvironmentEditor {
 			},
 			{
 				message:
-					'Please enter the deploy-templates URI. (You may also use a relative path)',
+					'Please enter the Product Repo URI. (You may also use a relative path)',
 				type: 'input',
-				default: this.environment.templates,
-				name: 'templates',
+				default: this.environment.productRepo,
+				name: 'productRepo',
 				validate: inquirerValidateDirectory, // TODO: support git
 			},
 			{
@@ -195,7 +202,7 @@ export class EnvironmentEditor {
 		const answers = await inquirer.prompt(questions);
 
 		const availableTargets = await EnvironmentEditor.getDeployTargetSelections(
-			get(answers, 'templates'),
+			get(answers, 'productRepo'),
 		);
 
 		const deployTarget = await this.inquireDeployTarget(

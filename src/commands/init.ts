@@ -5,7 +5,7 @@ import { EnvironmentEditor } from '../lib/controllers/environment-file/environme
 
 export const initializeFlags = {
 	configurationPath: flags.string({
-		description: 'URI to deploy-template folder/repo',
+		description: 'URI of the environment configuration path',
 		required: true,
 		default: './environment.yml',
 		char: 'c',
@@ -23,15 +23,10 @@ export default class Init extends Command {
 
 	static flags = initializeFlags;
 
-	static async initializeEnvironment(args: EnvironmentEditorArgs) {
-		const editor = await EnvironmentEditor.createEnvironmentEditor(args);
-		await editor.inquire();
-		await editor.save();
-		return true;
-	}
-
 	async run() {
 		const { flags } = this.parse(Init);
-		return Init.initializeEnvironment(flags as EnvironmentEditorArgs);
+		return EnvironmentEditor.initializeEnvironment(
+			flags as EnvironmentEditorArgs,
+		);
 	}
 }

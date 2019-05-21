@@ -46,7 +46,7 @@ export declare interface DeployTargetSelections {
 
 export declare interface Environment {
 	name: string;
-	templates: string;
+	productRepo: string;
 	archiveStore: string;
 	deployTarget: DeployTarget;
 	configStore: ConfigStore;
