@@ -1,5 +1,6 @@
 import inquirer = require('inquirer');
 
+import { Questions } from 'inquirer';
 import { filter, get, merge, omit } from 'lodash';
 
 import {
@@ -124,7 +125,7 @@ export class EnvironmentEditor {
 				name: 'bastionKeyPassword',
 				default: get(defaultBastion, 'bastionKeyPassword'),
 			},
-		];
+		] as Questions;
 		const answers = await inquirer.prompt(questions);
 		return answers as Bastion;
 	}
@@ -165,7 +166,7 @@ export class EnvironmentEditor {
 				name: 'archiveStore',
 				validate: inquirerValidateDirectory, // TODO: support git
 			},
-		];
+		] as Questions;
 
 		const answers = await inquirer.prompt(questions);
 
@@ -247,7 +248,7 @@ export class EnvironmentEditor {
 				default: get(defaultConfigStore, 'path'),
 				validate: inquirerValidatePath,
 			},
-		];
+		] as Questions;
 
 		const answers = await inquirer.prompt(questions);
 		if (get(answers, 'getBastion')) {
@@ -320,7 +321,7 @@ export class EnvironmentEditor {
 				default: get(defaultDeployTarget, 'path'),
 				validate: inquirerValidatePath,
 			},
-		];
+		] as Questions;
 
 		const answers = await inquirer.prompt(questions);
 		if (get(answers, 'getBastion')) {
