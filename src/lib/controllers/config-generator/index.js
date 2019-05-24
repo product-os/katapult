@@ -13,6 +13,8 @@ const {
 	GENERATE_CERT_CHAIN,
 	GENERATE_CHAIN,
 	GENERATE_EC_PRIVATE_KEYPAIR,
+	GENERATE_EC_KEYPAIR_PRIVATE,
+	GENERATE_EC_KEYPAIR_PUBLIC,
 	GENERATE_EC_CERT,
 	GENERATE_TOKENAUTH_KEYID,
 	GENERATE_PRIVATE_KEY,
@@ -92,6 +94,7 @@ module.exports = class ConfigGenerator {
 					])
 					if (formula) {
 						console.log('Generating', propertyName)
+						console.log(formula);
 						return eval(formula.split('\n').join(''))
 					} else {
 						throw new Error(error.stack)

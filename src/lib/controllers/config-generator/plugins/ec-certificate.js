@@ -46,7 +46,7 @@ const readECPublicKeyPem = pemString => {
 
 module.exports = params => {
 	const certificate = new Certificate()
-	const publicKey = readECPublicKeyPem(params.publicKeyPem)
+	const publicKey = readECPublicKeyPem(params.publicKeyPEM)
 
 	// X509 V3
 	certificate.version = 2
@@ -65,7 +65,7 @@ module.exports = params => {
 	certificate.notAfter.value = new Date(params.validTo)
 
 	if (!_.isNil(params.caCertPem)) {
-		const caCertificate = readPEMCertificate(params.caCertPem)
+		const caCertificate = readPEMCertificate(params.caCertPEM)
 		certificate.issuer = caCertificate.subject
 	}
 
@@ -162,7 +162,7 @@ module.exports = params => {
 	const bytes = certificate.tbs.toBER(false)
 	const signer = crypto.createSign('SHA256')
 	signer.update(Buffer.from(bytes))
-	const signResult = signer.sign(params.caPrivateKeyPem)
+	const signResult = signer.sign(params.caPrivateKeyPEM)
 	certificate.signatureValue = new BitString({
 		valueHex: signResult
 	})

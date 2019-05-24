@@ -2,13 +2,16 @@
 
 const crypto = require('crypto')
 const base32 = require('base32-encode')
+const { base64decode } = require('../filter-functions')
 
 /**
  *
  * @param privateKeyPEM {string}: PEM format private key string.
  * @returns {string} RSA KeyID
  */
-module.exports = keypair => {
+module.exports = keypairJSON => {
+	const keypair = JSON.parse(base64decode(keypairJSON));
+	console.log(keypair);
 	const derBuffer = Buffer.from(
 		keypair.publicKey.replace(/(---.*---\n)|(\n)/g, ''),
 		'base64'
