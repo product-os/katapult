@@ -1,10 +1,15 @@
-'use strict';
 import * as Bluebird from 'bluebird';
 import { stat } from 'fs';
 import { isFQDN, isPort } from 'validator';
 
 const statAsync = Bluebird.promisify(stat);
 
+/**
+ * Validate a directory exists
+ * @param {string} path
+ * @param {boolean} raise
+ * @returns {Promise<boolean>}
+ */
 export async function validateDirectoryPath(
 	path: string,
 	raise = true,
@@ -12,17 +17,15 @@ export async function validateDirectoryPath(
 	try {
 		const stat = await statAsync(path);
 		if (!stat.isDirectory()) {
-			if (raise) {
-				throw new Error('Error: ' + path + ' is not a directory');
-			}
-			return false;
+			throw new Error('Error: ' + path + ' is not a directory');
 		}
 		return true;
 	} catch (error) {
 		if (raise) {
 			throw error;
+		} else {
+			return false;
 		}
-		return false;
 	}
 }
 
@@ -33,11 +36,23 @@ export async function validateFilePath(
 	try {
 		const stat = await statAsync(path);
 		if (!stat.isFile()) {
-			if (raise) {
-				throw new Error('Error: ' + path + ' is not a file');
-			}
-			return false;
+			throw new Error('Error: ' + path + ' is not a file');
 		}
+		return true;
+	} catch (error) {
+		if (raise) {
+			throw error;
+		}
+		return false;
+	}
+}
+
+export async function validatePath(
+	path: string,
+	raise = true,
+): Promise<boolean> {
+	try {
+		await statAsync(path);
 		return true;
 	} catch (error) {
 		if (raise) {
@@ -79,8 +94,12 @@ export function validateString(value: any, raise = true) {
 	return false;
 }
 
-export async function inquirerValidatePath(value: any): Promise<boolean> {
+export async function inquirerValidateFilePath(value: any): Promise<boolean> {
 	return await validateFilePath(value, true);
+}
+
+export async function inquirerValidatePath(value: any): Promise<boolean> {
+	return await validatePath(value, true);
 }
 
 export async function inquirerValidateDirectory(value: any): Promise<boolean> {
