@@ -1,12 +1,12 @@
 import inquirer = require('inquirer');
 
-import { Questions } from 'inquirer';
 import { filter, get, isEmpty, merge, omit } from 'lodash';
+import { join } from 'path';
 
 import {
 	Bastion,
-	ConfigStore,
-	DeployTarget,
+	ConfigStoreAccess,
+	DeployTargetAccess,
 	DeployTargetSelections,
 	Environment,
 	EnvironmentEditorArgs,
@@ -16,6 +16,7 @@ import { getDirectories, loadFromFile, writeYaml } from '../../tools';
 
 import {
 	inquirerValidateDirectory,
+	inquirerValidateFilePath,
 	inquirerValidateFQDN,
 	inquirerValidatePath,
 	inquirerValidatePort,
@@ -24,47 +25,74 @@ import {
 
 const configStoreSelections = [
 	{ name: 'Kubernetes (secrets in namespace)', value: 'kubernetes' },
-	{ name: 'Local environment file', value: 'envfile' },
+	{ name: 'Local environment file', value: 'envFile' },
 ];
+
+const deployTargets = [
+	{ name: 'Kubernetes', value: 'kubernetes' },
+	{ name: 'Docker Socket', value: 'compose' },
+	{ name: 'Balena Cloud', value: 'balena' },
+];
+
+const defaultEnvironment = {
+	name: 'my-environment',
+	productRepo: './',
+	archiveStore: './archive-store',
+	encryptionKeyPath: './encryption_key_pub',
+	deployTarget: {
+		kubernetes: {
+			namespace: 'default',
+			endpoint: 'kubernetes.local',
+			kubeConfigPath: './kubeconfig',
+			bastion: {
+				host: 'bastion.example.com',
+				port: '22',
+				localPort: '8443',
+				username: 'admin',
+				key: 'bastion_key',
+				keyPassword: 'bastionKeyPassword',
+			},
+		},
+		compose: {
+			socket: '/var/run/docker.sock', // TODO: support generic socket URI
+		},
+	},
+	configStore: {
+		kubernetes: {
+			namespace: 'default',
+			endpoint: 'kubernetes.local',
+			kubeConfigPath: './kubeconfigl',
+			bastion: {
+				host: 'bastion.example.com',
+				port: '22',
+				localPort: '8443',
+				username: 'admin',
+				key: 'bastion_key',
+				keyPassword: 'bastionKeyPassword',
+			},
+		},
+	},
+} as Environment;
 
 export class EnvironmentEditor {
 	static async createEnvironmentEditor(
 		args: EnvironmentEditorArgs,
 	): Promise<EnvironmentEditor> {
 		const { configurationPath } = args;
+		let environment = {} as Environment;
 
-		try {
-			if (!args.environment && configurationPath) {
-				const environment = (await loadFromFile(
-					configurationPath,
-				)) as Environment;
-				if (!isEmpty(environment)) {
-					args.environment = environment;
-				} else {
-					args.environment = {
-						name: 'my-environment',
-						productRepo: './deploy',
-						archiveStore: './archive-store',
-						encryptionKeyPath: './encryption_key_pub',
-						deployTarget: {
-							kubernetes: {
-								namespace: 'default',
-								endpoint: 'kubernetes.local',
-							},
-						},
-						configStore: {
-							kubernetes: {
-								namespace: 'default',
-								endpoint: 'kubernetes.local',
-							},
-						},
-					} as Environment;
+		if (!args.environment && configurationPath) {
+			try {
+				environment = (await loadFromFile(configurationPath)) as Environment;
+			} catch (err) {
+				if (err.code !== 'ENOENT') {
+					throw err;
 				}
 			}
-			return new EnvironmentEditor(args);
-		} catch (err) {
-			if (err.code !== 'ENOENT') {
-				throw err;
+			if (!isEmpty(environment)) {
+				args.environment = environment;
+			} else {
+				args.environment = defaultEnvironment;
 			}
 		}
 		return new EnvironmentEditor(args);
@@ -90,13 +118,8 @@ export class EnvironmentEditor {
 	private static async getDeployTargetSelections(
 		productRepoPath: string,
 	): Promise<DeployTargetSelections[]> {
-		const directories = await getDirectories(productRepoPath);
-		const targets = [
-			{ name: 'Kubernetes', value: 'kubernetes' },
-			{ name: 'Docker Socket', value: 'docker' },
-			{ name: 'Balena Cloud', value: 'balena' },
-		];
-		const availableTargets = filter(targets, i =>
+		const directories = await getDirectories(join(productRepoPath, 'deploy'));
+		const availableTargets = filter(deployTargets, i =>
 			directories.includes(i.value),
 		) as DeployTargetSelections[];
 
@@ -104,7 +127,7 @@ export class EnvironmentEditor {
 			throw new Error(
 				`No available deploy targets were found in: ${productRepoPath}.` +
 					`\nAt least one folder with a deploy target name should exist in ${productRepoPath}.` +
-					`\nAvailable options:\n${targets.map(v => v.value)}`,
+					`\nAvailable options:\n${deployTargets.map(v => v.value)}`,
 			);
 		}
 
@@ -118,38 +141,45 @@ export class EnvironmentEditor {
 			{
 				message: 'Please enter your bastion hostname',
 				type: 'input',
-				name: 'bastionHost',
-				default: get(defaultBastion, 'bastionHost'),
+				name: 'host',
+				default: get(defaultBastion, 'host'),
 				validate: inquirerValidateFQDN,
 			},
 			{
 				message: 'Please enter your bastion port',
 				type: 'input',
-				name: 'bastionPort',
-				default: get(defaultBastion, 'bastionPort'),
+				name: 'port',
+				default: get(defaultBastion, 'port'),
+				validate: inquirerValidatePort,
+			},
+			{
+				message: 'Please enter localhost tunnel port',
+				type: 'input',
+				name: 'localPort',
+				default: get(defaultBastion, 'localPort'),
 				validate: inquirerValidatePort,
 			},
 			{
 				message: 'Please enter your bastion username',
 				type: 'input',
-				name: 'bastionUsername',
-				default: get(defaultBastion, 'bastionUsername'),
+				name: 'username',
+				default: get(defaultBastion, 'username'),
 				validate: inquirerValidateString,
 			},
 			{
 				message: 'Please enter your bastion key path',
 				type: 'input',
-				name: 'bastionKey',
-				default: get(defaultBastion, 'bastionKey'),
-				validate: inquirerValidatePath,
+				name: 'key',
+				default: get(defaultBastion, 'key'),
+				validate: inquirerValidateFilePath,
 			},
 			{
 				message: 'Please enter your bastion key password (if any)',
 				type: 'input',
-				name: 'bastionKeyPassword',
-				default: get(defaultBastion, 'bastionKeyPassword'),
+				name: 'keyPassword',
+				default: get(defaultBastion, 'keyPassword'),
 			},
-		] as Questions;
+		] as inquirer.Questions;
 		const answers = await inquirer.prompt(questions);
 		return answers as Bastion;
 	}
@@ -170,7 +200,7 @@ export class EnvironmentEditor {
 			{
 				message: 'Please enter name of the environment',
 				type: 'input',
-				default: this.environment.name,
+				default: get(this.environment, 'name'),
 				name: 'name',
 				validate: inquirerValidateString,
 			},
@@ -178,7 +208,7 @@ export class EnvironmentEditor {
 				message:
 					'Please enter the Product Repo URI. (You may also use a relative path)',
 				type: 'input',
-				default: this.environment.productRepo,
+				default: get(this.environment, 'productRepo'),
 				name: 'productRepo',
 				validate: inquirerValidateDirectory, // TODO: support git
 			},
@@ -186,7 +216,7 @@ export class EnvironmentEditor {
 				message:
 					'Please enter the archive-store URI. (You may also use a relative path)',
 				type: 'input',
-				default: this.environment.archiveStore,
+				default: get(this.environment, 'archiveStore'),
 				name: 'archiveStore',
 				validate: inquirerValidateDirectory, // TODO: support git
 			},
@@ -194,10 +224,10 @@ export class EnvironmentEditor {
 				message: 'Please enter the archive-store encryption key',
 				type: 'input',
 				name: 'encryptionKeyPath',
-				default: this.environment.encryptionKeyPath,
-				validate: inquirerValidatePath, // TODO: improve validation of key
+				default: get(this.environment, 'encryptionKeyPath'),
+				validate: inquirerValidateFilePath, // TODO: improve validation of key
 			},
-		] as Questions;
+		] as inquirer.Questions;
 
 		const answers = await inquirer.prompt(questions);
 
@@ -223,8 +253,8 @@ export class EnvironmentEditor {
 	}
 
 	async inquireConfigStore(
-		defaultConfigStore: ConfigStore,
-	): Promise<ConfigStore> {
+		defaultConfigStore: ConfigStoreAccess,
+	): Promise<ConfigStoreAccess> {
 		const questions = [
 			{
 				message: 'Please select config-store type',
@@ -271,33 +301,43 @@ export class EnvironmentEditor {
 			},
 			{
 				when(response: object): boolean {
+					return get(response, 'configStoreType') === 'kubernetes';
+				},
+				message: 'Please enter config-store kubeconfig path',
+				type: 'input',
+				name: 'kubernetes.kubeConfigPath',
+				default: get(defaultConfigStore, ['kubernetes', 'kubeConfigPath']),
+				validate: inquirerValidateFilePath,
+			},
+			{
+				when(response: object): boolean {
 					return get(response, 'configStoreType') === 'envFile';
 				},
 				message: 'Please enter config-store envFile path',
 				type: 'input',
 				name: 'envFile.path',
 				default: get(defaultConfigStore, ['envFile', 'path']),
-				validate: inquirerValidatePath,
+				validate: inquirerValidateFilePath,
 			},
-		] as Questions;
+		] as inquirer.Questions;
 
 		const answers = await inquirer.prompt(questions);
 		if (get(answers, 'getBastion')) {
 			const bastion = await EnvironmentEditor.inquireBastion(
-				get(defaultConfigStore, 'bastion'),
+				get(defaultConfigStore, ['kubernetes', 'bastion']),
 			);
 			return merge(EnvironmentEditor.filterPromptAnswers(answers), {
-				bastion,
-			}) as ConfigStore;
+				kubernetes: { bastion },
+			}) as ConfigStoreAccess;
 		}
 
-		return EnvironmentEditor.filterPromptAnswers(answers) as ConfigStore;
+		return EnvironmentEditor.filterPromptAnswers(answers) as ConfigStoreAccess;
 	}
 
 	async inquireDeployTarget(
-		defaultDeployTarget: DeployTarget,
+		defaultDeployTarget: DeployTargetAccess,
 		targetTypes: DeployTargetSelections[],
-	): Promise<DeployTarget> {
+	): Promise<DeployTargetAccess> {
 		function kubernetesDeployTarget(response: object): boolean {
 			return get(response, 'deployTargetType') === 'kubernetes';
 		}
@@ -345,26 +385,34 @@ export class EnvironmentEditor {
 				validate: inquirerValidateString,
 			},
 			{
+				when: kubernetesDeployTarget,
+				message: 'Please enter deploy-target kubeconfig path',
+				type: 'input',
+				name: 'kubernetes.kubeConfigPath',
+				default: get(defaultDeployTarget, ['kubernetes', 'kubeConfigPath']),
+				validate: inquirerValidateFilePath,
+			},
+			{
 				when: dockerDeployTarget,
 				message: 'Please enter deploy-target docker-socket path',
 				type: 'input',
-				name: 'docker.socket',
-				default: get(defaultDeployTarget, ['docker', 'socket']),
+				name: 'compose.socket',
+				default: get(defaultDeployTarget, ['compose', 'socket']),
 				validate: inquirerValidatePath,
 			},
-		] as Questions;
+		] as inquirer.Questions;
 
 		const answers = await inquirer.prompt(questions);
 		if (get(answers, 'getBastion')) {
 			const bastion = await EnvironmentEditor.inquireBastion(
-				get(defaultDeployTarget, 'bastion'),
+				get(defaultDeployTarget, ['kubernetes', 'bastion']),
 			);
 			return merge(EnvironmentEditor.filterPromptAnswers(answers), {
-				bastion,
-			}) as DeployTarget;
+				kubernetes: { bastion },
+			}) as DeployTargetAccess;
 		}
 
-		return EnvironmentEditor.filterPromptAnswers(answers) as DeployTarget;
+		return EnvironmentEditor.filterPromptAnswers(answers) as DeployTargetAccess;
 	}
 
 	async save(): Promise<Environment> {

@@ -1,7 +1,7 @@
 import { Command, flags } from '@oclif/command';
 
 import { EnvironmentEditorArgs } from '../lib/controllers/environment-file';
-import { EnvironmentEditor } from '../lib/controllers/environment-file/environmentEditor';
+import { EnvironmentEditor } from '../lib/controllers/environment-file/environment-editor';
 
 export const initializeFlags = {
 	configurationPath: flags.string({
