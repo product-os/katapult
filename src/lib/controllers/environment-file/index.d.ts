@@ -1,41 +1,44 @@
 export declare interface Bastion {
-	bastionHost: string;
-	bastionPort?: string;
-	bastionUsername: string;
-	bastionKey: string;
-	bastionKeyPassword?: string;
+	host: string;
+	port?: string;
+	localPort?: string;
+	username: string;
+	key: string;
+	keyPassword?: string;
 }
 
 export declare interface BastionTarget {
 	bastion?: Bastion;
 }
 
-export declare interface KubernetesDeployTarget extends BastionTarget {
+export declare interface KubernetesDeployTargetAccess extends BastionTarget {
 	namespace: string;
 	endpoint: string;
+	kubeConfigPath: string;
 }
 
-export declare interface DockerDeployTarget extends BastionTarget {
+export declare interface DockerDeployTargetAccess extends BastionTarget {
 	socket: string;
 }
 
-export declare interface KubernetesConfigStore extends BastionTarget {
+export declare interface KubernetesConfigStoreAccess extends BastionTarget {
 	namespace: string;
 	endpoint: string;
+	kubeConfigPath: string;
 }
 
-export declare interface EnvConfigStore extends BastionTarget {
+export declare interface EnvConfigStoreAccess extends BastionTarget {
 	path: string;
 }
 
-export declare interface DeployTarget {
-	kubernetes?: KubernetesDeployTarget;
-	compose?: DockerDeployTarget;
+export declare interface DeployTargetAccess {
+	kubernetes?: KubernetesDeployTargetAccess;
+	compose?: DockerDeployTargetAccess;
 }
 
-export declare interface ConfigStore {
-	kubernetes?: KubernetesConfigStore;
-	envFile?: EnvConfigStore;
+export declare interface ConfigStoreAccess {
+	kubernetes?: KubernetesConfigStoreAccess;
+	envFile?: EnvConfigStoreAccess;
 }
 
 export declare interface DeployTargetSelections {
@@ -48,8 +51,8 @@ export declare interface Environment {
 	name: string;
 	productRepo: string;
 	archiveStore: string;
-	deployTarget: DeployTarget;
-	configStore: ConfigStore;
+	deployTarget: DeployTargetAccess;
+	configStore: ConfigStoreAccess;
 	encryptionKeyPath: string;
 }
 
