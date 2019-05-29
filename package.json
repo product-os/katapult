@@ -25,7 +25,7 @@
     "dotenv": "^7.0.0",
     "inquirer": "^6.3.1",
     "jsonschema": "^1.2.4",
-    "kubernetes-client": "^6.11.0",
+    "kubernetes-client": "^7.0.1",
     "lodash": "^4.17.11",
     "mustache": "^3.0.1",
     "mv": "^2.1.1",
