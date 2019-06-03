@@ -93,8 +93,6 @@ module.exports = class ConfigGenerator {
 						'eval'
 					])
 					if (formula) {
-						console.log('Generating', propertyName)
-						console.log(formula);
 						return eval(formula.split('\n').join(''))
 					} else {
 						throw new Error(error.stack)
