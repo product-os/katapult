@@ -13,12 +13,15 @@ const {
 	GENERATE_CERT_CHAIN,
 	GENERATE_CHAIN,
 	GENERATE_EC_PRIVATE_KEYPAIR,
+	GENERATE_EC_KEYPAIR_PRIVATE,
+	GENERATE_EC_KEYPAIR_PUBLIC,
 	GENERATE_EC_CERT,
 	GENERATE_TOKENAUTH_KEYID,
 	GENERATE_PRIVATE_KEY,
 	GENERATE_PUBLIC_KEY,
 	GENERATE_DH_PARAM,
-	GENERATE_RSA_TOKENAUTH_KEYID
+	GENERATE_RSA_TOKENAUTH_KEYID,
+	GENERATE_SSH_PUBLIC_KEY,
 } = require('./plugins/all')
 const { escape, base64decode, base64 } = require('./filter-functions')
 
@@ -90,7 +93,6 @@ module.exports = class ConfigGenerator {
 						'eval'
 					])
 					if (formula) {
-						console.log('Generating', propertyName)
 						return eval(formula.split('\n').join(''))
 					} else {
 						throw new Error(error.stack)
