@@ -16,6 +16,7 @@
     "@types/dotenv": "^6.1.1",
     "@types/inquirer": "^6.0.1",
     "@types/node-forge": "^0.8.3",
+    "@types/pkijs": "0.0.2",
     "@types/tunnel-ssh": "^4.1.0",
     "@types/validator": "^10.11.0",
     "@types/yamljs": "^0.2.30",
