@@ -4,6 +4,7 @@ import * as forge from 'node-forge';
 export * from './generate-api-key';
 export * from './generate-ca-cert';
 export * from './generate-certificate';
+export * from './generate-cert-chain';
 export * from './generate-dh-param';
 export * from './generate-ec-certificate';
 export * from './generate-ec-keypair';

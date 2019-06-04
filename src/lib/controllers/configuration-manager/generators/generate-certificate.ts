@@ -4,7 +4,7 @@ import { convertAltNames, convertCertAttrs, GenerateCertArgs } from '.';
 import { generatePublicKey } from '.';
 
 /**
- * GENERATE_CERT
+ * GENERATE_CERTIFICATE
  * @param attributes: Attribute object with the following properties:
  * 	certAttrsMap: Attributes object for generateCertificate generation (Subject).
  * 	Example Object:
