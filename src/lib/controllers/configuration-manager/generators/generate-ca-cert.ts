@@ -6,7 +6,7 @@ import { GenerateCACertArgs } from '.';
 /**
  * GENERATE_CA_CERT
  * @param attributes: Attribute object with the following properties:
- * 	caAttrsMap: Attributes object for ca generateCert generation (Subject, and Issuer).
+ * 	caAttrsMap: Attributes object for ca generateCertificate generation (Subject, and Issuer).
  * 	Example Object:
  * 	{
  * 		C:'GR',
@@ -16,8 +16,8 @@ import { GenerateCACertArgs } from '.';
  * 		CN:'global-ca.io',
  * 		ST: ''
  * 	}
- * 	validFrom: Date parsable string for CA generateCert validFrom field.
- * 	validTo: Date parsable string for CA generateCert validTo field.
+ * 	validFrom: Date parsable string for CA generateCertificate validFrom field.
+ * 	validTo: Date parsable string for CA generateCertificate validTo field.
  * 	caPrivateKeyPEM: Private key PEM format string.
  * @returns {string} CA certificate PEM format string.
  */
