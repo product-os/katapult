@@ -1,6 +1,14 @@
 import { get, keys } from 'lodash';
 import * as forge from 'node-forge';
 
+export * from './generate-api-key';
+export * from './generate-dh-param';
+export * from './generate-ec-certificate';
+export * from './generate-ec-keypair';
+export * from './generate-private-key';
+export * from './generate-public-key';
+export * from './generate-tokenauth-keyid';
+
 export interface CertAttrs {
 	[key: string]: string;
 }
