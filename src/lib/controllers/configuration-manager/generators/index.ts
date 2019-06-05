@@ -13,6 +13,7 @@ export * from './generate-public-key';
 export * from './generate-tokenauth-keyid';
 export * from './get-ec-private-key';
 export * from './get-ec-public-key';
+export * from './get-ssh-public-key';
 
 export interface CertAttrs {
 	[key: string]: string;
