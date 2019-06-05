@@ -11,6 +11,7 @@ export * from './generate-ec-keypair';
 export * from './generate-private-key';
 export * from './generate-public-key';
 export * from './generate-tokenauth-keyid';
+export * from './get-ec-private-key';
 
 export interface CertAttrs {
 	[key: string]: string;
