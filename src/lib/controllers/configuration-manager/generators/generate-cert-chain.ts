@@ -1,4 +1,4 @@
-import { generateCert, GenerateCertArgs } from '.';
+import { GenerateCertArgs, generateCertificate } from '.';
 
 /**
  * GENERATE_CERT_CHAIN
@@ -26,6 +26,6 @@ import { generateCert, GenerateCertArgs } from '.';
 
 export function generateCertChain(attributes: GenerateCertArgs) {
 	const { caCertPEM, privateKeyPEM } = attributes;
-	const certPEM = generateCert(attributes);
+	const certPEM = generateCertificate(attributes);
 	return certPEM + caCertPEM + privateKeyPEM;
 }
