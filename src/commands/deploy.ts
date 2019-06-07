@@ -1,7 +1,5 @@
 import { Command } from '@oclif/command';
 
-import generateDeploy = require('../lib/commands/generate-deploy');
-
 import { GenerateDeployFlags } from './generate';
 
 export default class Deploy extends Command {
@@ -12,8 +10,6 @@ export default class Deploy extends Command {
 
 	async run() {
 		const { flags } = this.parse(Deploy);
-		flags.deploy = true;
-
-		return generateDeploy(flags).asCallback();
+		return true;
 	}
 }
