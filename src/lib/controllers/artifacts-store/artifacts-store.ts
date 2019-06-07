@@ -5,8 +5,8 @@ export interface Release {
 	[key: string]: string;
 }
 
-export class ArchiveStore {
-	public static async create(archiveStoreURI: string): Promise<ArchiveStore> {
+export class ArtifactsStore {
+	public static async create(archiveStoreURI: string): Promise<ArtifactsStore> {
 		let adapter: LocalArchiveStoreAdapter;
 
 		if (await localPathURI(archiveStoreURI)) {
@@ -16,7 +16,7 @@ export class ArchiveStore {
 		} else {
 			throw new Error('Not implemented');
 		}
-		return new ArchiveStore(adapter);
+		return new ArtifactsStore(adapter);
 	}
 
 	private readonly adapter: LocalArchiveStoreAdapter;

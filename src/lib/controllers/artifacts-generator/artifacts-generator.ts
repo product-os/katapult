@@ -8,7 +8,7 @@ import {
 	readFromURI,
 	unwrapKeyframe,
 } from '../../tools';
-import { ArchiveStore, Release } from '../archive-store/archive-store';
+import { ArtifactsStore, Release } from '../artifacts-store/artifacts-store';
 import { ConfigMap } from '../config-store';
 import { Environment } from '../environment-file';
 import { EnvironmentValidator } from '../environment-file/environment-validator';
@@ -21,18 +21,18 @@ export class ArtifactsGenerator {
 		const environment = await new EnvironmentValidator(
 			configurationPath,
 		).validate();
-		const archiveStore = await ArchiveStore.create(environment.archiveStore);
+		const archiveStore = await ArtifactsStore.create(environment.archiveStore);
 		return new ArtifactsGenerator(environment, configMap, archiveStore);
 	}
 
-	private readonly archiveStore: ArchiveStore;
+	private readonly archiveStore: ArtifactsStore;
 	private readonly environment: Environment;
 	private readonly configMap: ConfigMap;
 
 	public constructor(
 		environment: Environment,
 		configMap: ConfigMap,
-		archiveStore: ArchiveStore,
+		archiveStore: ArtifactsStore,
 	) {
 		this.archiveStore = archiveStore;
 		this.environment = environment;

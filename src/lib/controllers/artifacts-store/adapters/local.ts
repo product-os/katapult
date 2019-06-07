@@ -2,7 +2,7 @@ import { promisify } from 'bluebird';
 import { promises as fs, remove } from 'fs-extra';
 import { keys } from 'lodash';
 import { dirname, join } from 'path';
-import { Release } from '../archive-store';
+import { Release } from '../artifacts-store';
 
 export class LocalArchiveStoreAdapter {
 	private readonly path: string;

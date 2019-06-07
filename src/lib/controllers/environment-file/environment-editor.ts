@@ -37,7 +37,7 @@ const deployTargets = [
 const defaultEnvironment = {
 	name: 'my-environment',
 	productRepo: './',
-	archiveStore: './archive-store',
+	archiveStore: './artifacts-store',
 	encryptionKeyPath: './encryption_key_pub',
 	deployTarget: {
 		kubernetes: {
@@ -214,14 +214,14 @@ export class EnvironmentEditor {
 			},
 			{
 				message:
-					'Please enter the archive-store URI. (You may also use a relative path)',
+					'Please enter the artifacts-store URI. (You may also use a relative path)',
 				type: 'input',
 				default: get(this.environment, 'archiveStore'),
 				name: 'archiveStore',
 				validate: inquirerValidateDirectory, // TODO: support git
 			},
 			{
-				message: 'Please enter the archive-store encryption key',
+				message: 'Please enter the artifacts-store encryption key',
 				type: 'input',
 				name: 'encryptionKeyPath',
 				default: get(this.environment, 'encryptionKeyPath'),
