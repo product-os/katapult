@@ -1,7 +1,13 @@
 import { get, keys } from 'lodash';
 import { render } from 'mustache';
+import { encrypt, key, message } from 'openpgp';
 import { basename, join } from 'path';
-import { listURI, readFromURI, unwrapKeyframe } from '../../tools';
+import {
+	listURI,
+	readFileAsync,
+	readFromURI,
+	unwrapKeyframe,
+} from '../../tools';
 import { ArchiveStore, Release } from '../archive-store/archive-store';
 import { ConfigMap } from '../config-store';
 import { Environment } from '../environment-file';
@@ -51,7 +57,8 @@ export class ArtifactsGenerator {
 			const manifestPath = join(target, basename(file).replace('.tpl.', '.'));
 			release[manifestPath] = manifestString;
 		}
-		await this.archiveStore.write(release);
+		const outputRelease = await this.encryptRelease(release);
+		await this.archiveStore.write(outputRelease);
 		console.log('Generated artifacts');
 		return true;
 	}
@@ -62,5 +69,22 @@ export class ArtifactsGenerator {
 			this.configMap[`${key}-image`] = get(keyFrame, [key, 'image', 'url']);
 			this.configMap[`${key}-version`] = get(keyFrame, [key, 'version']);
 		}
+	}
+
+	private async encryptRelease(release: Release): Promise<Release> {
+		if (this.environment.encryptionKeyPath) {
+			const encryptionKey = (await readFileAsync(
+				this.environment.encryptionKeyPath,
+			)).toString();
+			const publicKeys = (await key.readArmored(encryptionKey)).keys;
+			for (const key of keys(release)) {
+				const encrypted = await encrypt({
+					message: message.fromText(release[key]),
+					publicKeys,
+				});
+				release[key] = encrypted.data;
+			}
+		}
+		return release;
 	}
 }
