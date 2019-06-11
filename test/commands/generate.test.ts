@@ -4,7 +4,7 @@ import * as path from 'path';
 describe('generate', () => {
 	test
 		.stdout()
-		.command(['generate'])
+		.command(['generate', '-c'])
 		.exit(2)
 		.it('exists with an error code 2 with missing required flags');
 
@@ -13,16 +13,10 @@ describe('generate', () => {
 		.command([
 			'generate',
 			'-c',
-			path.normalize(__dirname + '/../deploy-templates'),
-			'-e',
-			'openbalena',
-			'-t',
-			'docker-compose',
-			'-m',
-			'aggressive',
+			path.normalize(path.join(__dirname, '../environment.yml')),
 		])
 		.timeout(500000)
 		.it('runs OK with good values', ctx => {
-			expect(ctx.stdout).to.contain('Done...');
+			expect(ctx.stdout).to.contain('Generated artifacts');
 		});
 });
