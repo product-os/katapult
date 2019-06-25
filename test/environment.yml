@@ -1,10 +1,4 @@
-name: my-environment
-productRepo: ./
-archiveStore: ./artifacts-store
-encryptionKeyPath: pubkey.armor.gpg
-configStore:
-  envFile:
+version: v1.0.0
+config-store:
+    type: envFile
     path: envvars.env
-deployTarget:
-  compose:
-    socket: /var/run/docker.sock
