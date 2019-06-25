@@ -44,6 +44,7 @@
     "simple-git": "^1.107.0",
     "tslib": "^1.9.3",
     "tunnel-ssh": "^4.1.4",
+    "typed-error": "^3.1.0",
     "validator": "^10.11.0",
     "yamljs": "^0.3.0"
   },

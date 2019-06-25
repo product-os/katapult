@@ -42,7 +42,7 @@ export class ConfigValidator {
 			for (const e of errors) {
 				errorString += `${e.toString()}\n`;
 			}
-			throw new Error(errorString);
+			throw new ValidationError(errorString);
 		}
 		return errors;
 	}

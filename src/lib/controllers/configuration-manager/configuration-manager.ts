@@ -34,6 +34,7 @@ import {
 
 import { Question, Questions } from 'inquirer';
 import * as inquirer from 'inquirer';
+import { NotImplementedError } from '../../error-types';
 
 const base64 = b64encode;
 const base64decode = b64decode;
@@ -228,10 +229,10 @@ export class ConfigurationManager {
 					break;
 				}
 				case 'quiet': {
-					throw new Error(get(validationError, 'message'));
+					throw new ValidationError(get(validationError, 'message'));
 				}
 				default: {
-					throw new Error('Mode not implemented');
+					throw new NotImplementedError('Mode not implemented');
 				}
 			}
 		}
@@ -248,6 +249,7 @@ export class ConfigurationManager {
 			});
 		}
 		if (this.mode === 'edit') {
+			throw new NotImplementedError('edit mode not implemented yet');
 			// TODO: Invoke configuration interactive editor
 		}
 		return await this.configStore.updateMany(this.configMap);

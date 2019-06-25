@@ -1,6 +1,7 @@
 import * as fs from 'mz/fs';
 import * as yaml from 'yamljs';
 
+import { ConfigStoreAdapterError } from '../../../error-types';
 import { loadFromFile } from '../../../tools';
 import { ConfigStoreAccess, YamlConfigStoreAccess } from '../../environment';
 import { ConfigMap } from '../index';
@@ -10,7 +11,7 @@ export class YamlConfigStoreAdapter {
 
 	public constructor(access: ConfigStoreAccess) {
 		if (!access.yamlFile) {
-			throw new Error('yamlFile not specified');
+			throw new ConfigStoreAdapterError('yamlFile not specified');
 		}
 
 		this.access = {

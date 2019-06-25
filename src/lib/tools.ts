@@ -3,6 +3,14 @@ import * as _ from 'lodash';
 import * as fs from 'mz/fs';
 import { dirname, isAbsolute, join, resolve } from 'path';
 import * as tunnel from 'tunnel-ssh';
+import {
+	FileLoadError,
+	NotImplementedError,
+	UnsupportedError,
+	URILoadError,
+} from './error-types';
+
+import { TimeoutError } from 'bluebird';
 import * as yamljs from 'yamljs';
 import { ConfigMap } from './controllers/config-store';
 
@@ -29,40 +37,24 @@ export function getAbsolutePath(path: string, basePath: string): string {
 
 export function getAbsoluteURI(uri: string, basePath: string): string {
 	if (gitURI(uri)) {
-		throw new Error('Git URI support not implemented yet');
+		throw new NotImplementedError('Git URI support not implemented yet');
 	} else if (localPathURI(uri)) {
 		return getAbsolutePath(uri, basePath);
 	} else {
-		throw new Error('URI type support not implemented yet');
+		throw new UnsupportedError('URI type not supported yet');
 	}
 }
 
 export async function loadFromFile(
 	filePath: string,
-	errorMessage?: string,
+	errorMessage: string = '',
 ): Promise<any> {
 	try {
 		const buffer = await fs.readFile(filePath);
 		return yamljs.parse(buffer.toString('utf8'));
 	} catch (e) {
-		if (e.code === 'ENOENT' && errorMessage) {
-			throw new Error(errorMessage + e.message);
-		}
-		throw e;
+		throw new FileLoadError(errorMessage + e.message);
 	}
-}
-
-export async function writeYaml(
-	obj: object,
-	filePath: string,
-): Promise<object> {
-	const data = yamljs.stringify(obj, 40, 2);
-	await fs.writeFile(filePath, data, err => {
-		if (err) {
-			throw err;
-		}
-	});
-	return obj;
 }
 
 export function gitURI(uri: string): boolean {
@@ -82,15 +74,14 @@ export async function loadFromURI(
 ): Promise<any> {
 	// TODO: support git URI
 	if (gitURI(URI)) {
-		throw new Error('Git URI support not implemented yet');
+		throw new UnsupportedError('Git URI support not implemented yet');
 	}
 	try {
 		if (localPathURI(URI)) {
 			return await loadFromFile(join(URI, path), errorMessage);
 		}
 	} catch (e) {
-		const message = `Error loading ${path} from ${URI}\n${e.message}`;
-		throw new Error(message);
+		throw new URILoadError(`Error loading ${path} from ${URI}\n${e.message}`);
 	}
 }
 
@@ -133,7 +124,7 @@ export async function readFromURI(
 ): Promise<any> {
 	// TODO: support git URI
 	if (gitURI(URI)) {
-		throw new Error('Git URI support not implemented yet');
+		throw new UnsupportedError('Git URI support not implemented yet');
 	} else if (localPathURI(URI)) {
 		return (await fs.readFile(join(URI, path))).toString('utf8');
 	}
@@ -146,7 +137,7 @@ export async function listURI(
 ): Promise<any> {
 	// TODO: support git URI
 	if (gitURI(URI)) {
-		throw new Error('Git URI support not implemented yet');
+		throw new UnsupportedError('Git URI support not implemented yet');
 	} else if (localPathURI(URI)) {
 		return await fs.readdir(join(URI, path));
 	}
@@ -197,7 +188,7 @@ export async function runInTunnel(
 	return await tunnelAsync(tnlConfig).then(tnl => {
 		const wait = setTimeout(function() {
 			tnl.close();
-			throw new Error('Timeout exceeded');
+			throw new TimeoutError('Timeout exceeded');
 		}, timeout);
 		return prom.then((ret: any) => {
 			clearTimeout(wait);

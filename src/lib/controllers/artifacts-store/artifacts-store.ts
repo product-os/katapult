@@ -1,3 +1,4 @@
+import { NotImplementedError, UnsupportedError } from '../../error-types';
 import { gitURI, localPathURI } from '../../tools';
 import { LocalArchiveStoreAdapter } from './adapters/local';
 
@@ -12,9 +13,9 @@ export class ArtifactsStore {
 		if (await localPathURI(archiveStoreURI)) {
 			adapter = new LocalArchiveStoreAdapter(archiveStoreURI);
 		} else if (gitURI(archiveStoreURI)) {
-			throw new Error('Not implemented');
+			throw new NotImplementedError('Git URI support not implemented yet');
 		} else {
-			throw new Error('Not implemented');
+			throw new UnsupportedError('URI type not supported yet');
 		}
 		return new ArtifactsStore(adapter);
 	}

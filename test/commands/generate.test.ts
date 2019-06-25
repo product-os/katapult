@@ -4,7 +4,7 @@ import * as path from 'path';
 describe('generate', () => {
 	test
 		.stdout()
-		.command(['generate', '-c'])
+		.command(['generate', '-m', 'quiet', '-c'])
 		.exit(2)
 		.it('exists with an error code 2 with missing required flags');
 

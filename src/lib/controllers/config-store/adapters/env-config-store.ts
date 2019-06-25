@@ -4,6 +4,7 @@ import * as fs from 'mz/fs';
 
 import { configMapToPairs, kvPairsToConfigMap } from '../../../tools';
 
+import { ConfigStoreAdapterError } from '../../../error-types';
 import { ConfigStoreAccess, EnvConfigStoreAccess } from '../../environment';
 import { ConfigMap } from '../index';
 
@@ -12,7 +13,7 @@ export class EnvConfigStoreAdapter {
 
 	public constructor(access: ConfigStoreAccess) {
 		if (!access.envFile) {
-			throw new Error('envFile not specified');
+			throw new ConfigStoreAdapterError('envFile not specified');
 		}
 
 		this.access = {
