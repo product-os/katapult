@@ -1,12 +1,8 @@
-import { promisify } from 'bluebird';
 import { parse } from 'dotenv';
-import { readFile, writeFile } from 'fs';
 import * as _ from 'lodash';
+import * as fs from 'mz/fs';
 
 import { configMapToPairs, kvPairsToConfigMap } from '../../../tools';
-
-const readFileAsync = promisify(readFile);
-const writeFileAsync = promisify(writeFile);
 
 import { ConfigStoreAccess, EnvConfigStoreAccess } from '../../environment';
 import { ConfigMap } from '../index';
@@ -25,7 +21,7 @@ export class EnvConfigStoreAdapter {
 	}
 
 	async listPairs(): Promise<ConfigMap> {
-		const envFileBuffer = await readFileAsync(this.access.path);
+		const envFileBuffer = await fs.readFile(this.access.path);
 		return parse(
 			envFileBuffer
 				.toString()
@@ -39,7 +35,7 @@ export class EnvConfigStoreAdapter {
 		return kvPairsToConfigMap(configManifest);
 	}
 
-	async updateMany(envvars: ConfigMap) {
+	async updateMany(envvars: ConfigMap): Promise<ConfigMap> {
 		const envvarPairs = configMapToPairs(envvars);
 		const conf = await this.listPairs();
 
@@ -50,12 +46,12 @@ export class EnvConfigStoreAdapter {
 		return await this.list();
 	}
 
-	private async writeEnvFile(config: ConfigMap) {
+	private async writeEnvFile(config: ConfigMap): Promise<void> {
 		let dotenvString = '';
 		for (const name of _.keys(config)) {
 			dotenvString += `${name}="${config[name]}"\n`;
 		}
-		// @ts-ignore
-		return writeFileAsync(this.access.path, dotenvString);
+
+		return fs.writeFile(this.access.path, dotenvString);
 	}
 }

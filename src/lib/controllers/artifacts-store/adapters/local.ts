@@ -1,6 +1,6 @@
-import { promisify } from 'bluebird';
-import { promises as fs, remove } from 'fs-extra';
-import { keys } from 'lodash';
+import { remove } from 'fs-extra';
+import * as _ from 'lodash';
+import * as fs from 'mz/fs';
 import { dirname, join } from 'path';
 import { Release } from '../artifacts-store';
 
@@ -15,7 +15,7 @@ export class LocalArchiveStoreAdapter {
 		// Remove everything from path
 		await this.removeAll();
 		// write new release
-		for (const filePath of keys(release)) {
+		for (const filePath of _.keys(release)) {
 			await this.putFile(filePath, release[filePath]);
 		}
 	}
@@ -34,8 +34,8 @@ export class LocalArchiveStoreAdapter {
 		}
 	}
 
-	private async putFile(path: string, data: string) {
-		await fs.mkdir(join(this.path, dirname(path)), { recursive: true });
+	private async putFile(path: string, data: string): Promise<void> {
+		fs.mkdirSync(join(this.path, dirname(path)), { recursive: true });
 		return await fs.writeFile(join(this.path, path), data);
 	}
 }

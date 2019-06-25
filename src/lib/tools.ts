@@ -1,22 +1,18 @@
 import * as Bluebird from 'bluebird';
-import { readdir, readFile, stat, writeFile } from 'fs';
 import * as _ from 'lodash';
+import * as fs from 'mz/fs';
 import { dirname, isAbsolute, join, resolve } from 'path';
 import * as tunnel from 'tunnel-ssh';
 import * as yamljs from 'yamljs';
 import { ConfigMap } from './controllers/config-store';
 
-export const statAsync = Bluebird.promisify(stat);
-export const readdirAsync = Bluebird.promisify(readdir);
-export const readFileAsync = Bluebird.promisify(readFile);
 export const tunnelAsync = Bluebird.promisify(tunnel);
-export const writeFileAsync = Bluebird.promisify(writeFile);
 
 export async function getDirectories(path: string): Promise<string[]> {
-	const directories = (await readdirAsync(path)) as string[];
+	const directories = (await fs.readdir(path)) as string[];
 	return directories.filter(async (name: string) => {
 		const itemPath = join(path, name);
-		const itemStat = await statAsync(itemPath);
+		const itemStat = await fs.stat(itemPath);
 		return itemStat.isDirectory();
 	});
 }
@@ -46,7 +42,7 @@ export async function loadFromFile(
 	errorMessage?: string,
 ): Promise<any> {
 	try {
-		const buffer = await readFileAsync(filePath);
+		const buffer = await fs.readFile(filePath);
 		return yamljs.parse(buffer.toString('utf8'));
 	} catch (e) {
 		if (e.code === 'ENOENT' && errorMessage) {
@@ -61,7 +57,7 @@ export async function writeYaml(
 	filePath: string,
 ): Promise<object> {
 	const data = yamljs.stringify(obj, 40, 2);
-	await writeFileAsync(filePath, data, err => {
+	await fs.writeFile(filePath, data, err => {
 		if (err) {
 			throw err;
 		}
@@ -98,7 +94,7 @@ export async function loadFromURI(
 	}
 }
 
-export function getBasePath(path: string) {
+export function getBasePath(path: string): string {
 	return dirname(resolve(path));
 }
 
@@ -108,7 +104,7 @@ export function convertRelativePaths({
 }: {
 	conf: any;
 	basePath: string;
-}) {
+}): any {
 	// Convert relative to absolute URIs
 	const keys = [
 		'productRepo',
@@ -139,7 +135,7 @@ export async function readFromURI(
 	if (gitURI(URI)) {
 		throw new Error('Git URI support not implemented yet');
 	} else if (localPathURI(URI)) {
-		return (await readFileAsync(join(URI, path))).toString('utf8');
+		return (await fs.readFile(join(URI, path))).toString('utf8');
 	}
 }
 
@@ -152,7 +148,7 @@ export async function listURI(
 	if (gitURI(URI)) {
 		throw new Error('Git URI support not implemented yet');
 	} else if (localPathURI(URI)) {
-		return await readdirAsync(join(URI, path));
+		return await fs.readdir(join(URI, path));
 	}
 }
 

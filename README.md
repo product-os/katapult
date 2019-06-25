@@ -5,9 +5,7 @@ A tool for launching container-based products
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/katapult.svg)](https://npmjs.org/package/katapult)
-[![CircleCI](https://circleci.com/gh/balena-io/katapult/tree/master.svg?style=shield)](https://circleci.com/gh/balena-io/katapult/tree/master)
 [![Downloads/week](https://img.shields.io/npm/dw/katapult.svg)](https://npmjs.org/package/katapult)
-[![License](https://img.shields.io/npm/l/katapult.svg)](https://github.com/balena-io/katapult/blob/master/package.json)
 
 <!-- toc -->
 * [Usage](#usage)

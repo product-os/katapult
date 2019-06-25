@@ -1,13 +1,10 @@
 import { get, keys } from 'lodash';
 import { render } from 'mustache';
+import * as fs from 'mz/fs';
 import { encrypt, key, message } from 'openpgp';
 import { basename, join } from 'path';
-import {
-	listURI,
-	readFileAsync,
-	readFromURI,
-	unwrapKeyframe,
-} from '../../tools';
+
+import { listURI, readFromURI, unwrapKeyframe } from '../../tools';
 import { ArtifactsStore, Release } from '../artifacts-store/artifacts-store';
 import { ConfigMap } from '../config-store';
 import { Environment } from '../environment';
@@ -68,7 +65,7 @@ export class ArtifactsGenerator {
 
 	private async encryptRelease(release: Release): Promise<Release> {
 		if (this.environment.encryptionKeyPath) {
-			const encryptionKey = (await readFileAsync(
+			const encryptionKey = (await fs.readFile(
 				this.environment.encryptionKeyPath,
 			)).toString();
 			const publicKeys = (await key.readArmored(encryptionKey)).keys;

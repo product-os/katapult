@@ -1,7 +1,6 @@
-import { promisify } from 'bluebird';
-import { readFile } from 'fs';
 import { Client1_13 as Client, config } from 'kubernetes-client';
 import * as _ from 'lodash';
+import * as fs from 'mz/fs';
 import * as tunnel from 'tunnel-ssh';
 import {
 	configMapToPairs,
@@ -11,8 +10,6 @@ import {
 import { ConfigStoreAccess } from '../../environment';
 import { ConfigMap } from '../index';
 import { ApiClient } from './kubernetes-client-types-extended';
-
-const readFileAsync = promisify(readFile);
 
 interface SecretOperationArgs {
 	k8sSecretName: string;
@@ -35,7 +32,7 @@ export class KubernetesConfigStoreAdapter {
 
 		let tnlConfig: tunnel.Config | null = null;
 		if (_.get(access.kubernetes, ['bastion', 'host'])) {
-			const privateKey = await readFileAsync(
+			const privateKey = await fs.readFile(
 				_.get(access.kubernetes, ['bastion', 'key']),
 			);
 			tnlConfig = {

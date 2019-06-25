@@ -1,8 +1,5 @@
-import { promisify } from 'bluebird';
-import { writeFile } from 'fs';
-import { merge } from 'lodash';
+import * as fs from 'mz/fs';
 import * as yaml from 'yamljs';
-const writeFileAsync = promisify(writeFile);
 
 import { loadFromFile } from '../../../tools';
 import { ConfigStoreAccess, YamlConfigStoreAccess } from '../../environment';
@@ -37,14 +34,12 @@ export class YamlConfigStoreAdapter {
 	 * @param {ConfigMap} changes
 	 * @returns {Promise<ConfigMap>}
 	 */
-	async updateMany(changes: ConfigMap) {
-		await this.write(changes);
+	async updateMany(changes: ConfigMap): Promise<ConfigMap> {
+		this.write(changes);
 		return changes;
 	}
 
-	private async write(config: ConfigMap) {
-		const output = yaml.stringify(config, 4);
-		// @ts-ignore
-		return writeFileAsync(this.access.path, output);
+	private write(config: ConfigMap): void {
+		return fs.writeFileSync(this.access.path, yaml.stringify(config, 4));
 	}
 }
