@@ -11,29 +11,26 @@ export class LocalArchiveStoreAdapter {
 		this.path = path;
 	}
 
-	async write(release: Release): Promise<boolean> {
+	async write(release: Release): Promise<void> {
 		// Remove everything from path
 		await this.removeAll();
 		// write new release
 		for (const filePath of keys(release)) {
 			await this.putFile(filePath, release[filePath]);
 		}
-		return true;
 	}
 
-	private async removeAll(): Promise<boolean> {
+	private async removeAll(): Promise<void> {
 		try {
 			const files = await fs.readdir(this.path);
 			for (const file of files) {
 				await remove(join(this.path, file));
 			}
-			return true;
 		} catch (e) {
 			// ignore missing folders/paths
-			if (e.code === 'ENOENT') {
-				return true;
+			if (e.code !== 'ENOENT') {
+				throw e;
 			}
-			throw e;
 		}
 	}
 

@@ -5,7 +5,9 @@ import * as forge from 'node-forge';
  * @param {forge.pki.PEM} privateKeyPEM
  * @returns {Promise<string>} PublicKeyPEM
  */
-export async function generatePublicKey(privateKeyPEM: forge.pki.PEM) {
+export async function generatePublicKey(
+	privateKeyPEM: forge.pki.PEM,
+): Promise<string> {
 	const privateKey = forge.pki.privateKeyFromPem(
 		privateKeyPEM,
 	) as forge.pki.rsa.PrivateKey;

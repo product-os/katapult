@@ -19,10 +19,12 @@ import { GenerateCACertArgs } from '.';
  * 	validFrom: Date parsable string for CA generateCertificate validFrom field.
  * 	validTo: Date parsable string for CA generateCertificate validTo field.
  * 	caPrivateKeyPEM: Private key PEM format string.
- * @returns {string} CA certificate PEM format string.
+ * @returns Promise<string> CA certificate PEM format string.
  */
 
-export async function generateCaCert(attributes: GenerateCACertArgs) {
+export async function generateCaCert(
+	attributes: GenerateCACertArgs,
+): Promise<string> {
 	const {
 		caAttrsMap,
 		validFrom,

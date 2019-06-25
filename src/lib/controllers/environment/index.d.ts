@@ -31,6 +31,10 @@ export declare interface EnvConfigStoreAccess extends BastionTarget {
 	path: string;
 }
 
+export declare interface YamlConfigStoreAccess extends BastionTarget {
+	path: string;
+}
+
 export declare interface DeployTargetAccess {
 	kubernetes?: KubernetesDeployTargetAccess;
 	compose?: DockerDeployTargetAccess;
@@ -39,16 +43,10 @@ export declare interface DeployTargetAccess {
 export declare interface ConfigStoreAccess {
 	kubernetes?: KubernetesConfigStoreAccess;
 	envFile?: EnvConfigStoreAccess;
-}
-
-export declare interface DeployTargetSelections {
-	name: string;
-	value: string;
-	short?: string;
+	yamlFile?: YamlConfigStoreAccess;
 }
 
 export declare interface Environment {
-	name: string;
 	productRepo: string;
 	archiveStore: string;
 	deployTarget: DeployTargetAccess;
@@ -56,8 +54,22 @@ export declare interface Environment {
 	encryptionKeyPath: string;
 }
 
-export declare interface EnvironmentEditorArgs {
-	environment: Environment;
-	configurationPath: string;
-	verbose?: boolean;
+export declare interface BastionConfiguration {
+	host: string;
+	port?: string;
+	localPort?: string;
+	username: string;
+}
+
+export declare interface ConfigStoreAccessConfiguration {
+	type: string;
+	endpoint?: string;
+	namespace?: string;
+	envFile?: string;
+	bastion?: BastionConfiguration;
+}
+
+export declare interface KatapultFile {
+	version: string;
+	'config-store': ConfigStoreAccessConfiguration;
 }

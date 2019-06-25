@@ -1,8 +1,11 @@
 import { Command, flags } from '@oclif/command';
 
 import { ArtifactsGenerator } from '../lib/controllers/artifacts-generator/artifacts-generator';
-import { ConfigurationManagerCreateArgs } from '../lib/controllers/configuration-manager';
+import { ConfigManifest } from '../lib/controllers/config-manifest/config-manifest';
+import { ConfigStore } from '../lib/controllers/config-store/config-store';
 import { ConfigurationManager } from '../lib/controllers/configuration-manager/configuration-manager';
+import { EnvironmentEditor } from '../lib/controllers/environment/environment-editor';
+import { convertRelativePaths, getBasePath, readFromURI } from '../lib/tools';
 
 export const GenerateDeployFlags = {
 	configurationPath: flags.string({
@@ -27,14 +30,23 @@ export default class Generate extends Command {
 
 	async run() {
 		const { flags } = this.parse(Generate);
-		const cm = await ConfigurationManager.create(
-			flags as ConfigurationManagerCreateArgs,
+		const environment = convertRelativePaths({
+			conf: await (await EnvironmentEditor.create(flags)).initializeEnvironment(
+				false,
+			),
+			basePath: getBasePath(flags.configurationPath),
+		});
+		const configStore = await ConfigStore.create(environment.configStore);
+		const configManifest = new ConfigManifest(
+			await readFromURI(environment.productRepo, 'config-manifest.yml'),
 		);
-		const confMap = await cm.sync();
-		const generator = await ArtifactsGenerator.create(
-			flags.configurationPath,
-			confMap,
-		);
+		const configMap = (await ConfigurationManager.create({
+			mode: flags.mode,
+			configManifest,
+			configStore,
+		})).sync();
+
+		const generator = await ArtifactsGenerator.create(environment, configMap);
 		await generator.generate();
 		return true;
 	}

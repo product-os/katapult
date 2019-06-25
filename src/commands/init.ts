@@ -1,7 +1,6 @@
 import { Command, flags } from '@oclif/command';
 
-import { EnvironmentEditorArgs } from '../lib/controllers/environment-file';
-import { EnvironmentEditor } from '../lib/controllers/environment-file/environment-editor';
+import { EnvironmentEditor } from '../lib/controllers/environment/environment-editor';
 
 export const initializeFlags = {
 	configurationPath: flags.string({
@@ -11,10 +10,11 @@ export const initializeFlags = {
 		char: 'c',
 	}),
 
-	verbose: flags.boolean({
-		description: 'Enable verbose mode',
-		char: 'v',
-		default: false,
+	mode: flags.string({
+		description: 'Determine how to resolve data which is missing at runtime.',
+		options: ['interactive', 'quiet', 'edit'],
+		default: 'interactive',
+		char: 'm',
 	}),
 };
 
@@ -25,8 +25,6 @@ export default class Init extends Command {
 
 	async run() {
 		const { flags } = this.parse(Init);
-		return EnvironmentEditor.initializeEnvironment(
-			flags as EnvironmentEditorArgs,
-		);
+		return (await EnvironmentEditor.create(flags)).initializeEnvironment();
 	}
 }

@@ -1,6 +1,5 @@
 import { Command, flags } from '@oclif/command';
-import { ConfigurationManagerCreateArgs } from '../lib/controllers/configuration-manager';
-import { ConfigurationManager } from '../lib/controllers/configuration-manager/configuration-manager';
+import { EnvironmentEditor } from '../lib/controllers/environment/environment-editor';
 
 const syncFlags = {
 	configurationPath: flags.string({
@@ -25,10 +24,7 @@ export default class SyncCommand extends Command {
 
 	async run() {
 		const { flags } = this.parse(SyncCommand);
-		const cm = await ConfigurationManager.create(
-			flags as ConfigurationManagerCreateArgs,
-		);
-		await cm.sync();
-		return true;
+
+		return (await EnvironmentEditor.create(flags)).initializeEnvironment(false);
 	}
 }

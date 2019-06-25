@@ -10,17 +10,13 @@ import {
 } from '../../tools';
 import { ArtifactsStore, Release } from '../artifacts-store/artifacts-store';
 import { ConfigMap } from '../config-store';
-import { Environment } from '../environment-file';
-import { EnvironmentValidator } from '../environment-file/environment-validator';
+import { Environment } from '../environment';
 
 export class ArtifactsGenerator {
 	static async create(
-		configurationPath: string,
+		environment: Environment,
 		configMap: ConfigMap,
 	): Promise<ArtifactsGenerator> {
-		const environment = await new EnvironmentValidator(
-			configurationPath,
-		).validate();
 		const archiveStore = await ArtifactsStore.create(environment.archiveStore);
 		return new ArtifactsGenerator(environment, configMap, archiveStore);
 	}
@@ -39,7 +35,7 @@ export class ArtifactsGenerator {
 		this.configMap = configMap;
 	}
 
-	public async generate(): Promise<boolean> {
+	public async generate(): Promise<void> {
 		await this.extendConfigMap();
 		const target = keys(this.environment.deployTarget)[0];
 		const templatesPath = join('deploy', target, 'templates');
@@ -60,7 +56,6 @@ export class ArtifactsGenerator {
 		const outputRelease = await this.encryptRelease(release);
 		await this.archiveStore.write(outputRelease);
 		console.log('Generated artifacts');
-		return true;
 	}
 
 	private async extendConfigMap() {

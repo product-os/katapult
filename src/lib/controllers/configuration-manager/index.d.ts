@@ -11,7 +11,9 @@ export declare interface ConfigurationManagerArgs {
 }
 
 export interface ConfigurationManagerCreateArgs {
-	configurationPath: string;
+	configManifest: ConfigManifest;
+	configStore: ConfigStore;
+	configMap?: ConfigMap;
 	mode?: string;
 }
 

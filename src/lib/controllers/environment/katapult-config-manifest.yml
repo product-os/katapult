@@ -1,0 +1,51 @@
+---
+properties:
+- version:
+    type: string
+    default:
+      eval: '"v1.0.0"'
+- config-store:
+    type: object
+    properties:
+    - type:
+        description: Select the type of config-store
+        type: string
+        enum:
+          - kubernetes
+          - envFile
+    - endpoint:
+        when: type == "kubernetes"
+        description: Hostname of the kubernetes endpoint
+        type: hostname
+    - namespace:
+        when: type == "kubernetes"
+        description: Namespace of secrets in the of the kubernetes endpoint
+        type: string
+    - kubeConfigPath:
+          when: type == "kubernetes"
+          description: KubeConfig Path location (you may leave blank and use KUBECONFIG envvar instead)
+          type: string
+    - path:
+          when: type == 'envFile'
+          description: EnvFile path
+          type: string
+    - bastion:
+        type: object?
+        description: Is your kubernetes endpoint accessible behind a bastion host? (Typically No)
+        when: type == "kubernetes"
+        properties:
+        - host:
+            description: Bastion host name
+            type: hostname
+        - port:
+            description: Bastion port
+            type: number
+        - localPort:
+            description: Local port for tunneling kubernetes API via the bastion
+            type: number
+        - username:
+            description: Username for bastion ssh access
+            type: string
+        - key:
+            description: Private key path for bastion ssh access (You may leave this blank and use BASTION_KEY_PATH environment variable instead)
+            type?: path

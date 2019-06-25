@@ -1,11 +1,10 @@
-'use strict';
-
 import * as Bluebird from 'bluebird';
 import { readdir, readFile, stat, writeFile } from 'fs';
-import { filter, get, keyBy, mapValues, merge } from 'lodash';
-import { isAbsolute, join } from 'path';
+import * as _ from 'lodash';
+import { dirname, isAbsolute, join, resolve } from 'path';
 import * as tunnel from 'tunnel-ssh';
 import * as yamljs from 'yamljs';
+import { ConfigMap } from './controllers/config-store';
 
 export const statAsync = Bluebird.promisify(stat);
 export const readdirAsync = Bluebird.promisify(readdir);
@@ -29,10 +28,7 @@ export async function getDirectories(path: string): Promise<string[]> {
  * @returns {string} An asolute path
  */
 export function getAbsolutePath(path: string, basePath: string): string {
-	if (isAbsolute(path)) {
-		return path;
-	}
-	return join(basePath, path);
+	return isAbsolute(path) ? path : join(basePath, path);
 }
 
 export function getAbsoluteURI(uri: string, basePath: string): string {
@@ -48,7 +44,7 @@ export function getAbsoluteURI(uri: string, basePath: string): string {
 export async function loadFromFile(
 	filePath: string,
 	errorMessage?: string,
-): Promise<object> {
+): Promise<any> {
 	try {
 		const buffer = await readFileAsync(filePath);
 		return yamljs.parse(buffer.toString('utf8'));
@@ -74,15 +70,13 @@ export async function writeYaml(
 }
 
 export function gitURI(uri: string): boolean {
-	const re = new RegExp(
-		'((git|ssh|http|https)|(git@[\\w\\.]+))(:(//)?)([\\w\\.@\\:/\\-]+)',
+	return /((git|ssh|http|https)|(git@[\w\.]+))(:(\/\/)?)([\w\.@\:/\-]+)/.test(
+		uri,
 	);
-	return re.test(uri);
 }
 
 export function localPathURI(uri: string): boolean {
-	const re = new RegExp('^([a-zA-Z0-9_/\\-.])+$');
-	return re.test(uri);
+	return /^([a-zA-Z0-9_/\-.])+$/.test(uri);
 }
 
 export async function loadFromURI(
@@ -93,9 +87,47 @@ export async function loadFromURI(
 	// TODO: support git URI
 	if (gitURI(URI)) {
 		throw new Error('Git URI support not implemented yet');
-	} else if (localPathURI(URI)) {
-		return await loadFromFile(join(URI, path), errorMessage);
 	}
+	try {
+		if (localPathURI(URI)) {
+			return await loadFromFile(join(URI, path), errorMessage);
+		}
+	} catch (e) {
+		const message = `Error loading ${path} from ${URI}\n${e.message}`;
+		throw new Error(message);
+	}
+}
+
+export function getBasePath(path: string) {
+	return dirname(resolve(path));
+}
+
+export function convertRelativePaths({
+	conf,
+	basePath,
+}: {
+	conf: any;
+	basePath: string;
+}) {
+	// Convert relative to absolute URIs
+	const keys = [
+		'productRepo',
+		'archiveStore',
+		'encryptionKeyPath',
+		'envFile.path',
+		'yamlFile.path',
+		'kubernetes.kubeConfigPath',
+		'kubernetes.bastion.key',
+		'compose.socket',
+	];
+
+	for (const k of keys) {
+		const value = _.get(conf, k);
+		if (value) {
+			_.set(conf, k, getAbsoluteURI(value, basePath));
+		}
+	}
+	return conf;
 }
 
 export async function readFromURI(
@@ -139,14 +171,14 @@ export async function unwrapKeyframe(
 	let keyFrame = await loadFromURI(productRepoURI, keyFramePath);
 
 	if (keyFrame) {
-		keyFrame = filter(
-			get(keyFrame, ['children', 'sw', 'containerized-application'], []),
+		keyFrame = _.filter(
+			_.get(keyFrame, ['children', 'sw', 'containerized-application'], []),
 			component => {
 				return component.type === 'sw.containerized-application';
 			},
 		);
-		keyFrame = mapValues(keyBy(keyFrame, 'slug'), o => {
-			return merge(get(o, 'assets', {}), { version: get(o, 'version') });
+		keyFrame = _.mapValues(_.keyBy(keyFrame, 'slug'), o => {
+			return _.merge(_.get(o, 'assets', {}), { version: _.get(o, 'version') });
 		});
 		return keyFrame;
 	} else {
@@ -175,4 +207,48 @@ export async function runInTunnel(tnlConfig: any, prom: any, timeout: number) {
 			return ret;
 		});
 	});
+}
+
+/**
+ * Convert a nested configMap object to a flat Key-Value pair configMap
+ * @param {ConfigMap} configMap
+ * @returns {ConfigMap}
+ */
+export function configMapToPairs(configMap: ConfigMap): ConfigMap {
+	const keyPaths: string[] = [];
+	const ret: ConfigMap = {};
+	function traverse(configMap: any, path: string = '') {
+		if (configMap && _.isObject(configMap)) {
+			_.forIn(configMap, function(value: any, key: string) {
+				traverse(value, path + '.' + key);
+			});
+		} else {
+			keyPaths.push(_.trimStart(path, '.'));
+		}
+	}
+	traverse(configMap);
+	for (const keyPath of keyPaths) {
+		ret[_.replace(keyPath, new RegExp('\\.', 'g'), '___')] = _.get(
+			configMap,
+			keyPath,
+		);
+	}
+	return ret;
+}
+
+/**
+ * Transforms a key-value pair configMap to a nested configMap object.
+ * @param {ConfigMap} configPairs
+ * @returns {ConfigMap}
+ */
+export function kvPairsToConfigMap(configPairs: ConfigMap): ConfigMap {
+	for (const key of _.keys(configPairs).sort()) {
+		const keyPath = _.split(key, '___');
+		_.set(configPairs, keyPath, configPairs[key]);
+		// filter out '___' delimited flat keys
+		if (keyPath.length > 1) {
+			_.unset(configPairs, key);
+		}
+	}
+	return configPairs;
 }

@@ -1,7 +1,5 @@
-import * as inquirer from 'inquirer';
-import { Questions } from 'inquirer';
 import { ValidationError, Validator } from 'jsonschema';
-import { get, keys, reduce, replace } from 'lodash';
+import { get, keys, reduce, replace, split, trim } from 'lodash';
 import {
 	ConfigurationManagerArgs,
 	ConfigurationManagerCreateArgs,
@@ -34,7 +32,9 @@ import {
 	getSSHPublicKey,
 } from './generators';
 
-import { EnvironmentValidator } from '../environment-file/environment-validator';
+import { Question, Questions } from 'inquirer';
+import * as inquirer from 'inquirer';
+
 const base64 = b64encode;
 const base64decode = b64decode;
 const escape = esc;
@@ -56,25 +56,59 @@ export class ConfigurationManager {
 	static async create(
 		args: ConfigurationManagerCreateArgs,
 	): Promise<ConfigurationManager> {
-		const { configurationPath, mode = 'interactive' } = args;
-		const environment = await new EnvironmentValidator(
-			configurationPath,
-		).validate();
-		const configManifest = await ConfigManifest.create(environment.productRepo);
-		const configStore = await ConfigStore.create(environment.configStore);
-
-		const configMap = await configStore.list();
-		return new ConfigurationManager({
+		const {
 			configManifest,
 			configStore,
 			configMap,
+			mode = 'interactive',
+		} = args;
+
+		return new ConfigurationManager({
+			configManifest,
+			configStore,
+			configMap: configMap || (await configStore.list()),
 			mode,
 		});
 	}
 
+	/**
+	 * Validates property against this.configManifest
+	 * @param {string[]} jsonSchema: Schema containing property for validation
+	 * @param {string} name: Property name
+	 * @param {string} value: Property value
+	 * @returns {boolean}
+	 */
+	private static validateProperty({
+		jsonSchema,
+		name,
+		value,
+	}: {
+		jsonSchema: object;
+		name: string;
+		value: string;
+	}): boolean {
+		const validator = new Validator();
+		const schemaErrors = validator.validate(
+			{
+				[name]: value,
+			},
+			{
+				type: 'object',
+				properties: {
+					[name]: jsonSchema,
+				},
+				required: [name],
+			},
+		);
+		if (schemaErrors.valid) {
+			return true;
+		}
+		throw schemaErrors.errors[0];
+	}
+
 	private readonly configManifest: ConfigManifest;
-	private readonly configMap: ConfigMap;
 	private readonly mode: string;
+	private configMap: ConfigMap;
 	private configStore: ConfigStore;
 
 	public constructor(args: ConfigurationManagerArgs) {
@@ -85,80 +119,138 @@ export class ConfigurationManager {
 		this.mode = mode || 'interactive';
 	}
 
-	public async sync() {
-		const invalidProperties = this.validateConfigMap();
-
-		const updatedConfig: ConfigMap = {};
-		const cmJSONSchema = this.configManifest.JSONSchema();
-		for (const name of keys(invalidProperties)) {
-			const formula = get(cmJSONSchema, [
-				'properties',
-				name,
-				'default',
-				'eval',
-			]);
-
-			if (formula) {
-				updatedConfig[name] = await this.evalFormula(name, formula);
-			} else {
-				switch (this.mode) {
-					case 'interactive':
-					case 'edit': {
-						const questions = [
-							{
-								message: `Please enter value for ${name}`,
-								type: 'input',
-								name: 'value',
-								validate: (value: string) => {
-									return this.validateProperty(name, value);
-								},
-							},
-						] as Questions;
-						const answers = await inquirer.prompt(questions);
-						updatedConfig[name] = answers.value;
-						break;
-					}
-					case 'quiet': {
-						throw new Error(invalidProperties[name].message);
-					}
-					default: {
-						throw new Error('Mode not implemented');
-					}
+	public async inquireProperties({ jsonSchema }: { jsonSchema: object }) {
+		const ret: inquirer.Answers = {};
+		// Shallow property list inquiring (shallow when validation). This will be replaced by ReconFix.
+		// Only a subset of when '==' operator is implemented/used in the current context
+		for (const name of keys(get(jsonSchema, 'properties'))) {
+			const propertyJsonSchema = get(jsonSchema, ['properties', name]);
+			let [dependency, value] = split(get(propertyJsonSchema, 'when'), '==');
+			value = trim(value, ' "\'');
+			dependency = trim(dependency);
+			if (!dependency || get(ret, dependency) === value) {
+				const answer = await this.inquire({
+					jsonSchema: propertyJsonSchema,
+					name,
+				});
+				if (get(answer, name)) {
+					ret[name] = get(answer, name);
 				}
 			}
-			this.configMap[name] = updatedConfig[name];
+		}
+		return ret;
+	}
+
+	public async inquire({
+		jsonSchema,
+		name,
+	}: {
+		jsonSchema: object;
+		name: string;
+	}): Promise<any> {
+		if (get(jsonSchema, 'type') === 'object' && get(jsonSchema, 'properties')) {
+			if (!get(jsonSchema, 'required')) {
+				const questions = [
+					{
+						message: `Do you have a ${name}?`,
+						type: 'confirm',
+						name: 'ask',
+					},
+				] as Questions;
+				const answer = await inquirer.prompt(questions);
+				if (!answer['ask']) {
+					return {};
+				}
+			}
+			const answers = await this.inquireProperties({ jsonSchema });
+			return { [name]: answers };
+		} else {
+			let question: Question = {};
+			if (get(jsonSchema, 'enum')) {
+				question = {
+					message: get(
+						jsonSchema,
+						'description',
+						`Please enter value for ${name}`,
+					),
+					type: 'list',
+					choices: get(jsonSchema, 'enum'),
+					name,
+				};
+			} else {
+				question = {
+					message: get(
+						jsonSchema,
+						'description',
+						`Please enter value for ${name}`,
+					),
+					type: 'input',
+					name,
+					validate: (value: string) => {
+						return ConfigurationManager.validateProperty({
+							jsonSchema,
+							name,
+							value,
+						});
+					},
+				};
+			}
+
+			return await inquirer.prompt([question]);
+		}
+	}
+
+	public async syncProperty({
+		jsonSchema,
+		validationError,
+		name,
+	}: {
+		jsonSchema: object;
+		name: string;
+		validationError: object;
+	}): Promise<void> {
+		const formula = get(jsonSchema, ['properties', name, 'default', 'eval']);
+
+		if (formula) {
+			this.configMap[name] = await this.evalFormula(name, formula);
+		} else {
+			switch (this.mode) {
+				case 'interactive':
+				case 'edit': {
+					// if optional ask;
+					const answer = await this.inquire({
+						jsonSchema: get(jsonSchema, ['properties', name]),
+						name,
+					});
+					if (get(answer, name)) {
+						this.configMap[name] = get(answer, name);
+					}
+					break;
+				}
+				case 'quiet': {
+					throw new Error(get(validationError, 'message'));
+				}
+				default: {
+					throw new Error('Mode not implemented');
+				}
+			}
+		}
+	}
+
+	public async sync(): Promise<ConfigMap> {
+		const invalidProperties = this.validateConfigMap();
+		const jsonSchema = this.configManifest.JSONSchema();
+		for (const name of keys(invalidProperties)) {
+			await this.syncProperty({
+				jsonSchema,
+				name,
+				validationError: get(invalidProperties, name),
+			});
 		}
 		if (this.mode === 'edit') {
 			// TODO: Invoke configuration interactive editor
 		}
-
 		return await this.configStore.updateMany(this.configMap);
-	}
-
-	/**
-	 * Validates property against this.configManifest
-	 * @param {string} name: Property name
-	 * @param {string} value: Property value
-	 * @returns {boolean}
-	 */
-	private validateProperty(name: string, value: string): boolean {
-		const validator = new Validator();
-		const schemaErrors = validator.validate(
-			{
-				[name]: value,
-			},
-			{
-				type: 'object',
-				properties: {
-					[name]: get(this.configManifest.JSONSchema(), ['properties', name]),
-				},
-				required: [name],
-			},
-		);
-		if (schemaErrors.valid) {
-			return true;
-		}
-		throw schemaErrors.errors[0];
 	}
 
 	private validateConfigMap(): ErrorMap {

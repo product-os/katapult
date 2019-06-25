@@ -1,14 +1,14 @@
 import { promisify } from 'bluebird';
 import { parse } from 'dotenv';
 import { readFile, writeFile } from 'fs';
-import { keys } from 'lodash';
+import * as _ from 'lodash';
+
+import { configMapToPairs, kvPairsToConfigMap } from '../../../tools';
+
 const readFileAsync = promisify(readFile);
 const writeFileAsync = promisify(writeFile);
 
-import {
-	ConfigStoreAccess,
-	EnvConfigStoreAccess,
-} from '../../environment-file';
+import { ConfigStoreAccess, EnvConfigStoreAccess } from '../../environment';
 import { ConfigMap } from '../index';
 
 export class EnvConfigStoreAdapter {
@@ -21,34 +21,39 @@ export class EnvConfigStoreAdapter {
 
 		this.access = {
 			path: access.envFile.path || 'env',
-		} as EnvConfigStoreAccess;
+		};
 	}
 
-	async list(): Promise<ConfigMap> {
+	async listPairs(): Promise<ConfigMap> {
 		const envFileBuffer = await readFileAsync(this.access.path);
 		return parse(
 			envFileBuffer
 				.toString()
 				.split('\\r')
 				.join('\r'),
-		) as ConfigMap;
+		);
+	}
+
+	async list(): Promise<ConfigMap> {
+		const configManifest = await this.listPairs();
+		return kvPairsToConfigMap(configManifest);
 	}
 
 	async updateMany(envvars: ConfigMap) {
-		const conf = await this.list();
+		const envvarPairs = configMapToPairs(envvars);
+		const conf = await this.listPairs();
 
-		for (const name of keys(envvars)) {
-			conf[name] = envvars[name];
+		for (const name of _.keys(envvarPairs)) {
+			conf[name] = envvarPairs[name];
 		}
 		await this.writeEnvFile(conf);
-		return conf;
+		return await this.list();
 	}
 
 	private async writeEnvFile(config: ConfigMap) {
 		let dotenvString = '';
-		for (const name of keys(config)) {
-			const entry = `${name}="${config[name]}"\n`;
-			dotenvString += entry;
+		for (const name of _.keys(config)) {
+			dotenvString += `${name}="${config[name]}"\n`;
 		}
 		// @ts-ignore
 		return writeFileAsync(this.access.path, dotenvString);

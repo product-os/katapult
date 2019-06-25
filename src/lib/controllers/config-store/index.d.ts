@@ -1,3 +1,3 @@
 export interface ConfigMap {
-	[key: string]: string | number;
+	[key: string]: any;
 }

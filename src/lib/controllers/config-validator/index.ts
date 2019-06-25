@@ -1,5 +1,5 @@
 import { ValidationError, Validator } from 'jsonschema';
-import { get, has, keys } from 'lodash';
+import * as _ from 'lodash';
 import { ConfigManifest } from '../config-manifest/config-manifest';
 import { ConfigMap } from '../config-store';
 
@@ -28,10 +28,10 @@ export class ConfigValidator {
 	public validate(throwErrors: boolean): ValidationError[] {
 		const cmJSONSchema = this.configManifest.JSONSchema();
 		// adapt config value types, according to config-manifest, for validation.
-		for (const name of keys(this.configMap)) {
+		for (const name of _.keys(this.configMap)) {
 			if (
-				has(cmJSONSchema, ['properties', name]) &&
-				get(cmJSONSchema, [name, 'type']) === 'number'
+				_.has(cmJSONSchema, ['properties', name]) &&
+				_.get(cmJSONSchema, [name, 'type']) === 'number'
 			) {
 				this.configMap[name] = parseInt(this.configMap[name] as string, 10);
 			}

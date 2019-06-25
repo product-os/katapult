@@ -30,7 +30,7 @@ export class ArtifactsStore {
 	 * @param {string} release: Release object of archive manifests.
 	 * @returns {Promise<boolean>} : true in case of success.
 	 */
-	async write(release: Release): Promise<boolean> {
+	async write(release: Release): Promise<void> {
 		return await this.adapter.write(release);
 	}
 }

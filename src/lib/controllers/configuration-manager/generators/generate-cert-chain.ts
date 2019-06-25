@@ -21,11 +21,13 @@ import { GenerateCertArgs, generateCertificate } from '.';
  * 	validFrom: Date parsable string for generateCertificate validFrom field.
  * 	validTo: Date parsable string for generateCertificate validTo field.
  * 	bits: Integer. Defaults to 2048. RSA bits for generated key.
- * 	@returns {Promise<*String>} CertificateChainPEM, base64 encoded
+ * 	@returns {Promise<string>} CertificateChainPEM, base64 encoded
  */
 
-export function generateCertChain(attributes: GenerateCertArgs) {
+export async function generateCertChain(
+	attributes: GenerateCertArgs,
+): Promise<string> {
 	const { caCertPEM, privateKeyPEM } = attributes;
-	const certPEM = generateCertificate(attributes);
+	const certPEM = await generateCertificate(attributes);
 	return certPEM + caCertPEM + privateKeyPEM;
 }
