@@ -26,9 +26,11 @@ import { generatePublicKey } from '.';
  * 	extKeyUsage: List of extended usages.
  * 		Example: ['serverAuth', 'clientAuth']
  *
- * 	@returns {string} Certificate PEM format string.
+ * 	@returns {Promise<string>} Certificate PEM format string.
  */
-export async function generateCertificate(attributes: GenerateCertArgs) {
+export async function generateCertificate(
+	attributes: GenerateCertArgs,
+): Promise<string> {
 	const {
 		certAttrsMap,
 		caCertPEM,

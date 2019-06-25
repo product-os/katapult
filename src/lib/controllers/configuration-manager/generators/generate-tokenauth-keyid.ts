@@ -7,7 +7,9 @@ import { base64decode } from '../filters';
  * @param {string} keypairJSON: base64 JSON key pair.
  * @returns {Promise<string>}
  */
-export async function generateTokenauthKeyid(keypairJSON: string) {
+export async function generateTokenauthKeyid(
+	keypairJSON: string,
+): Promise<string> {
 	const keypair = JSON.parse(await base64decode(keypairJSON));
 	const derBuffer = Buffer.from(
 		keypair.publicKey.replace(/(---.*---\n)|(\n)/g, ''),

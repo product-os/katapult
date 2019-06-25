@@ -14,6 +14,18 @@ import { ApiClient } from './kubernetes-client-types-extended';
 
 const readFileAsync = promisify(readFile);
 
+interface SecretOperationArgs {
+	k8sSecretName: string;
+	name: string;
+	value: string;
+}
+
+interface UpdateSecretArgs {
+	name: string;
+	value: string;
+	secrets?: any;
+}
+
 export class KubernetesConfigStoreAdapter {
 	public static async create(access: ConfigStoreAccess) {
 		const kubeConfig = config.fromKubeconfig(
@@ -82,7 +94,11 @@ export class KubernetesConfigStoreAdapter {
 		return kvPairsToConfigMap(ret);
 	}
 
-	async patchSecret(k8sSecretName: string, name: string, value: string) {
+	async patchSecret({
+		k8sSecretName,
+		name,
+		value,
+	}: SecretOperationArgs): Promise<void> {
 		const patchManifest = {
 			APIVersion: 'v1',
 			Kind: 'Secret',
@@ -94,22 +110,17 @@ export class KubernetesConfigStoreAdapter {
 				[name]: Buffer.from(value).toString('base64'),
 			},
 		};
-		try {
-			await this.client.api.v1
-				.namespaces(_.get(this.access.kubernetes, 'namespace'))
-				.secrets(k8sSecretName)
-				.patch({ body: patchManifest });
-			return true;
-		} catch (err) {
-			throw new Error(`Error updating secret ${name}`);
-		}
+		await this.client.api.v1
+			.namespaces(_.get(this.access.kubernetes, 'namespace'))
+			.secrets(k8sSecretName)
+			.patch({ body: patchManifest });
 	}
 
-	async putSecret(
-		k8sSecretName: string,
-		name: string,
-		value: string,
-	): Promise<void> {
+	async putSecret({
+		k8sSecretName,
+		name,
+		value,
+	}: SecretOperationArgs): Promise<void> {
 		const postManifest = {
 			APIVersion: 'v1',
 			Kind: 'Secret',
@@ -121,14 +132,9 @@ export class KubernetesConfigStoreAdapter {
 				[name]: Buffer.from(value).toString('base64'),
 			},
 		};
-		try {
-			await this.client.api.v1
-				.namespaces(_.get(this.access.kubernetes, 'namespace'))
-				.secrets.post({ body: postManifest });
-		} catch (err) {
-			throw new Error(err);
-			// throw new Error(`Error setting secret ${name}`);
-		}
+		await this.client.api.v1
+			.namespaces(_.get(this.access.kubernetes, 'namespace'))
+			.secrets.post({ body: postManifest });
 	}
 
 	async updateMany(envvars: ConfigMap): Promise<ConfigMap> {
@@ -149,11 +155,11 @@ export class KubernetesConfigStoreAdapter {
 	 * @param secrets
 	 * @returns {Promise<boolean>} True if secret exists
 	 */
-	async updateExistingSecret(
-		name: string,
-		value: string,
-		secrets?: any,
-	): Promise<boolean> {
+	async updateExistingSecret({
+		name,
+		value,
+		secrets,
+	}: UpdateSecretArgs): Promise<boolean> {
 		if (!secrets) {
 			secrets = this.getOpaqueSecrets();
 		}
@@ -165,7 +171,11 @@ export class KubernetesConfigStoreAdapter {
 					value.toString() !==
 						Buffer.from(secret.data[envvarName], 'base64').toString()
 				) {
-					await this.patchSecret(secret.metadata.name, envvarName, value);
+					await this.patchSecret({
+						k8sSecretName: secret.metadata.name,
+						name: envvarName,
+						value,
+					});
 					return true;
 				}
 				if (envvarName === name) {
@@ -176,18 +186,18 @@ export class KubernetesConfigStoreAdapter {
 		return false;
 	}
 
-	async updateSecret(
-		name: string,
-		value: string,
-		secrets?: any,
-	): Promise<void> {
+	async updateSecret({
+		name,
+		value,
+		secrets,
+	}: UpdateSecretArgs): Promise<void> {
 		if (!secrets) {
 			secrets = this.getOpaqueSecrets();
 		}
-		const exists = await this.updateExistingSecret(name, value, secrets);
+		const exists = await this.updateExistingSecret({ name, value, secrets });
 		if (!exists) {
 			const k8sSecretName = name.toLowerCase().replace(/_/g, '-');
-			await this.putSecret(k8sSecretName, name, value);
+			await this.putSecret({ k8sSecretName, name, value });
 		}
 	}
 
@@ -202,7 +212,11 @@ export class KubernetesConfigStoreAdapter {
 		const secrets = await this.getOpaqueSecrets();
 		const envvarPairs = configMapToPairs(envvars);
 		for (const name of _.keys(envvarPairs)) {
-			await this.updateSecret(name, envvarPairs[name].toString(), secrets);
+			await this.updateSecret({
+				name,
+				value: envvarPairs[name].toString(),
+				secrets,
+			});
 		}
 		return await this.listSecretsVars();
 	}

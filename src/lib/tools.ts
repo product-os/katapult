@@ -191,10 +191,14 @@ export async function unwrapKeyframe(
  * @param tnlConfig: ssh2 tunnel configuration object
  * @param prom: promise
  * @param timeout: tunnel timeout.
- * @returns {Promise<T>}
+ * @returns {Promise<any>}
  */
-export async function runInTunnel(tnlConfig: any, prom: any, timeout: number) {
-	return tunnelAsync(tnlConfig).then(tnl => {
+export async function runInTunnel(
+	tnlConfig: any,
+	prom: any,
+	timeout: number,
+): Promise<any> {
+	return await tunnelAsync(tnlConfig).then(tnl => {
 		const wait = setTimeout(function() {
 			tnl.close();
 			throw new Error('Timeout exceeded');
