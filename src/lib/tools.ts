@@ -1,3 +1,18 @@
+/*
+Copyright 2019 Balena Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 import * as Bluebird from 'bluebird';
 import * as _ from 'lodash';
 import * as fs from 'mz/fs';
@@ -16,79 +31,110 @@ import { ConfigMap } from './controllers/config-store';
 
 export const tunnelAsync = Bluebird.promisify(tunnel);
 
-export async function getDirectories(path: string): Promise<string[]> {
-	const directories = (await fs.readdir(path)) as string[];
-	return directories.filter(async (name: string) => {
-		const itemPath = join(path, name);
-		const itemStat = await fs.stat(itemPath);
-		return itemStat.isDirectory();
-	});
-}
-
 /**
  * Returns an absolute path for a path, when in basePath
  * @param {string} path: The file path, (or an absolute path)
  * @param {string} basePath: The base path
- * @returns {string} An asolute path
+ * @returns {string} An absolute path
  */
 export function getAbsolutePath(path: string, basePath: string): string {
 	return isAbsolute(path) ? path : join(basePath, path);
 }
 
-export function getAbsoluteURI(uri: string, basePath: string): string {
-	if (gitURI(uri)) {
+/**
+ * Gets absolute URI
+ * @param {string} uri
+ * @param {string} basePath
+ * @returns {string}
+ */
+export function getAbsoluteUri(uri: string, basePath: string): string {
+	if (gitUri(uri)) {
 		throw new NotImplementedError('Git URI support not implemented yet');
-	} else if (localPathURI(uri)) {
+	} else if (localPathUri(uri)) {
 		return getAbsolutePath(uri, basePath);
 	} else {
 		throw new UnsupportedError('URI type not supported yet');
 	}
 }
 
+/**
+ * Loads a yaml file as object
+ * @param {string} filePath
+ * @param {string} errorMessage
+ * @returns {Promise<string>}
+ */
 export async function loadFromFile(
 	filePath: string,
 	errorMessage: string = '',
-): Promise<any> {
+): Promise<object> {
 	try {
-		const buffer = await fs.readFile(filePath);
-		return yamljs.parse(buffer.toString('utf8'));
+		return yamljs.parse(await fs.readFile(filePath, 'utf8'));
 	} catch (e) {
 		throw new FileLoadError(errorMessage + e.message);
 	}
 }
 
-export function gitURI(uri: string): boolean {
+/**
+ * Checks uri is a valid git URI
+ * @param {string} uri
+ * @returns {boolean}
+ */
+export function gitUri(uri: string): boolean {
 	return /((git|ssh|http|https)|(git@[\w\.]+))(:(\/\/)?)([\w\.@\:/\-]+)/.test(
 		uri,
 	);
 }
 
-export function localPathURI(uri: string): boolean {
+/**
+ * Checks if uri is a valid local path URI
+ * @param {string} uri
+ * @returns {boolean}
+ */
+export function localPathUri(uri: string): boolean {
 	return /^([a-zA-Z0-9_/\-.])+$/.test(uri);
 }
 
-export async function loadFromURI(
-	URI: string,
-	path: string,
-	errorMessage?: string,
-): Promise<any> {
+/**
+ * Loads a file in path of URI
+ * @param {string} uri
+ * @param {string} path
+ * @param {string} errorMessage
+ * @returns {Promise<string>}
+ */
+export async function loadFromUri({
+	uri,
+	path,
+	errorMessage,
+}: {
+	uri: string;
+	path: string;
+	errorMessage?: string;
+}): Promise<object> {
 	// TODO: support git URI
-	if (gitURI(URI)) {
+	if (gitUri(uri)) {
 		throw new UnsupportedError('Git URI support not implemented yet');
 	}
-	try {
-		if (localPathURI(URI)) {
-			return await loadFromFile(join(URI, path), errorMessage);
-		}
-	} catch (e) {
-		throw new URILoadError(`Error loading ${path} from ${URI}\n${e.message}`);
+	if (localPathUri(uri)) {
+		return await loadFromFile(join(uri, path), errorMessage);
 	}
+	throw new URILoadError(`Error loading ${path} from ${uri}`);
 }
 
+/**
+ * Gets base path of a path
+ * @param {string} path
+ * @returns {string}
+ */
 export function getBasePath(path: string): string {
 	return dirname(resolve(path));
 }
 
+/**
+ * Converts relative paths of any object to absolute paths
+ * @param {object} conf
+ * @param {string} basePath
+ * @returns {object}
+ */
 export function convertRelativePaths({
 	conf,
 	basePath,
@@ -108,38 +154,64 @@ export function convertRelativePaths({
 		'compose.socket',
 	];
 
-	for (const k of keys) {
-		const value = _.get(conf, k);
+	for (const key of keys) {
+		const value = _.get(conf, key);
 		if (value) {
-			_.set(conf, k, getAbsoluteURI(value, basePath));
+			_.set(conf, key, getAbsoluteUri(value, basePath));
 		}
 	}
 	return conf;
 }
 
-export async function readFromURI(
-	URI: string,
-	path: string,
-	cachePath?: string,
-): Promise<any> {
+/**
+ * Reads a file from URI
+ * @param {string} URI
+ * @param {string} path
+ * @param {string} cachePath
+ * @returns {Promise<string>}
+ */
+export async function readFromUri({
+	uri,
+	path,
+	cachePath,
+}: {
+	uri: string;
+	path: string;
+	cachePath?: string;
+}): Promise<string> {
 	// TODO: support git URI
-	if (gitURI(URI)) {
+	if (gitUri(uri)) {
 		throw new UnsupportedError('Git URI support not implemented yet');
-	} else if (localPathURI(URI)) {
-		return (await fs.readFile(join(URI, path))).toString('utf8');
+	} else if (localPathUri(uri)) {
+		return (await fs.readFile(join(uri, path))).toString('utf8');
+	} else {
+		throw new UnsupportedError('URI type not supported yet');
 	}
 }
 
-export async function listURI(
-	URI: string,
-	path: string,
-	cachePath?: string,
-): Promise<any> {
+/**
+ * Lists a path in a URI
+ * @param {string} URI
+ * @param {string} path
+ * @param {string} cachePath
+ * @returns {Promise<string[]>}
+ */
+export async function listUri({
+	uri,
+	path,
+	cachePath,
+}: {
+	uri: string;
+	path: string;
+	cachePath?: string;
+}): Promise<string[]> {
 	// TODO: support git URI
-	if (gitURI(URI)) {
+	if (gitUri(uri)) {
 		throw new UnsupportedError('Git URI support not implemented yet');
-	} else if (localPathURI(URI)) {
-		return await fs.readdir(join(URI, path));
+	} else if (localPathUri(uri)) {
+		return await fs.readdir(join(uri, path));
+	} else {
+		throw new UnsupportedError('URI type not supported yet');
 	}
 }
 
@@ -155,18 +227,16 @@ export async function unwrapKeyframe(
 	keyFramePath: string = './keyframe.yml',
 ): Promise<object> {
 	// TODO: keyframe layering
-	let keyFrame = await loadFromURI(productRepoURI, keyFramePath);
+	let keyFrame = await loadFromUri({ uri: productRepoURI, path: keyFramePath });
 
 	if (keyFrame) {
 		keyFrame = _.filter(
 			_.get(keyFrame, ['children', 'sw', 'containerized-application'], []),
-			component => {
-				return component.type === 'sw.containerized-application';
-			},
+			component => component.type === 'sw.containerized-application',
 		);
-		keyFrame = _.mapValues(_.keyBy(keyFrame, 'slug'), o => {
-			return _.merge(_.get(o, 'assets', {}), { version: _.get(o, 'version') });
-		});
+		keyFrame = _.mapValues(_.keyBy(keyFrame, 'slug'), o =>
+			_.merge(_.get(o, 'assets', {}), { version: _.get(o, 'version') }),
+		);
 		return keyFrame;
 	} else {
 		return {};
@@ -181,22 +251,21 @@ export async function unwrapKeyframe(
  * @returns {Promise<any>}
  */
 export async function runInTunnel(
-	tnlConfig: any,
-	prom: any,
+	tnlConfig: tunnel.Config,
+	prom: Promise<any>,
 	timeout: number,
 ): Promise<any> {
-	return await tunnelAsync(tnlConfig).then(tnl => {
-		const wait = setTimeout(function() {
+	const tnl = await tunnelAsync(tnlConfig);
+	const wait = setTimeout(function() {
+		tnl.close();
+		throw new TimeoutError('Timeout exceeded');
+	}, timeout);
+	return prom.then((ret: any) => {
+		clearTimeout(wait);
+		if (tnl) {
 			tnl.close();
-			throw new TimeoutError('Timeout exceeded');
-		}, timeout);
-		return prom.then((ret: any) => {
-			clearTimeout(wait);
-			if (tnl) {
-				tnl.close();
-			}
-			return ret;
-		});
+		}
+		return ret;
 	});
 }
 
@@ -211,7 +280,7 @@ export function configMapToPairs(configMap: ConfigMap): ConfigMap {
 	function traverse(configMap: any, path: string = '') {
 		if (configMap && _.isObject(configMap)) {
 			_.forIn(configMap, function(value: any, key: string) {
-				traverse(value, path + '.' + key);
+				traverse(value, `${path}.${key}`);
 			});
 		} else {
 			keyPaths.push(_.trimStart(path, '.'));
