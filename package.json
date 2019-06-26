@@ -12,19 +12,6 @@
     "@oclif/command": "^1.5.12",
     "@oclif/config": "^1.12.10",
     "@oclif/plugin-help": "^2.1.6",
-    "@types/bluebird": "^3.5.26",
-    "@types/dotenv": "^6.1.1",
-    "@types/fs-extra": "^7.0.0",
-    "@types/inquirer": "^6.0.1",
-    "@types/mustache": "^0.8.32",
-    "@types/mz": "0.0.32",
-    "@types/node-forge": "^0.8.3",
-    "@types/openpgp": "^4.4.5",
-    "@types/pkijs": "0.0.2",
-    "@types/pvutils": "0.0.1",
-    "@types/tunnel-ssh": "^4.1.0",
-    "@types/validator": "^10.11.0",
-    "@types/yamljs": "^0.2.30",
     "asn1js": "^2.0.22",
     "base32-encode": "^1.1.1",
     "bluebird": "^3.5.3",
@@ -52,9 +39,22 @@
     "@oclif/dev-cli": "^1.21.3",
     "@oclif/test": "^1.2.4",
     "@oclif/tslint": "^3.1.1",
+    "@types/bluebird": "^3.5.26",
     "@types/chai": "^4.1.7",
+    "@types/dotenv": "^6.1.1",
+    "@types/fs-extra": "^7.0.0",
+    "@types/inquirer": "^6.0.1",
     "@types/mocha": "^5.2.6",
+    "@types/mustache": "^0.8.32",
+    "@types/mz": "0.0.32",
     "@types/node": "^10.14.8",
+    "@types/node-forge": "^0.8.3",
+    "@types/openpgp": "^4.4.5",
+    "@types/pkijs": "0.0.2",
+    "@types/pvutils": "0.0.1",
+    "@types/tunnel-ssh": "^4.1.0",
+    "@types/validator": "^10.11.0",
+    "@types/yamljs": "^0.2.30",
     "chai": "^4.2.0",
     "globby": "^8.0.2",
     "husky": "^2.2.0",
@@ -69,7 +69,7 @@
     "typescript": "^3.4.5"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=8.9.0"
   },
   "files": [
     "/bin",
@@ -81,7 +81,7 @@
   "keywords": [
     "oclif"
   ],
-  "license": "MIT",
+  "license": "Apache 2.0",
   "main": "src/index.js",
   "oclif": {
     "commands": "./src/commands",

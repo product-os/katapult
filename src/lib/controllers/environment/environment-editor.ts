@@ -1,3 +1,18 @@
+/*
+Copyright 2019 Balena Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 import * as _ from 'lodash';
 import {
 	ConfigStoreAccess,
@@ -24,7 +39,16 @@ export declare interface EnvironmentEditorArgs {
 	mode: string;
 }
 
+/**
+ * EnvironmentEditor class
+ * Used for creating/updating an environment configuration ( tool related configuration for an environment)
+ */
 export class EnvironmentEditor {
+	/**
+	 * Creates EnvironmentEditor by:
+	 * @param {EnvironmentEditorCreateArgs} args
+	 * @returns {Promise<EnvironmentEditor>}
+	 */
 	static async create(
 		args: EnvironmentEditorCreateArgs,
 	): Promise<EnvironmentEditor> {
@@ -58,6 +82,11 @@ export class EnvironmentEditor {
 		});
 	}
 
+	/**
+	 * Gets ConfigStoreAccess from ConfigStoreAccessConfiguration
+	 * @param {ConfigStoreAccessConfiguration} conf
+	 * @returns {ConfigStoreAccess}
+	 */
 	public static getEnvironmentConfigStoreAccess(
 		conf: ConfigStoreAccessConfiguration,
 	): ConfigStoreAccess {
@@ -70,14 +99,21 @@ export class EnvironmentEditor {
 	private readonly configurationPath: string;
 	private readonly mode: string;
 
-	public constructor(args: EnvironmentEditorArgs) {
-		const {
-			katapultConfigStore,
-			katapultConfigManifest,
-			environmentConfigManifest,
-			configurationPath,
-			mode,
-		} = args;
+	/**
+	 * EnvironmentEditor constructor
+	 * @param {ConfigStore} katapultConfigStore
+	 * @param {ConfigManifest} katapultConfigManifest
+	 * @param {ConfigManifest} environmentConfigManifest
+	 * @param {string} configurationPath
+	 * @param {string} mode
+	 */
+	public constructor({
+		katapultConfigStore,
+		katapultConfigManifest,
+		environmentConfigManifest,
+		configurationPath,
+		mode,
+	}: EnvironmentEditorArgs) {
 		this.katapultConfigStore = katapultConfigStore;
 		this.katapultConfigManifest = katapultConfigManifest;
 		this.environmentConfigManifest = environmentConfigManifest;
@@ -85,6 +121,11 @@ export class EnvironmentEditor {
 		this.mode = mode;
 	}
 
+	/**
+	 * Initialize environment. Ignore any existing values if init=true
+	 * @param {boolean} init
+	 * @returns {Promise<Environment>}
+	 */
 	async initializeEnvironment(init = true): Promise<Environment> {
 		// initialize the environment.yml file
 		const cm = await ConfigurationManager.create({

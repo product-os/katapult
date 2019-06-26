@@ -1,60 +1,111 @@
+/*
+Copyright 2019 Balena Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 import { get, keys } from 'lodash';
 import { render } from 'mustache';
 import * as fs from 'mz/fs';
 import { encrypt, key, message } from 'openpgp';
 import { basename, join } from 'path';
 
-import { listURI, readFromURI, unwrapKeyframe } from '../../tools';
+import { listUri, readFromUri, unwrapKeyframe } from '../../tools';
 import { ArtifactsStore, Release } from '../artifacts-store/artifacts-store';
 import { ConfigMap } from '../config-store';
 import { Environment } from '../environment';
 
+/**
+ * ArtifactsGenerator class
+ * Used for generating deployment artifacts.
+ */
 export class ArtifactsGenerator {
+	/**
+	 * Creates an ArtifactsGenerator using:
+	 * @param {Environment} environment
+	 * @param {ConfigMap} configMap
+	 * @returns {Promise<ArtifactsGenerator>}
+	 */
 	static async create(
 		environment: Environment,
 		configMap: ConfigMap,
 	): Promise<ArtifactsGenerator> {
 		const archiveStore = await ArtifactsStore.create(environment.archiveStore);
-		return new ArtifactsGenerator(environment, configMap, archiveStore);
+		return new ArtifactsGenerator({ environment, configMap, archiveStore });
 	}
 
 	private readonly archiveStore: ArtifactsStore;
 	private readonly environment: Environment;
 	private readonly configMap: ConfigMap;
 
-	public constructor(
-		environment: Environment,
-		configMap: ConfigMap,
-		archiveStore: ArtifactsStore,
-	) {
+	/**
+	 * ArtifactsGenerator constructor
+	 * @param {Environment} environment
+	 * @param {ConfigMap} configMap
+	 * @param {ArtifactsStore} archiveStore
+	 */
+	public constructor({
+		environment,
+		configMap,
+		archiveStore,
+	}: {
+		environment: Environment;
+		configMap: ConfigMap;
+		archiveStore: ArtifactsStore;
+	}) {
 		this.archiveStore = archiveStore;
 		this.environment = environment;
 		this.configMap = configMap;
 	}
 
-	public async generate(): Promise<void> {
+	/**
+	 * This method Generates deploy artifacts, and returns them as a Release.
+	 * @returns {Promise<Release>}
+	 */
+	public async generate(): Promise<Release> {
 		await this.extendConfigMap();
 		const target = keys(this.environment.deployTarget)[0];
 		const templatesPath = join('deploy', target, 'templates');
-		const templateFilePaths = await listURI(
-			this.environment.productRepo,
-			templatesPath,
-		);
+		const templateFilePaths = await listUri({
+			uri: this.environment.productRepo,
+			path: templatesPath,
+		});
 		const release: Release = {};
 		for (const file of templateFilePaths) {
-			const template = await readFromURI(
-				this.environment.productRepo,
-				join(templatesPath, file),
-			);
+			const template = await readFromUri({
+				uri: this.environment.productRepo,
+				path: join(templatesPath, file),
+			});
 			const manifestString = render(template, this.configMap);
 			const manifestPath = join(target, basename(file).replace('.tpl.', '.'));
 			release[manifestPath] = manifestString;
 		}
-		const outputRelease = await this.encryptRelease(release);
-		await this.archiveStore.write(outputRelease);
 		console.log('Generated artifacts');
+		return release;
 	}
 
+	/**
+	 * This method stores deployment artifacts.
+	 * @param {Release} release
+	 * @returns {Promise<void>}
+	 */
+	public async store(release: Release): Promise<void> {
+		await this.archiveStore.write(await this.encryptRelease(release));
+	}
+
+	/**
+	 * This method extends a ConfigMap with keyFrame data
+	 * @returns {Promise<void>}
+	 */
 	private async extendConfigMap() {
 		const keyFrame = await unwrapKeyframe(this.environment.productRepo);
 		for (const key of keys(keyFrame)) {
@@ -63,6 +114,11 @@ export class ArtifactsGenerator {
 		}
 	}
 
+	/**
+	 * This method encrypts a release.
+	 * @param {Release} release
+	 * @returns {Promise<Release>}
+	 */
 	private async encryptRelease(release: Release): Promise<Release> {
 		if (this.environment.encryptionKeyPath) {
 			const encryptionKey = (await fs.readFile(
