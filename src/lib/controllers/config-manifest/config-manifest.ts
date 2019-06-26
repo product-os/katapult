@@ -1,22 +1,53 @@
-import { loadFromURI } from '../../tools';
+/*
+Copyright 2019 Balena Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+import { loadFromUri } from '../../tools';
 
 import * as _ from 'lodash';
 
+/**
+ * ConfigManifest class
+ * Used for transforming/exposing a config-manifest
+ */
 export class ConfigManifest {
+	/**
+	 * Creates ConfigManifest using:
+	 * @param {string} productRepoURI
+	 * @param {string} path
+	 * @returns {Promise<ConfigManifest>}
+	 */
 	static async create(
 		productRepoURI: string,
 		path = 'config-manifest.yml',
 	): Promise<ConfigManifest> {
 		// TODO: support configManifest layering
 		let schema;
-		schema = await loadFromURI(
-			productRepoURI,
-			path || 'config-manifest.yml',
-			'Unable to find config-manifest.yml. See documentation_link for more info.\n',
-		);
+		schema = await loadFromUri({
+			uri: productRepoURI,
+			path: path || 'config-manifest.yml',
+			errorMessage:
+				'Unable to find config-manifest.yml. See documentation_link for more info.\n',
+		});
 		return new ConfigManifest({ schema });
 	}
 
+	/**
+	 * Applies when condition to JsonSchema
+	 * @param obj
+	 * @param {string} key
+	 */
 	private static applyWhenCondition(obj: any, key: string): void {
 		const properties = _.get(obj, key);
 		const conditions: any = {};
@@ -55,8 +86,9 @@ export class ConfigManifest {
 	}
 
 	/**
-	 * This method recursively transforms current config-manifest schema format to JSONSchema.
+	 * Recursively transforms current config-manifest schema format to JSONSchema.
 	 * It will be replaced by JellySchema and ReConFix.
+	 * @param obj
 	 */
 	private static traverse(obj: any) {
 		// Convert array of properties to object
@@ -111,6 +143,10 @@ export class ConfigManifest {
 
 	private readonly schema: object;
 
+	/**
+	 * ConfigManifest constructor
+	 * @param {object} schema
+	 */
 	public constructor(schema: object) {
 		this.schema = schema;
 	}
@@ -118,8 +154,9 @@ export class ConfigManifest {
 	/**
 	 * This is a wrapper for traverse recursive method.
 	 * It will be replaced by ReConFix.
+	 * @returns {any}
 	 */
-	JSONSchema() {
+	JSONSchema(): any {
 		const jsonSchema = _.cloneDeep(this.schema);
 		ConfigManifest.traverse(jsonSchema);
 		return _.get(jsonSchema, 'schema', {});

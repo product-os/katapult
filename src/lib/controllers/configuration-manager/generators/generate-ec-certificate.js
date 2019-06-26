@@ -1,5 +1,20 @@
-// Original: https://github.com/balena-io/ec-certificate-generator/blob/master/index.js
+/*
+Copyright 2019 Balena Ltd.
 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Original: https://github.com/balena-io/ec-certificate-generator/blob/master/index.js
 const { BitString, fromBER, PrintableString } = require('asn1js');
 const { isNil, map } = require('lodash');
 const { pem } = require('node-forge');
@@ -27,6 +42,10 @@ const dnOIDMap = {
 	CN: '2.5.4.3',
 };
 
+/**
+ * Reads PEM certificate
+ * @param pemString
+ */
 function readPEMCertificate(pemString) {
 	const cert = pem.decode(pemString)[0];
 
@@ -36,6 +55,11 @@ function readPEMCertificate(pemString) {
 	});
 }
 
+/**
+ * Reads EC Public Key PEM
+ * @param pemString
+ * @returns {Promise<void>}
+ */
 async function readECPublicKeyPem(pemString) {
 	const data = pem.decode(await pemString)[0];
 	const asn1 = fromBER(stringToArrayBuffer(data.body));
@@ -44,6 +68,11 @@ async function readECPublicKeyPem(pemString) {
 	});
 }
 
+/**
+ * GENERATE_EC_CERTIFICATE: Generates EC Certificate
+ * @param params
+ * @returns {string}
+ */
 async function generateEcCertificate(params) {
 	const certificate = new Certificate();
 	const publicKey = await readECPublicKeyPem(params.publicKeyPEM);

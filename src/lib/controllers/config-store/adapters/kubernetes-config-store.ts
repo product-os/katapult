@@ -1,3 +1,18 @@
+/*
+Copyright 2019 Balena Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 import { Client1_13 as Client, config } from 'kubernetes-client';
 import * as _ from 'lodash';
 import * as fs from 'mz/fs';
@@ -23,6 +38,10 @@ interface UpdateSecretArgs {
 	secrets?: any;
 }
 
+/**
+ * KubernetesConfigStoreAdapter class
+ * Used for interacting with kubernetes config stores
+ */
 export class KubernetesConfigStoreAdapter {
 	public static async create(access: ConfigStoreAccess) {
 		const kubeConfig = config.fromKubeconfig(
@@ -54,6 +73,12 @@ export class KubernetesConfigStoreAdapter {
 	readonly tnlConfig: tunnel.Config | null;
 	private client: ApiClient;
 
+	/**
+	 * KubernetesConfigStoreAdapter constructor
+	 * @param {ConfigStoreAccess} access
+	 * @param client
+	 * @param {tunnel.Config | null} tnlConfig
+	 */
 	public constructor(
 		access: ConfigStoreAccess,
 		client: any,
@@ -64,13 +89,21 @@ export class KubernetesConfigStoreAdapter {
 		this.client = client;
 	}
 
+	/**
+	 * Returns kubernetes ConfigStore ConfigMap
+	 * @returns {Promise<ConfigMap>}
+	 */
 	async list(): Promise<ConfigMap> {
-		if (_.get(this.access.kubernetes, 'bastion')) {
+		if (_.get(this.access.kubernetes, 'bastion') && this.tnlConfig) {
 			return await runInTunnel(this.tnlConfig, this.listSecretsVars(), 300000);
 		}
 		return await this.listSecretsVars();
 	}
 
+	/**
+	 * Lists raw secrets pairs
+	 * @returns {Promise<ConfigMap>}
+	 */
 	async listSecretsVars(): Promise<ConfigMap> {
 		await this.client.loadSpec();
 		const secrets = await this.client.api.v1
@@ -91,6 +124,13 @@ export class KubernetesConfigStoreAdapter {
 		return kvPairsToConfigMap(ret);
 	}
 
+	/**
+	 * Patch a k8s secret in ConfigStore
+	 * @param {string} k8sSecretName
+	 * @param {string} name
+	 * @param {string} value
+	 * @returns {Promise<void>}
+	 */
 	async patchSecret({
 		k8sSecretName,
 		name,
@@ -113,6 +153,13 @@ export class KubernetesConfigStoreAdapter {
 			.patch({ body: patchManifest });
 	}
 
+	/**
+	 * Put a k8s secret to ConfigStore
+	 * @param {string} k8sSecretName
+	 * @param {string} name
+	 * @param {string} value
+	 * @returns {Promise<void>}
+	 */
 	async putSecret({
 		k8sSecretName,
 		name,
@@ -134,8 +181,13 @@ export class KubernetesConfigStoreAdapter {
 			.secrets.post({ body: postManifest });
 	}
 
+	/**
+	 * Updates ConfigStore with envvars ConfigMap
+	 * @param {ConfigMap} envvars
+	 * @returns {Promise<ConfigMap>}
+	 */
 	async updateMany(envvars: ConfigMap): Promise<ConfigMap> {
-		if (_.get(this.access.kubernetes, 'bastion')) {
+		if (_.get(this.access.kubernetes, 'bastion') && this.tnlConfig) {
 			return (await runInTunnel(
 				this.tnlConfig,
 				this.updateSecretsConfigMap(envvars),
@@ -146,11 +198,11 @@ export class KubernetesConfigStoreAdapter {
 	}
 
 	/**
-	 *
+	 * Updates a secret if exists
 	 * @param {string} name
 	 * @param {string} value
 	 * @param secrets
-	 * @returns {Promise<boolean>} True if secret exists
+	 * @returns {Promise<boolean>} True if secret exists, otherwise False
 	 */
 	async updateExistingSecret({
 		name,
@@ -183,6 +235,13 @@ export class KubernetesConfigStoreAdapter {
 		return false;
 	}
 
+	/**
+	 * Updates a secret
+	 * @param {string} name
+	 * @param {string} value
+	 * @param {any} secrets
+	 * @returns {Promise<void>}
+	 */
 	async updateSecret({
 		name,
 		value,
@@ -198,6 +257,10 @@ export class KubernetesConfigStoreAdapter {
 		}
 	}
 
+	/**
+	 * Gets Opaque secrets
+	 * @returns {Promise<any>}
+	 */
 	async getOpaqueSecrets(): Promise<any> {
 		const secrets = await this.client.api.v1
 			.namespaces(_.get(this.access.kubernetes, 'namespace'))
@@ -205,6 +268,11 @@ export class KubernetesConfigStoreAdapter {
 		return _.filter(secrets.body.items, { type: 'Opaque' });
 	}
 
+	/**
+	 * Updates config-store secrets of envvars ConfigMap
+	 * @param {ConfigMap} envvars
+	 * @returns {Promise<ConfigMap>}
+	 */
 	async updateSecretsConfigMap(envvars: ConfigMap): Promise<ConfigMap> {
 		const secrets = await this.getOpaqueSecrets();
 		const envvarPairs = configMapToPairs(envvars);
