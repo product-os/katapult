@@ -13,14 +13,33 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { loadFromUri } from '../../tools';
-
+import * as Ajv from 'ajv';
 import * as _ from 'lodash';
+
+import { loadFromUri } from '../../tools';
+import { ConfigManifestSchema } from './config-manifest-schema';
+import { path } from 'temp';
+import { fs } from 'mz';
+// tslint:disable-next-line:no-var-requires
+const configManifestSchemaJson = require('../../../../schemas/config-manifest-schema.json');
+
+const ajv = new Ajv();
+const configManifestSchema = ajv.compile(configManifestSchemaJson);
 
 /**
  * ConfigManifest class
  * Used for transforming/exposing a config-manifest
  */
+// WIP notes: Kept this only because it provides the ability to return either
+// 	a JSON schema or valid ConfigManifest at this point
+export type NameValueCollection = { [propName: string]: any };
+
+export type ConfigManifestRaw = {
+	version: string;
+	title: string;
+	properties: NameValueCollection[];
+};
+
 export class ConfigManifest {
 	/**
 	 * Creates ConfigManifest using:
@@ -30,17 +49,29 @@ export class ConfigManifest {
 	 */
 	static async create(
 		productRepoURI: string,
-		path = 'config-manifest.yml',
+		paths: string[] = [],
 	): Promise<ConfigManifest> {
 		// TODO: support configManifest layering
-		let schema;
-		schema = await loadFromUri({
-			uri: productRepoURI,
-			path: path || 'config-manifest.yml',
-			errorMessage:
-				'Unable to find config-manifest.yml. See documentation_link for more info.\n',
-		});
-		return new ConfigManifest({ schema });
+		if (paths.length === 0) {
+			paths = ['config-manifest.yml'];
+		}
+
+		const schemas = await Promise.all(
+			paths.map(
+				p =>
+					loadFromUri({
+						uri: productRepoURI,
+						path: p,
+						errorMessage:
+							'Unable to find config-manifest.yml. See documentation_link for more info.\n',
+					}) as Promise<ConfigManifestRaw>,
+			),
+		);
+		return new ConfigManifest(
+			schemas.map(schema => {
+				return { schema };
+			}),
+		);
 	}
 
 	/**
@@ -54,9 +85,9 @@ export class ConfigManifest {
 		const anyOf: any = [];
 		_.forIn(properties, function(val, key) {
 			if (_.includes(_.get(val, 'when'), '==')) {
-				let [dependency, value] = _.split(_.get(val, 'when'), '==');
-				value = _.trim(value, '\'" ');
-				dependency = _.trim(dependency);
+				const depArray = _.split(_.get(val, 'when'), '==');
+				const dependency = _.trim(depArray[0]);
+				const value = _.trim(depArray[1], `'" `);
 				if (!_.get(conditions, dependency, false)) {
 					conditions[dependency] = { [value]: [key] };
 				} else if (_.get(conditions, [dependency, value])) {
@@ -68,14 +99,14 @@ export class ConfigManifest {
 		});
 
 		for (const requirements of _.values(conditions)) {
-			for (const v of _.values(requirements)) {
+			for (const requirement of _.values(requirements)) {
 				const conditionProperties: any = {};
-				for (const name of v) {
+				for (const name of requirement) {
 					conditionProperties[name] = properties[name];
 				}
 				anyOf.push({
 					properties: conditionProperties,
-					required: v,
+					required: requirement,
 				});
 			}
 		}
@@ -147,8 +178,35 @@ export class ConfigManifest {
 	 * ConfigManifest constructor
 	 * @param {object} schema
 	 */
-	public constructor(schema: object) {
-		this.schema = schema;
+	public constructor(schemas: { schema: ConfigManifestRaw }[]) {
+		// get all the properties by manifest..
+		const propertiesByManifest: NameValueCollection[] = _.chain(schemas)
+			.map(schema =>
+				_.chain(schema.schema.properties)
+					.keyBy((p: NameValueCollection) => Object.getOwnPropertyNames(p)[0])
+					.mapValues((p, k) => p[k])
+					.value(),
+			)
+			.value();
+
+		// merge the properies...
+		const properties = _.map(
+			_.assignIn({}, ...propertiesByManifest),
+			(p, k) => {
+				return {
+					[k]: p,
+				};
+			},
+		);
+
+		// store the schema...
+		this.schema = {
+			schema: {
+				version: schemas[0].schema.version,
+				title: schemas[0].schema.title,
+				properties,
+			},
+		};
 	}
 
 	/**
@@ -156,9 +214,24 @@ export class ConfigManifest {
 	 * It will be replaced by ReConFix.
 	 * @returns {any}
 	 */
-	JSONSchema(): any {
+	public JSONSchema(): any {
 		const jsonSchema = _.cloneDeep(this.schema);
 		ConfigManifest.traverse(jsonSchema);
 		return _.get(jsonSchema, 'schema', {});
+	}
+
+	public getConfigManifestSchema(): ConfigManifestSchema {
+		const schema: any = _.cloneDeep(this.schema);
+
+		// Validate against the schema that we have
+		if (!configManifestSchema(schema.schema)) {
+			throw new Error(
+				`Invalid manifest schema:\n${configManifestSchema.errors}`,
+			);
+		}
+
+		// This returned object can now be used as the manifest to test against
+		// the config
+		return schema.schema as ConfigManifestSchema;
 	}
 }

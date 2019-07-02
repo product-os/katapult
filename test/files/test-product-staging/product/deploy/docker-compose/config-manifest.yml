@@ -1,0 +1,6 @@
+# Additive schema only relevant to the target (docker-compose) deploy
+version: "1"
+title: Docker-Compose Config manifest
+properties:
+  - DOCKER_HOST:
+      type: string

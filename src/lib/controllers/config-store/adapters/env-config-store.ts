@@ -17,17 +17,21 @@ import { parse } from 'dotenv';
 import * as _ from 'lodash';
 import * as fs from 'mz/fs';
 
-import { configMapToPairs, kvPairsToConfigMap } from '../../../tools';
-
 import { ConfigStoreAdapterError } from '../../../error-types';
+import {
+	configMapToPairs,
+	kvPairsToConfigMap,
+	readFromUri,
+} from '../../../tools';
 import { ConfigStoreAccess, EnvConfigStoreAccess } from '../../environment';
-import { ConfigMap } from '../index';
+
+import { ConfigMap, ConfigStore } from '../config-store';
 
 /**
  * EnvConfigStoreAdapter class
  * Used for interacting with envFile config stores
  */
-export class EnvConfigStoreAdapter {
+export class EnvConfigStore implements ConfigStore {
 	private readonly access: EnvConfigStoreAccess;
 
 	/**
@@ -48,8 +52,11 @@ export class EnvConfigStoreAdapter {
 	 * Lists raw envvar pairs
 	 * @returns {Promise<ConfigMap>}
 	 */
-	async listPairs(): Promise<ConfigMap> {
-		const envFileBuffer = await fs.readFile(this.access.path);
+	public async listPairs(): Promise<ConfigMap> {
+		const envFileBuffer = await readFromUri({
+			uri: this.access.path,
+			path: '',
+		});
 		return parse(
 			envFileBuffer
 				.toString()
@@ -62,9 +69,8 @@ export class EnvConfigStoreAdapter {
 	 * Returns Env ConfigStore ConfigMap
 	 * @returns {Promise<ConfigMap>}
 	 */
-	async list(): Promise<ConfigMap> {
-		const configManifest = await this.listPairs();
-		return kvPairsToConfigMap(configManifest);
+	public async list(): Promise<ConfigMap> {
+		return kvPairsToConfigMap(await this.listPairs());
 	}
 
 	/**
@@ -88,7 +94,7 @@ export class EnvConfigStoreAdapter {
 	 * @param {ConfigMap} config
 	 * @returns {Promise<void>}
 	 */
-	private async writeEnvFile(config: ConfigMap): Promise<void> {
+	private writeEnvFile(config: ConfigMap): Promise<void> {
 		let dotenvString = '';
 		for (const name of _.keys(config)) {
 			dotenvString += `${name}="${config[name]}"\n`;

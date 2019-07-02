@@ -19,13 +19,14 @@ import * as yaml from 'yamljs';
 import { ConfigStoreAdapterError } from '../../../error-types';
 import { loadFromFile } from '../../../tools';
 import { ConfigStoreAccess, YamlConfigStoreAccess } from '../../environment';
-import { ConfigMap } from '../index';
+
+import { ConfigMap, ConfigStore } from '../config-store';
 
 /**
  * YamlConfigStoreAdapter class
  * Used for interacting with yaml config-stores
  */
-export class YamlConfigStoreAdapter {
+export class YamlConfigStore implements ConfigStore {
 	private readonly access: YamlConfigStoreAccess;
 
 	/**
@@ -39,7 +40,7 @@ export class YamlConfigStoreAdapter {
 
 		this.access = {
 			path: access.yamlFile.path || 'environment.yml',
-		} as YamlConfigStoreAccess;
+		};
 	}
 
 	/**
@@ -48,10 +49,10 @@ export class YamlConfigStoreAdapter {
 	 */
 	async list(): Promise<ConfigMap> {
 		try {
-			return (await loadFromFile(this.access.path)) as ConfigMap;
+			return await loadFromFile(this.access.path);
 		} catch (e) {
 			if (e.code === 'ENOENT') {
-				return {} as ConfigMap;
+				return {};
 			}
 			throw e;
 		}
