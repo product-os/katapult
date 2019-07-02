@@ -21,7 +21,7 @@ import { base64 } from '../filters';
  * @returns {Promise<string>}
  */
 export async function generateECKeypair(): Promise<string> {
-	const options = {
+	const options: ECKeyPairOptions<'pem', 'pem'> = {
 		namedCurve: 'prime256v1',
 		publicKeyEncoding: {
 			type: 'spki',
@@ -30,7 +30,9 @@ export async function generateECKeypair(): Promise<string> {
 		privateKeyEncoding: {
 			type: 'pkcs8',
 			format: 'pem',
+			cipher: '',
+			passphrase: '',
 		},
-	} as ECKeyPairOptions<'pem', 'pem'>;
+	};
 	return base64(JSON.stringify(generateKeyPairSync('ec', options)));
 }

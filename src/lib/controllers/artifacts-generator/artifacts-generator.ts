@@ -13,11 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { get, keys } from 'lodash';
+import * as _ from 'lodash';
 import { render } from 'mustache';
 import * as fs from 'mz/fs';
-import { encrypt, key, message } from 'openpgp';
-import { basename, join } from 'path';
+import * as openpgp from 'openpgp';
+import * as path from 'path';
 
 import { listUri, readFromUri, unwrapKeyframe } from '../../tools';
 import { ArtifactsStore, Release } from '../artifacts-store/artifacts-store';
@@ -72,9 +72,8 @@ export class ArtifactsGenerator {
 	 * @returns {Promise<Release>}
 	 */
 	public async generate(): Promise<Release> {
-		await this.extendConfigMap();
-		const target = keys(this.environment.deployTarget)[0];
-		const templatesPath = join('deploy', target, 'templates');
+		const target = _.keys(this.environment.deployTarget)[0];
+		const templatesPath = path.join('deploy', target, 'templates');
 		const templateFilePaths = await listUri({
 			uri: this.environment.productRepo,
 			path: templatesPath,
@@ -83,11 +82,13 @@ export class ArtifactsGenerator {
 		for (const file of templateFilePaths) {
 			const template = await readFromUri({
 				uri: this.environment.productRepo,
-				path: join(templatesPath, file),
+				path: path.join(templatesPath, file),
 			});
-			const manifestString = render(template, this.configMap);
-			const manifestPath = join(target, basename(file).replace('.tpl.', '.'));
-			release[manifestPath] = manifestString;
+			const manifestPath = path.join(
+				target,
+				path.basename(file).replace('.tpl.', '.'),
+			);
+			release[manifestPath] = render(template, this.configMap);
 		}
 		console.log('Generated artifacts');
 		return release;
@@ -108,10 +109,10 @@ export class ArtifactsGenerator {
 	 */
 	private async extendConfigMap() {
 		const keyFrame = await unwrapKeyframe(this.environment.productRepo);
-		for (const key of keys(keyFrame)) {
-			this.configMap[`${key}-image`] = get(keyFrame, [key, 'image', 'url']);
-			this.configMap[`${key}-version`] = get(keyFrame, [key, 'version']);
-		}
+		_.forEach(keyFrame, (value, key) => {
+			this.configMap[`${key}-image`] = _.get(value, ['image', 'url']);
+			this.configMap[`${key}-version`] = _.get(value, ['version']);
+		});
 	}
 
 	/**
@@ -124,10 +125,10 @@ export class ArtifactsGenerator {
 			const encryptionKey = (await fs.readFile(
 				this.environment.encryptionKeyPath,
 			)).toString();
-			const publicKeys = (await key.readArmored(encryptionKey)).keys;
-			for (const key of keys(release)) {
-				const encrypted = await encrypt({
-					message: message.fromText(release[key]),
+			const publicKeys = (await openpgp.key.readArmored(encryptionKey)).keys;
+			for (const key of _.keys(release)) {
+				const encrypted = await openpgp.encrypt({
+					message: openpgp.message.fromText(release[key]),
 					publicKeys,
 				});
 				release[key] = encrypted.data;

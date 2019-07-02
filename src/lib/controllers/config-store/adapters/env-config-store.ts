@@ -18,16 +18,17 @@ import * as _ from 'lodash';
 import * as fs from 'mz/fs';
 
 import { configMapToPairs, kvPairsToConfigMap } from '../../../tools';
-
 import { ConfigStoreAdapterError } from '../../../error-types';
 import { ConfigStoreAccess, EnvConfigStoreAccess } from '../../environment';
 import { ConfigMap } from '../index';
+import { loadFromFile } from '../../../tools';
+import { ConfigStoreAdapter } from '.'
 
 /**
  * EnvConfigStoreAdapter class
  * Used for interacting with envFile config stores
  */
-export class EnvConfigStoreAdapter {
+export class EnvConfigStoreAdapter implements ConfigStoreAdapter {
 	private readonly access: EnvConfigStoreAccess;
 
 	/**
@@ -49,7 +50,7 @@ export class EnvConfigStoreAdapter {
 	 * @returns {Promise<ConfigMap>}
 	 */
 	async listPairs(): Promise<ConfigMap> {
-		const envFileBuffer = await fs.readFile(this.access.path);
+		const envFileBuffer = loadFromFile(this.access.path);
 		return parse(
 			envFileBuffer
 				.toString()
@@ -63,8 +64,7 @@ export class EnvConfigStoreAdapter {
 	 * @returns {Promise<ConfigMap>}
 	 */
 	async list(): Promise<ConfigMap> {
-		const configManifest = await this.listPairs();
-		return kvPairsToConfigMap(configManifest);
+		return kvPairsToConfigMap(await this.listPairs());
 	}
 
 	/**
@@ -88,7 +88,7 @@ export class EnvConfigStoreAdapter {
 	 * @param {ConfigMap} config
 	 * @returns {Promise<void>}
 	 */
-	private async writeEnvFile(config: ConfigMap): Promise<void> {
+	private writeEnvFile(config: ConfigMap): Promise<void> {
 		let dotenvString = '';
 		for (const name of _.keys(config)) {
 			dotenvString += `${name}="${config[name]}"\n`;

@@ -56,7 +56,7 @@ export class ConfigValidator {
 				_.has(cmJSONSchema, ['properties', name]) &&
 				_.get(cmJSONSchema, [name, 'type']) === 'number'
 			) {
-				this.configMap[name] = parseInt(this.configMap[name] as string, 10);
+				this.configMap[name] = parseInt(this.configMap[name], 10);
 			}
 		}
 		const errors = this.validator.validate(this.configMap, cmJSONSchema).errors;

@@ -15,11 +15,6 @@ limitations under the License.
 */
 import { ValidationError, Validator } from 'jsonschema';
 import { get, keys, reduce, replace, split, trim } from 'lodash';
-import {
-	ConfigurationManagerArgs,
-	ConfigurationManagerCreateArgs,
-	ErrorMap,
-} from '.';
 import { ConfigManifest } from '../config-manifest/config-manifest';
 import { ConfigMap } from '../config-store';
 import { ConfigStore } from '../config-store/config-store';
@@ -50,6 +45,23 @@ import {
 import { Question, Questions } from 'inquirer';
 import * as inquirer from 'inquirer';
 import { NotImplementedError } from '../../error-types';
+
+interface ConfigurationManagerArgs {
+	configManifest: ConfigManifest;
+	configStore: ConfigStore;
+	configMap: ConfigMap;
+	mode?: string;
+}
+
+interface ConfigurationManagerCreateArgs {
+	configManifest: ConfigManifest;
+	configStore: ConfigStore;
+	configMap?: ConfigMap;
+	mode?: string;
+}
+interface ErrorMap {
+	[key: string]: ValidationError;
+}
 
 const base64 = b64encode;
 const base64decode = b64decode;

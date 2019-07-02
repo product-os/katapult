@@ -48,7 +48,7 @@ export function getAbsolutePath(path: string, basePath: string): string {
  * @returns {string}
  */
 export function getAbsoluteUri(uri: string, basePath: string): string {
-	if (gitUri(uri)) {
+	if (isValidGitUri(uri)) {
 		throw new NotImplementedError('Git URI support not implemented yet');
 	} else if (localPathUri(uri)) {
 		return getAbsolutePath(uri, basePath);
@@ -79,7 +79,7 @@ export async function loadFromFile(
  * @param {string} uri
  * @returns {boolean}
  */
-export function gitUri(uri: string): boolean {
+export function isValidGitUri(uri: string): boolean {
 	return /((git|ssh|http|https)|(git@[\w\.]+))(:(\/\/)?)([\w\.@\:/\-]+)/.test(
 		uri,
 	);
@@ -111,7 +111,7 @@ export async function loadFromUri({
 	errorMessage?: string;
 }): Promise<object> {
 	// TODO: support git URI
-	if (gitUri(uri)) {
+	if (isValidGitUri(uri)) {
 		throw new UnsupportedError('Git URI support not implemented yet');
 	}
 	if (localPathUri(uri)) {
@@ -180,7 +180,7 @@ export async function readFromUri({
 	cachePath?: string;
 }): Promise<string> {
 	// TODO: support git URI
-	if (gitUri(uri)) {
+	if (isValidGitUri(uri)) {
 		throw new UnsupportedError('Git URI support not implemented yet');
 	} else if (localPathUri(uri)) {
 		return (await fs.readFile(join(uri, path))).toString('utf8');
@@ -206,7 +206,7 @@ export async function listUri({
 	cachePath?: string;
 }): Promise<string[]> {
 	// TODO: support git URI
-	if (gitUri(uri)) {
+	if (isValidGitUri(uri)) {
 		throw new UnsupportedError('Git URI support not implemented yet');
 	} else if (localPathUri(uri)) {
 		return await fs.readdir(join(uri, path));

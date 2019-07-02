@@ -13,13 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { ApiClient as ApiClientBase } from 'kubernetes-client';
+const dhparam = require('dhparam') as (bits: number) => string;
 
-interface ApiVersion {
-	v1: any;
-}
-
-export interface ApiClient extends ApiClientBase {
-	api: ApiVersion;
-	loadSpec(): any;
-}
+/**
+ * GENERATE_DH_PARAM: Generate dh param
+ * @param {number} bits
+ * @returns {string} DH_PARAM
+ */
+export const generateDHParam = (bits: number): string => {
+	return dhparam(bits);
+};

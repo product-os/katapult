@@ -40,7 +40,7 @@ export class LocalArchiveStoreAdapter {
 		await this.removeAll();
 		// write new release
 		for (const filePath of _.keys(release)) {
-			await this.putFile(filePath, release[filePath]);
+			await this.writeFile(filePath, release[filePath]);
 		}
 	}
 
@@ -68,8 +68,8 @@ export class LocalArchiveStoreAdapter {
 	 * @param {string} data
 	 * @returns {Promise<void>}
 	 */
-	private async putFile(path: string, data: string): Promise<void> {
-		fs.mkdirSync(join(this.path, dirname(path)), { recursive: true });
+	private async writeFile(path: string, data: string): Promise<void> {
+		await fs.mkdirSync(join(this.path, dirname(path)), { recursive: true });
 		return await fs.writeFile(join(this.path, path), data);
 	}
 }

@@ -54,9 +54,9 @@ export class ConfigManifest {
 		const anyOf: any = [];
 		_.forIn(properties, function(val, key) {
 			if (_.includes(_.get(val, 'when'), '==')) {
-				let [dependency, value] = _.split(_.get(val, 'when'), '==');
-				value = _.trim(value, '\'" ');
-				dependency = _.trim(dependency);
+				const depArray = _.split(_.get(val, 'when'), '==');
+				const dependency = _.trim(depArray[0]);
+				const value = _.trim(depArray[1], `'" `);
 				if (!_.get(conditions, dependency, false)) {
 					conditions[dependency] = { [value]: [key] };
 				} else if (_.get(conditions, [dependency, value])) {
@@ -68,14 +68,14 @@ export class ConfigManifest {
 		});
 
 		for (const requirements of _.values(conditions)) {
-			for (const v of _.values(requirements)) {
+			for (const requirement of _.values(requirements)) {
 				const conditionProperties: any = {};
-				for (const name of v) {
+				for (const name of requirement) {
 					conditionProperties[name] = properties[name];
 				}
 				anyOf.push({
 					properties: conditionProperties,
-					required: v,
+					required: requirement,
 				});
 			}
 		}
