@@ -18,13 +18,12 @@ import {
 	ConfigStoreAccess,
 	ConfigStoreAccessConfiguration,
 	Environment,
-	KatapultFile,
 } from '.';
 import { ConfigurationManager } from '../configuration-manager/configuration-manager';
 
 import { convertRelativePaths, getBasePath } from '../../tools';
 import { ConfigManifest } from '../config-manifest/config-manifest';
-import { ConfigStore } from '../config-store/config-store';
+import { ConfigStore, createConfigStore } from '../config-store/config-store';
 
 export declare interface EnvironmentEditorCreateArgs {
 	configurationPath: string;
@@ -58,7 +57,7 @@ export class EnvironmentEditor {
 				path: configurationPath,
 			},
 		};
-		const katapultConfigStore = await ConfigStore.create(
+		const katapultConfigStore = await createConfigStore(
 			convertRelativePaths({
 				conf: configStoreAccess,
 				basePath: process.cwd(),
@@ -142,7 +141,7 @@ export class EnvironmentEditor {
 			),
 			basePath: getBasePath(this.configurationPath),
 		});
-		const configStore = await ConfigStore.create(configStoreAccess);
+		const configStore = await createConfigStore(configStoreAccess);
 		const config = await (await ConfigurationManager.create({
 			configManifest: this.environmentConfigManifest,
 			configStore,

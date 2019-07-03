@@ -18,7 +18,7 @@ import * as _ from 'lodash';
 
 import { ArtifactsGenerator } from '../lib/controllers/artifacts-generator/artifacts-generator';
 import { ConfigManifest } from '../lib/controllers/config-manifest/config-manifest';
-import { ConfigStore } from '../lib/controllers/config-store/config-store';
+import { createConfigStore } from '../lib/controllers/config-store/config-store';
 import { ConfigurationManager } from '../lib/controllers/configuration-manager/configuration-manager';
 import { EnvironmentEditor } from '../lib/controllers/environment/environment-editor';
 import { convertRelativePaths, getBasePath, loadFromUri } from '../lib/tools';
@@ -47,7 +47,7 @@ export default class Generate extends Command {
 		});
 
 		// Environment ConfigStore instance
-		const configStore = await ConfigStore.create(
+		const configStore = await createConfigStore(
 			_.get(environment, 'configStore'),
 		);
 

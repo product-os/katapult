@@ -25,13 +25,13 @@ import {
 } from '../../../tools';
 import { ConfigStoreAccess, EnvConfigStoreAccess } from '../../environment';
 
-import { ConfigMap, ConfigStoreAdapter } from '.';
+import { ConfigMap, ConfigStore } from '../config-store';
 
 /**
  * EnvConfigStoreAdapter class
  * Used for interacting with envFile config stores
  */
-export class EnvConfigStoreAdapter implements ConfigStoreAdapter {
+export class EnvConfigStore implements ConfigStore {
 	private readonly access: EnvConfigStoreAccess;
 
 	/**

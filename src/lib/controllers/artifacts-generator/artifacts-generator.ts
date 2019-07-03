@@ -21,7 +21,7 @@ import * as path from 'path';
 
 import { listUri, readFromUri, unwrapKeyframe } from '../../tools';
 import { ArtifactsStore, Release } from '../artifacts-store/artifacts-store';
-import { ConfigMap } from '../config-store/adapters';
+import { ConfigMap } from '../config-store/config-store';
 import { Environment } from '../environment';
 
 /**

@@ -30,7 +30,7 @@ import {
 } from '../../../tools';
 import { ConfigStoreAccess } from '../../environment';
 
-import { ConfigMap, ConfigStoreAdapter } from '.';
+import { ConfigMap, ConfigStore } from '../config-store';
 
 interface ApiVersion {
 	v1: any;
@@ -57,7 +57,7 @@ interface UpdateSecretArgs {
  * KubernetesConfigStoreAdapter class
  * Used for interacting with kubernetes config stores
  */
-export class KubernetesConfigStoreAdapter implements ConfigStoreAdapter {
+export class KubernetesConfigStore implements ConfigStore {
 	public static async create(access: ConfigStoreAccess) {
 		const kubeConfig = config.fromKubeconfig(
 			_.get(access.kubernetes, 'kubeConfigPath', './kube/config'),
@@ -80,7 +80,7 @@ export class KubernetesConfigStoreAdapter implements ConfigStoreAdapter {
 				passphrase: _.get(access.kubernetes, ['bastion', 'keyPassword']),
 			};
 		}
-		return new KubernetesConfigStoreAdapter(access, client, tnlConfig);
+		return new KubernetesConfigStore(access, client, tnlConfig);
 	}
 
 	readonly access: ConfigStoreAccess;

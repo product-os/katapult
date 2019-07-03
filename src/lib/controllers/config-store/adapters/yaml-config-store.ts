@@ -20,13 +20,13 @@ import { ConfigStoreAdapterError } from '../../../error-types';
 import { loadFromFile } from '../../../tools';
 import { ConfigStoreAccess, YamlConfigStoreAccess } from '../../environment';
 
-import { ConfigMap, ConfigStoreAdapter } from '.';
+import { ConfigMap, ConfigStore } from '../config-store';
 
 /**
  * YamlConfigStoreAdapter class
  * Used for interacting with yaml config-stores
  */
-export class YamlConfigStoreAdapter implements ConfigStoreAdapter {
+export class YamlConfigStore implements ConfigStore {
 	private readonly access: YamlConfigStoreAccess;
 
 	/**

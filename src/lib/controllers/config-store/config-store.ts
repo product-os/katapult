@@ -13,65 +13,43 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { get } from 'lodash';
 import { ConfigStoreAccess } from '../environment';
-import { EnvConfigStoreAdapter } from './adapters/env-config-store';
-import { KubernetesConfigStoreAdapter } from './adapters/kubernetes-config-store';
-import { YamlConfigStoreAdapter } from './adapters/yaml-config-store';
+import { EnvConfigStore } from './adapters/env-config-store';
+import { KubernetesConfigStore } from './adapters/kubernetes-config-store';
+import { YamlConfigStore } from './adapters/yaml-config-store';
 
-import { ConfigMap, ConfigStoreAdapter } from './adapters';
+export interface ConfigMap {
+	[key: string]: any;
+}
 
-/**
- * ConfigStore class
- * Used for interacting with config-stores of supported types.
- */
-export class ConfigStore {
-	/**
-	 * Create ConfigStore using:
-	 * @param {ConfigStoreAccess} access
-	 * @returns {Promise<ConfigStore>}
-	 */
-	public static async create(access: ConfigStoreAccess): Promise<ConfigStore> {
-		let adapter: ConfigStoreAdapter;
-		if (get(access, 'kubernetes')) {
-			adapter = await KubernetesConfigStoreAdapter.create(access);
-		} else if (get(access, 'envFile')) {
-			adapter = new EnvConfigStoreAdapter(access);
-		} else if (get(access, 'yamlFile')) {
-			adapter = new YamlConfigStoreAdapter(access);
-		} else {
-			throw new Error('Not implemented');
-		}
-		return new ConfigStore(access, adapter);
-	}
-
-	private readonly access: ConfigStoreAccess;
-	private readonly adapter: ConfigStoreAdapter;
-
-	/**
-	 * ConfigStore constructor
-	 * @param {ConfigStoreAccess} access
-	 * @param {ConfigStoreAdapter} adapter
-	 */
-	public constructor(access: ConfigStoreAccess, adapter: ConfigStoreAdapter) {
-		this.access = access;
-		this.adapter = adapter;
-	}
-
+export interface ConfigStore {
 	/**
 	 * List the key-value configuration variables.
 	 * @returns {Promise<ConfigMap>}
 	 */
-	async list(): Promise<ConfigMap> {
-		return await this.adapter.list();
-	}
-
+	list(): Promise<ConfigMap>;
 	/**
 	 * Create or update the configMap key-value configuration variables.
 	 * @param {ConfigMap} config: [key: string]: string
 	 * @returns {Promise<ConfigMap>}
 	 */
-	async updateMany(config: ConfigMap): Promise<ConfigMap> {
-		return this.adapter.updateMany(config);
+	updateMany(config: ConfigMap): Promise<ConfigMap>;
+}
+
+/**
+ * Create ConfigStore using:
+ * @param {ConfigStoreAccess} access
+ * @returns {Promise<ConfigStore>}
+ */
+export async function createConfigStore(access: ConfigStoreAccess): Promise<ConfigStore> {
+	if (access.kubernetes) {
+		return await KubernetesConfigStore.create(access);
 	}
+	if (access.envFile) {
+		return new EnvConfigStore(access);
+	}
+	if (access.yamlFile) {
+		return new YamlConfigStore(access);
+	}
+	throw new Error('Not implemented');
 }
