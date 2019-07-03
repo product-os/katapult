@@ -41,7 +41,9 @@ export interface ConfigStore {
  * @param {ConfigStoreAccess} access
  * @returns {Promise<ConfigStore>}
  */
-export async function createConfigStore(access: ConfigStoreAccess): Promise<ConfigStore> {
+export async function createConfigStore(
+	access: ConfigStoreAccess,
+): Promise<ConfigStore> {
 	if (access.kubernetes) {
 		return await KubernetesConfigStore.create(access);
 	}

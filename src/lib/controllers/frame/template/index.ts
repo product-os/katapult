@@ -1,7 +1,7 @@
-import { ConfigMap } from '../../config-store/config-store'
+import { ConfigMap } from '../../config-store/config-store';
 
 export interface FrameTemplateEngine {
-    new (configMap: ConfigMap): FrameTemplateEngine;
+	new (configMap: ConfigMap): FrameTemplateEngine;
 
-    render: (content: string) => string
+	render: (content: string) => string;
 }

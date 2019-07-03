@@ -1,3 +1,1 @@
-export class FrameTemplate {
-
-}
+export class FrameTemplate {}

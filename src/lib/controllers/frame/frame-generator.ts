@@ -19,7 +19,7 @@ import * as path from 'path';
 
 import { ConfigStore } from '../config-store/config-store';
 import { ConfigManifest } from '../config-manifest/config-manifest';
-import { Frame } from './frame'
+import { Frame } from './frame';
 import { FrameTemplate } from './frame-template';
 
 /**
@@ -28,7 +28,11 @@ import { FrameTemplate } from './frame-template';
  * Used for generating a Frame. A Frame is the resulting output after rendering the frame templates using data
  * from the config stores.
  */
-export async function generate(frameTemplate: FrameTemplate, configManifest: ConfigManifest, configStore: ConfigStore): Promise<Frame> {
+export async function generate(
+	frameTemplate: FrameTemplate,
+	configManifest: ConfigManifest,
+	configStore: ConfigStore,
+): Promise<Frame> {
 	const target = _.keys(this.environment.deployTarget)[0];
 	const templatesPath = path.join('deploy', target, 'templates');
 	const templateFilePaths = await listUri({
