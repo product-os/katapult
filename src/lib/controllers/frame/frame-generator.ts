@@ -14,13 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import * as _ from 'lodash';
-import * as fs from 'mz/fs';
-import * as path from 'path';
 
 import { ConfigStore } from '../config-store/config-store';
-import { ConfigManifest } from '../config-manifest/config-manifest';
-import { Frame } from './frame';
+import { Frame, createFrame } from './frame';
 import { FrameTemplate } from './frame-template';
+import { build as buildRenderer, FrameTemplateRenderer } from './template';
 
 /**
  * generate
@@ -30,27 +28,17 @@ import { FrameTemplate } from './frame-template';
  */
 export async function generate(
 	frameTemplate: FrameTemplate,
-	configManifest: ConfigManifest,
 	configStore: ConfigStore,
+	renderer: FrameTemplateRenderer,
 ): Promise<Frame> {
-	const target = _.keys(this.environment.deployTarget)[0];
-	const templatesPath = path.join('deploy', target, 'templates');
-	const templateFilePaths = await listUri({
-		uri: this.environment.productRepo,
-		path: templatesPath,
-	});
-	const release: Release = {};
-	for (const file of templateFilePaths) {
-		const template = await readFromUri({
-			uri: this.environment.productRepo,
-			path: path.join(templatesPath, file),
-		});
-		const manifestPath = path.join(
-			target,
-			path.basename(file).replace('.tpl.', '.'),
-		);
-		release[manifestPath] = render(template, this.configMap);
-	}
-	console.log('Generated artifacts');
-	return release;
+	const configMap = await configStore.list();
+	const frame = createFrame();
+	const frameRenderer = buildRenderer(renderer, configMap);
+
+	Object.keys(frameTemplate.files).forEach(
+		path =>
+			(frame.files[path] = frameRenderer.render(frameTemplate.files[path])),
+	);
+
+	return frame;
 }

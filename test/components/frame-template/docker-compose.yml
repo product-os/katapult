@@ -1,0 +1,5 @@
+version: "2.0"
+
+services:
+  api:
+    image: "balena/api:{{SERVICE_API_VERSION}}"
