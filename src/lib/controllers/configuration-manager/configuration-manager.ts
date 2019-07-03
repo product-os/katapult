@@ -16,7 +16,7 @@ limitations under the License.
 import { ValidationError, Validator } from 'jsonschema';
 import { get, keys, reduce, replace, split, trim } from 'lodash';
 import { ConfigManifest } from '../config-manifest/config-manifest';
-import { ConfigMap } from '../config-store';
+import { ConfigMap } from '../config-store/adapters';
 import { ConfigStore } from '../config-store/config-store';
 import { ConfigValidator } from '../config-validator';
 

@@ -23,7 +23,9 @@ import * as forge from 'node-forge';
 export async function generatePublicKey(
 	privateKeyPEM: forge.pki.PEM,
 ): Promise<string> {
-	const privateKey = forge.pki.privateKeyFromPem(privateKeyPEM);
+	const privateKey: forge.pki.rsa.PrivateKey = forge.pki.privateKeyFromPem(
+		privateKeyPEM,
+	);
 	const pubKey = forge.pki.rsa.setPublicKey(privateKey.n, privateKey.e);
 	return Buffer.from(forge.pki.publicKeyToPem(pubKey)).toString();
 }

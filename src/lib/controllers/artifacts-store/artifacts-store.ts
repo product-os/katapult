@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { NotImplementedError, UnsupportedError } from '../../error-types';
-import { gitUri, localPathUri } from '../../tools';
+import { isValidGitUri, localPathUri } from '../../tools';
 import { LocalArchiveStoreAdapter } from './adapters/local';
 
 export interface Release {
@@ -36,7 +36,7 @@ export class ArtifactsStore {
 
 		if (await localPathUri(archiveStoreURI)) {
 			adapter = new LocalArchiveStoreAdapter(archiveStoreURI);
-		} else if (gitUri(archiveStoreURI)) {
+		} else if (isValidGitUri(archiveStoreURI)) {
 			throw new NotImplementedError('Git URI support not implemented yet');
 		} else {
 			throw new UnsupportedError('URI type not supported yet');

@@ -27,7 +27,7 @@ import {
 
 import { TimeoutError } from 'bluebird';
 import * as yamljs from 'yamljs';
-import { ConfigMap } from './controllers/config-store';
+import { ConfigMap } from './controllers/config-store/adapters';
 
 export const tunnelAsync = Bluebird.promisify(tunnel);
 

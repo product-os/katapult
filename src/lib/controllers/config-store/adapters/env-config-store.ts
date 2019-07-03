@@ -17,12 +17,15 @@ import { parse } from 'dotenv';
 import * as _ from 'lodash';
 import * as fs from 'mz/fs';
 
-import { configMapToPairs, kvPairsToConfigMap } from '../../../tools';
 import { ConfigStoreAdapterError } from '../../../error-types';
+import {
+	configMapToPairs,
+	kvPairsToConfigMap,
+	loadFromFile,
+} from '../../../tools';
 import { ConfigStoreAccess, EnvConfigStoreAccess } from '../../environment';
-import { ConfigMap } from '../index';
-import { loadFromFile } from '../../../tools';
-import { ConfigStoreAdapter } from '.'
+
+import { ConfigMap, ConfigStoreAdapter } from '.';
 
 /**
  * EnvConfigStoreAdapter class

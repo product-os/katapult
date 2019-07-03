@@ -18,7 +18,8 @@ import { ConfigStoreAccess } from '../environment';
 import { EnvConfigStoreAdapter } from './adapters/env-config-store';
 import { KubernetesConfigStoreAdapter } from './adapters/kubernetes-config-store';
 import { YamlConfigStoreAdapter } from './adapters/yaml-config-store';
-import { ConfigMap } from './index';
+
+import { ConfigMap, ConfigStoreAdapter } from './adapters';
 
 /**
  * ConfigStore class
@@ -31,10 +32,7 @@ export class ConfigStore {
 	 * @returns {Promise<ConfigStore>}
 	 */
 	public static async create(access: ConfigStoreAccess): Promise<ConfigStore> {
-		let adapter:
-			| EnvConfigStoreAdapter
-			| KubernetesConfigStoreAdapter
-			| YamlConfigStoreAdapter;
+		let adapter: ConfigStoreAdapter;
 		if (get(access, 'kubernetes')) {
 			adapter = await KubernetesConfigStoreAdapter.create(access);
 		} else if (get(access, 'envFile')) {
@@ -48,23 +46,14 @@ export class ConfigStore {
 	}
 
 	private readonly access: ConfigStoreAccess;
-	private readonly adapter:
-		| EnvConfigStoreAdapter
-		| KubernetesConfigStoreAdapter
-		| YamlConfigStoreAdapter;
+	private readonly adapter: ConfigStoreAdapter;
 
 	/**
 	 * ConfigStore constructor
 	 * @param {ConfigStoreAccess} access
-	 * @param {EnvConfigStoreAdapter | KubernetesConfigStoreAdapter | YamlConfigStoreAdapter} adapter
+	 * @param {ConfigStoreAdapter} adapter
 	 */
-	public constructor(
-		access: ConfigStoreAccess,
-		adapter:
-			| EnvConfigStoreAdapter
-			| KubernetesConfigStoreAdapter
-			| YamlConfigStoreAdapter,
-	) {
+	public constructor(access: ConfigStoreAccess, adapter: ConfigStoreAdapter) {
 		this.access = access;
 		this.adapter = adapter;
 	}

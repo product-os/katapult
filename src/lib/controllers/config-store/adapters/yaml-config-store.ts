@@ -19,8 +19,8 @@ import * as yaml from 'yamljs';
 import { ConfigStoreAdapterError } from '../../../error-types';
 import { loadFromFile } from '../../../tools';
 import { ConfigStoreAccess, YamlConfigStoreAccess } from '../../environment';
-import { ConfigMap } from '../index';
-import { ConfigStoreAdapter } from '.'
+
+import { ConfigMap, ConfigStoreAdapter } from '.';
 
 /**
  * YamlConfigStoreAdapter class

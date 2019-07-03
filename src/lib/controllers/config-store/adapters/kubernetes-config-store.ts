@@ -14,21 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import {
+	ApiClient as ApiClientBase,
 	Client1_13 as Client,
 	config,
-	ApiClient as ApiClientBase,
 } from 'kubernetes-client';
+
 import * as _ from 'lodash';
 import * as fs from 'mz/fs';
 import * as tunnel from 'tunnel-ssh';
+
 import {
 	configMapToPairs,
 	kvPairsToConfigMap,
 	runInTunnel,
 } from '../../../tools';
 import { ConfigStoreAccess } from '../../environment';
-import { ConfigMap } from '../index';
-import { ConfigStoreAdapter } from '.'
+
+import { ConfigMap, ConfigStoreAdapter } from '.';
 
 interface ApiVersion {
 	v1: any;
@@ -125,8 +127,10 @@ export class KubernetesConfigStoreAdapter implements ConfigStoreAdapter {
 		for (const secret of secrets.body.items) {
 			if (secret.type === 'Opaque') {
 				for (const name of _.keys(secret.data)) {
-					ret[name] = secret.data[name] == null ? '' : Buffer.from(secret.data[name], 'base64').toString()
-
+					ret[name] =
+						secret.data[name] == null
+							? ''
+							: Buffer.from(secret.data[name], 'base64').toString();
 				}
 			}
 		}
@@ -223,22 +227,18 @@ export class KubernetesConfigStoreAdapter implements ConfigStoreAdapter {
 		}
 
 		for (const secret of secrets) {
-			for (const envvarName of _.keys(secret.data)) {
+			const secretValue = _.get(secret.data, name);
+			if (secretValue) {
 				if (
-					envvarName === name &&
-					value.toString() !==
-						Buffer.from(secret.data[envvarName], 'base64').toString()
+					value.toString() !== Buffer.from(secretValue, 'base64').toString()
 				) {
 					await this.patchSecret({
 						k8sSecretName: secret.metadata.name,
-						name: envvarName,
+						name,
 						value,
 					});
-					return true;
 				}
-				if (envvarName === name) {
-					return true;
-				}
+				return true;
 			}
 		}
 		return false;
@@ -259,8 +259,7 @@ export class KubernetesConfigStoreAdapter implements ConfigStoreAdapter {
 		if (!secrets) {
 			secrets = this.getOpaqueSecrets();
 		}
-		const exists = await this.updateExistingSecret({ name, value, secrets });
-		if (!exists) {
+		if (!(await this.updateExistingSecret({ name, value, secrets }))) {
 			const k8sSecretName = name.toLowerCase().replace(/_/g, '-');
 			await this.putSecret({ k8sSecretName, name, value });
 		}
