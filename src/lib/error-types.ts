@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 import { TypedError } from 'typed-error';
+import { ConfigManifestItem } from './controllers/config-manifest/config-manifest-schema';
 
 export class ConfigStoreAdapterError extends TypedError {
 	constructor(message: string) {
@@ -43,5 +44,16 @@ export class FileLoadError extends TypedError {
 export class URILoadError extends TypedError {
 	constructor(message: string) {
 		super(message);
+	}
+}
+
+export class ValidationError extends TypedError {
+	public property: string;
+	public schema: ConfigManifestItem;
+
+	constructor(message: string, property: string, schema: ConfigManifestItem) {
+		super(message);
+		this.property = property;
+		this.schema = schema;
 	}
 }

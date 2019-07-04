@@ -13,14 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { loadFromUri } from '../../tools';
-
+import * as Ajv from 'ajv';
 import * as _ from 'lodash';
+
+import { loadFromUri } from '../../tools';
+import { ConfigManifestSchema } from './config-manifest-schema';
+// tslint:disable-next-line:no-var-requires
+const configManifestSchemaJson = require('../../../../schemas/config-manifest-schema.json');
+
+const ajv = new Ajv();
+const configManifestSchema = ajv.compile(configManifestSchemaJson);
 
 /**
  * ConfigManifest class
  * Used for transforming/exposing a config-manifest
  */
+// WIP notes: Kept this only because it provides the ability to return either
+// 	a JSON schema or valid ConfigManifest at this point
 export class ConfigManifest {
 	/**
 	 * Creates ConfigManifest using:
@@ -156,9 +165,24 @@ export class ConfigManifest {
 	 * It will be replaced by ReConFix.
 	 * @returns {any}
 	 */
-	JSONSchema(): any {
+	public JSONSchema(): any {
 		const jsonSchema = _.cloneDeep(this.schema);
 		ConfigManifest.traverse(jsonSchema);
 		return _.get(jsonSchema, 'schema', {});
+	}
+
+	public getConfigManifestSchema(): ConfigManifestSchema {
+		const schema: any = _.cloneDeep(this.schema);
+
+		// Validate against the schema that we have
+		if (!configManifestSchema(schema.schema)) {
+			throw new Error(
+				`Invalid manifest schema:\n${configManifestSchema.errors}`,
+			);
+		}
+
+		// This returned object can now be used as the manifest to test against
+		// the config
+		return schema.schema as ConfigManifestSchema;
 	}
 }

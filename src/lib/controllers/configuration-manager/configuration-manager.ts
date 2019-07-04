@@ -14,10 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { ValidationError, Validator } from 'jsonschema';
+import { ValidationError as ValidError } from '../../error-types';
 import { get, keys, reduce, replace, split, trim } from 'lodash';
 import { ConfigManifest } from '../config-manifest/config-manifest';
 import { ConfigMap, ConfigStore } from '../config-store/config-store';
-import { ConfigValidator } from '../config-validator';
+import { validateConfig } from '../config-validator';
 
 import {
 	base64 as b64encode,
@@ -59,7 +60,7 @@ interface ConfigurationManagerCreateArgs {
 	mode?: string;
 }
 interface ErrorMap {
-	[key: string]: ValidationError;
+	[key: string]: ValidError;
 }
 
 const base64 = b64encode;
@@ -322,13 +323,14 @@ export class ConfigurationManager {
 	 * @returns {ErrorMap}
 	 */
 	private validateConfigMap(): ErrorMap {
-		const errors = new ConfigValidator({
+		const errors = validateConfig({
 			configMap: this.configMap,
 			configManifest: this.configManifest,
-		}).validate(false);
+			throwErrors: false,
+		});
 		return reduce(
 			errors,
-			(result: any, e: ValidationError) => {
+			(result: any, e: ValidError) => {
 				result[replace(e.property, /^instance\./g, '')] = e;
 				return result;
 			},
