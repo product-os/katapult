@@ -1,0 +1,6 @@
+test:
+  version: v1.0.0
+  docker-compose:
+    template: test/v1.0.0/docker-compose/templates
+    config-store: test/v1.0.0/docker-compose/config-map.json
+  archive-store: release

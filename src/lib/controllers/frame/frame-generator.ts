@@ -17,8 +17,11 @@ import * as _ from 'lodash';
 
 import { ConfigStore } from '../config-store/config-store';
 import { Frame, createFrame } from './frame';
-import { FrameTemplate } from './frame-template';
-import { build as buildRenderer, FrameTemplateRenderer } from './template';
+import { FrameTemplate } from '../frame-template';
+import {
+	FrameTemplateRenderer,
+	prepareRenderer,
+} from '../frame-template/renderer';
 
 /**
  * generate
@@ -28,17 +31,10 @@ import { build as buildRenderer, FrameTemplateRenderer } from './template';
  */
 export async function generate(
 	frameTemplate: FrameTemplate,
+	frameTemplateRenderer: FrameTemplateRenderer,
 	configStore: ConfigStore,
-	renderer: FrameTemplateRenderer,
 ): Promise<Frame> {
 	const configMap = await configStore.list();
-	const frame = createFrame();
-	const frameRenderer = buildRenderer(renderer, configMap);
-
-	Object.keys(frameTemplate.files).forEach(
-		path =>
-			(frame.files[path] = frameRenderer.render(frameTemplate.files[path])),
-	);
-
-	return frame;
+	const templateRenderer = prepareRenderer(frameTemplateRenderer, configMap);
+	return templateRenderer.renderTemplate(frameTemplate);
 }

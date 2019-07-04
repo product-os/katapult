@@ -16,7 +16,6 @@ limitations under the License.
 import { Command, flags } from '@oclif/command';
 import * as _ from 'lodash';
 
-import { ArtifactsGenerator } from '../lib/controllers/artifacts-generator/artifacts-generator';
 import { ConfigManifest } from '../lib/controllers/config-manifest/config-manifest';
 import { createConfigStore } from '../lib/controllers/config-store/config-store';
 import { ConfigurationManager } from '../lib/controllers/configuration-manager/configuration-manager';
@@ -67,7 +66,7 @@ export default class Generate extends Command {
 		})).sync();
 
 		// Generate environment artifacts
-		const generator = await ArtifactsGenerator.create(environment, configMap);
-		await generator.generate();
+		// const generator = await ArtifactsGenerator.create(environment, configMap);
+		// await generator.generate();
 	}
 }

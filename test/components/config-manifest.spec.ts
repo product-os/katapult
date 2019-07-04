@@ -16,13 +16,14 @@ limitations under the License.
 import * as chai from 'chai';
 
 import { ConfigManifest } from '../../src/lib/controllers/config-manifest/config-manifest';
+import { getTestFile, getTestDir } from '../files';
 
 const { expect } = chai;
 
 describe('config-manifest', () => {
 	it('should read an invalid config manifest and throw an error', async () => {
 		const configManifestObj = await ConfigManifest.create(
-			__dirname,
+			await getTestDir('configs'),
 			'invalid-config-manifest.yml',
 		);
 
@@ -33,7 +34,7 @@ describe('config-manifest', () => {
 	it('should read a valid config manifest and return it', async () => {
 		// Read invalid config manifest YAML
 		const configManifestObj = await ConfigManifest.create(
-			__dirname,
+			await getTestDir('configs'),
 			'valid-config-manifest.yml',
 		);
 
@@ -41,5 +42,14 @@ describe('config-manifest', () => {
 		const configManifest = configManifestObj.getConfigManifestSchema();
 
 		// Test for expected version, title and properties
+		expect(configManifest)
+			.to.have.property('version')
+			.equal('1');
+		expect(configManifest)
+			.to.have.property('title')
+			.equal('Config manifest');
+		expect(configManifest)
+			.to.have.property('properties')
+			.that.has.length(4);
 	});
 });

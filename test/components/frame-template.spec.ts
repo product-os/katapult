@@ -1,13 +1,15 @@
-import * as frameTemplate from '../../src/lib/controllers/frame/frame-template';
+import * as frameTemplate from '../../src/lib/controllers/frame-template';
 import * as fs from 'mz/fs';
 import * as path from 'path';
 import { expect } from 'chai';
+import { getTestDir } from '../files';
 
-describe('FrameTemplate', () => {
-	const frameTemplateDir = path.join(__dirname, 'frame-template');
-
+describe('frame-template', () => {
 	it('should create a FrameTemplate from a directory of files', async () => {
 		// create a FrameTemplate from a directory of files...
+		const frameTemplateDir = await getTestDir(
+			'deploy-templates/test/v1.0.0/docker-compose/templates',
+		);
 		const ft = await frameTemplate.fromDirectory(frameTemplateDir);
 
 		// check some basics...

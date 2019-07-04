@@ -9,7 +9,7 @@
  * Config Manifest schema
  */
 export interface ConfigManifestSchema {
-	version: number;
+	version: string;
 	title: string;
 	properties: ConfigManifestKeys[];
 }

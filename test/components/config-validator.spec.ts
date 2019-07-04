@@ -18,6 +18,7 @@ import * as fs from 'mz/fs';
 
 import { ConfigManifest } from '../../src/lib/controllers/config-manifest/config-manifest';
 import { validateConfig } from '../../src/lib/controllers/config-validator';
+import { getTestFile, getTestDir } from '../files';
 
 const { expect, should } = chai;
 
@@ -25,13 +26,16 @@ describe('config-manifest', () => {
 	it('should use a valid config manifest to test against an invalid config map', async () => {
 		// Read invalid config manifest YAML
 		const configManifestObj = await ConfigManifest.create(
-			__dirname,
+			await getTestDir('configs'),
 			'valid-config-manifest.yml',
 		);
 
 		// Read new config map
 		const configMap = JSON.parse(
-			await fs.readFile(`${__dirname}/invalid-config-map.json`, 'utf-8'),
+			await fs.readFile(
+				await getTestFile('configs/invalid-config-map.json'),
+				'utf-8',
+			),
 		);
 
 		// The config map validator returns an array of errors, rather than throwing
@@ -47,13 +51,16 @@ describe('config-manifest', () => {
 	it('should use a valid config manifest to test against a valid config map', async () => {
 		// Get new config manifest object
 		const configManifestObj = await ConfigManifest.create(
-			__dirname,
+			await getTestDir('configs'),
 			'valid-config-manifest.yml',
 		);
 
 		// Read new config map
 		const configMap = JSON.parse(
-			await fs.readFile(`${__dirname}/valid-config-map.json`, 'utf-8'),
+			await fs.readFile(
+				await getTestFile('configs/valid-config-map.json'),
+				'utf-8',
+			),
 		);
 
 		// Expect the validation to work

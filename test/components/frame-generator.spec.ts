@@ -1,8 +1,8 @@
 import { Frame } from '../../src/lib/controllers/frame/frame';
 import * as frameGenerator from '../../src/lib/controllers/frame/frame-generator';
-import * as frameTemplate from '../../src/lib/controllers/frame/frame-template';
+import * as frameTemplate from '../../src/lib/controllers/frame-template';
 import { exportAdapters } from '../../src/lib/controllers/frame/adapter';
-import { mustacheRenderer } from '../../src/lib/controllers/frame/template/mustache-engine';
+import { mustacheRenderer } from '../../src/lib/controllers/frame-template/renderer/mustache';
 import {
 	ConfigStore,
 	ConfigMap,
@@ -12,10 +12,9 @@ import { expect } from 'chai';
 import * as fs from 'mz/fs';
 import * as path from 'path';
 import * as temp from 'temp';
+import { getTestFile, getTestDir } from '../files';
 
-describe('FrameGenerator', () => {
-	const frameTemplateDir = path.join(__dirname, 'frame-template');
-
+describe('frame-generator', () => {
 	const configMap: ConfigMap = {
 		SERVICE_API_VERSION: 'master',
 		CERT_ROOT_CA: 'abcde12345',
@@ -26,10 +25,14 @@ describe('FrameGenerator', () => {
 		updateMany: async () => configMap,
 	};
 
+	let frameTemplateDir = '';
 	let frame: Frame = { files: {} };
 	let tempDir = '';
 
-	before(() => {
+	before(async () => {
+		frameTemplateDir = await getTestDir(
+			'deploy-templates/test/v1.0.0/docker-compose/templates',
+		);
 		tempDir = temp.track().mkdirSync();
 	});
 
@@ -39,7 +42,7 @@ describe('FrameGenerator', () => {
 
 	it('should create a Frame from a mustache-formatted FrameTemplate', async () => {
 		const ft = await frameTemplate.fromDirectory(frameTemplateDir);
-		frame = await frameGenerator.generate(ft, configStore, mustacheRenderer);
+		frame = await frameGenerator.generate(ft, mustacheRenderer, configStore);
 
 		expect(frame.files['certs/balena-root-ca.pem']).is.not.undefined;
 		expect(frame.files['certs/balena-root-ca.pem']).contains('abcde12345');
