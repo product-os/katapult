@@ -20,14 +20,17 @@ import { ConfigManifest } from '../../src/lib/controllers/config-manifest/config
 import { createConfigStore } from '../../src/lib/controllers/config-store/config-store';
 import { EnvConfigStoreAccess } from '../../src/lib/controllers/environment';
 import { ConfigurationManager } from '../../src/lib/controllers/configuration-manager/configuration-manager';
+import { getTestDir } from '../files';
 
 const { expect } = chai;
 
 describe('config-manager', async () => {
 	it('create a config manager and use it on a non-fully-populated config store', async () => {
+		const filesDir = await getTestDir('configs');
+
 		// Environment ConfigStore instance
 		const envStore: EnvConfigStoreAccess = {
-			path: `${__dirname}/invalid-config-store.env`,
+			path: `${filesDir}/invalid-config-store.env`,
 		};
 		const configStore = await createConfigStore({
 			envFile: envStore,
@@ -35,8 +38,8 @@ describe('config-manager', async () => {
 
 		// Create the correct config manifest
 		const configManifest = await ConfigManifest.create(
-			__dirname,
-			'config-manifest.yml',
+			filesDir,
+			'valid-config-manifest.yml',
 		);
 
 		// Sync the environment configmap
@@ -60,9 +63,11 @@ describe('config-manager', async () => {
 	});
 
 	it('create a config manager and use it on a fully-populated config store', async () => {
+		const filesDir = await getTestDir('configs');
+
 		// Environment ConfigStore instance
 		const envStore: EnvConfigStoreAccess = {
-			path: `${__dirname}/valid-config-store.env`,
+			path: `${filesDir}/valid-config-store.env`,
 		};
 		const configStore = await createConfigStore({
 			envFile: envStore,
@@ -70,8 +75,8 @@ describe('config-manager', async () => {
 
 		// Create the correct config manifest
 		const configManifest = await ConfigManifest.create(
-			__dirname,
-			'config-manifest.yml',
+			filesDir,
+			'valid-config-manifest.yml',
 		);
 
 		// Sync the environment configmap
