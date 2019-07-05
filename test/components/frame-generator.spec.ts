@@ -6,6 +6,7 @@ import { mustacheRenderer } from '../../src/lib/controllers/frame-template/rende
 import {
 	ConfigStore,
 	ConfigMap,
+	createConfigStore,
 } from '../../src/lib/controllers/config-store/config-store';
 
 import { expect } from 'chai';
@@ -13,10 +14,13 @@ import * as fs from 'mz/fs';
 import * as path from 'path';
 import * as temp from 'temp';
 import { getTestFile, getTestDir } from '../files';
+import { EnvConfigStoreAccess } from '../../src/lib/controllers/environment';
+import { ConfigManifest } from '../../src/lib/controllers/config-manifest/config-manifest';
+import { ConfigurationManager } from '../../src/lib/controllers/configuration-manager/configuration-manager';
 
 describe('frame-generator', () => {
 	const configMap: ConfigMap = {
-		SERVICE_API_VERSION: 'master',
+		BALENA_TLD: 'fish.local',
 		CERT_ROOT_CA: 'abcde12345',
 	};
 
@@ -30,10 +34,10 @@ describe('frame-generator', () => {
 	let tempDir = '';
 
 	before(async () => {
+		tempDir = temp.track().mkdirSync();
 		frameTemplateDir = await getTestDir(
 			'deploy-templates/test/v1.0.0/docker-compose/templates',
 		);
-		tempDir = temp.track().mkdirSync();
 	});
 
 	after(() => {
@@ -49,7 +53,7 @@ describe('frame-generator', () => {
 
 		expect(frame.files['docker-compose.yml']).is.not.undefined;
 		expect(frame.files['docker-compose.yml']).contains(
-			'image: "balena/api:master"',
+			'BALENA_TLD: fish.local',
 		);
 	});
 
@@ -62,5 +66,43 @@ describe('frame-generator', () => {
 			const filePath = path.join(tempDir, file);
 			expect(await fs.exists(filePath)).to.equal(true);
 		}
+	});
+
+	it('should create a Frame using a valid ConfigStore', async () => {
+		// create the config manifest
+		const configManifest = await ConfigManifest.create(
+			await getTestDir('configs'),
+			'valid-config-manifest.yml',
+		);
+
+		// create an Environment ConfigStore instance
+		const configStore = await createConfigStore({
+			envFile: {
+				path: await getTestFile('configs/valid-config-store.env'),
+			},
+		});
+
+		// sync the environment configmap
+		const configManager = await ConfigurationManager.create({
+			mode: 'quiet',
+			configManifest,
+			configStore,
+		});
+
+		// ensure the config map is synced
+		await configManager.sync();
+
+		// create the frame
+		const ft = await frameTemplate.fromDirectory(frameTemplateDir);
+		const frame = await frameGenerator.generate(
+			ft,
+			mustacheRenderer,
+			configStore,
+		);
+
+		expect(frame.files['docker-compose.yml']).is.not.undefined;
+		expect(frame.files['docker-compose.yml']).contains(
+			'BALENA_TLD: fish.local',
+		);
 	});
 });

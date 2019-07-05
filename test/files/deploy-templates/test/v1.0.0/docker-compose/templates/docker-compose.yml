@@ -2,4 +2,6 @@ version: "2.0"
 
 services:
   api:
-    image: "balena/api:{{SERVICE_API_VERSION}}"
+    image: "balena/api:master"
+    environment:
+      BALENA_TLD: {{BALENA_TLD}}
