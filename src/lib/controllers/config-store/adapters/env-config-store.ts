@@ -21,7 +21,7 @@ import { ConfigStoreAdapterError } from '../../../error-types';
 import {
 	configMapToPairs,
 	kvPairsToConfigMap,
-	loadFromFile,
+	readFromUri,
 } from '../../../tools';
 import { ConfigStoreAccess, EnvConfigStoreAccess } from '../../environment';
 
@@ -52,8 +52,11 @@ export class EnvConfigStore implements ConfigStore {
 	 * Lists raw envvar pairs
 	 * @returns {Promise<ConfigMap>}
 	 */
-	async listPairs(): Promise<ConfigMap> {
-		const envFileBuffer = loadFromFile(this.access.path);
+	public async listPairs(): Promise<ConfigMap> {
+		const envFileBuffer = await readFromUri({
+			uri: this.access.path,
+			path: '',
+		});
 		return parse(
 			envFileBuffer
 				.toString()
@@ -66,7 +69,7 @@ export class EnvConfigStore implements ConfigStore {
 	 * Returns Env ConfigStore ConfigMap
 	 * @returns {Promise<ConfigMap>}
 	 */
-	async list(): Promise<ConfigMap> {
+	public async list(): Promise<ConfigMap> {
 		return kvPairsToConfigMap(await this.listPairs());
 	}
 

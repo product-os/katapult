@@ -13,8 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { ValidationError, Validator } from 'jsonschema';
-import { ValidationError as ValidError } from '../../error-types';
+import * as _ from 'lodash';
+
+import { ConfigStoreError, ValidationError } from '../../error-types';
 import { get, keys, reduce, replace, split, trim } from 'lodash';
 import { ConfigManifest } from '../config-manifest/config-manifest';
 import { ConfigMap, ConfigStore } from '../config-store/config-store';
@@ -60,7 +61,7 @@ interface ConfigurationManagerCreateArgs {
 	mode?: string;
 }
 interface ErrorMap {
-	[key: string]: ValidError;
+	[key: string]: ValidationError;
 }
 
 const base64 = b64encode;
@@ -116,6 +117,7 @@ export class ConfigurationManager {
 	 * @param {string} value: Property value
 	 * @returns {boolean}
 	 */
+	/*
 	private static validateProperty({
 		jsonSchema,
 		name,
@@ -143,6 +145,7 @@ export class ConfigurationManager {
 		}
 		throw schemaErrors.errors[0];
 	}
+	*/
 
 	private readonly configManifest: ConfigManifest;
 	private readonly mode: string;
@@ -166,6 +169,7 @@ export class ConfigurationManager {
 	 * @param {object} jsonSchema
 	 * @returns {Promise<inquirer.Answers>}
 	 */
+	/*
 	public async inquireProperties({ jsonSchema }: { jsonSchema: object }) {
 		const ret: inquirer.Answers = {};
 		// Shallow property list inquiring (shallow when validation). This will be replaced by ReconFix.
@@ -187,6 +191,7 @@ export class ConfigurationManager {
 		}
 		return ret;
 	}
+	*/
 
 	/**
 	 * Inquires a single property, as defined in JsonSchema
@@ -194,6 +199,7 @@ export class ConfigurationManager {
 	 * @param {string} name
 	 * @returns {Promise<any>}
 	 */
+	/*
 	public async inquire({
 		jsonSchema,
 		name,
@@ -252,6 +258,7 @@ export class ConfigurationManager {
 			return await inquirer.prompt([question]);
 		}
 	}
+	*/
 
 	/**
 	 * Syncs a single property
@@ -260,6 +267,7 @@ export class ConfigurationManager {
 	 * @param {string} name
 	 * @returns {Promise<void>}
 	 */
+	/*
 	public async syncProperty({
 		jsonSchema,
 		validationError,
@@ -296,6 +304,7 @@ export class ConfigurationManager {
 			}
 		}
 	}
+	*/
 
 	/**
 	 * Syncs config-store with config-manifest returning a ConfigMap of result configuration
@@ -304,6 +313,17 @@ export class ConfigurationManager {
 	public async sync(): Promise<ConfigMap> {
 		const invalidProperties = this.validateConfigMap();
 		const jsonSchema = this.configManifest.JSONSchema();
+
+		if (_.size(invalidProperties) > 0) {
+			let errorString =
+				'Required properties are missing from the config store:\n';
+			for (const property in invalidProperties) {
+				errorString += `  - ${invalidProperties[property].property}\n`;
+			}
+			throw new ConfigStoreError(errorString);
+		}
+
+		/*
 		for (const name of keys(invalidProperties)) {
 			await this.syncProperty({
 				jsonSchema,
@@ -315,6 +335,7 @@ export class ConfigurationManager {
 			throw new NotImplementedError('edit mode not implemented yet');
 			// TODO: Invoke configuration interactive editor
 		}
+		*/
 		return await this.configStore.updateMany(this.configMap);
 	}
 
@@ -330,7 +351,7 @@ export class ConfigurationManager {
 		});
 		return reduce(
 			errors,
-			(result: any, e: ValidError) => {
+			(result: any, e: ValidationError) => {
 				result[replace(e.property, /^instance\./g, '')] = e;
 				return result;
 			},

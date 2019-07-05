@@ -22,7 +22,7 @@ import { getTestFile, getTestDir } from '../files';
 
 const { expect, should } = chai;
 
-describe('config-manifest', () => {
+describe('config-validator', () => {
 	it('should use a valid config manifest to test against an invalid config map', async () => {
 		// Read invalid config manifest YAML
 		const configManifestObj = await ConfigManifest.create(

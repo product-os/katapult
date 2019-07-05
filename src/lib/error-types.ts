@@ -57,3 +57,9 @@ export class ValidationError extends TypedError {
 		this.schema = schema;
 	}
 }
+
+export class ConfigStoreError extends TypedError {
+	constructor(message: string) {
+		super(message);
+	}
+}
