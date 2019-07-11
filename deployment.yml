@@ -1,0 +1,113 @@
+kind: Deployment
+apiVersion: apps/v1beta2
+metadata:
+  name: registry2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: registry2
+  template:
+    metadata:
+      labels:
+        component: registry2
+    spec:
+      imagePullSecrets:
+        -
+          name: pull-secret
+      hostNetwork: false
+      containers:
+        -
+          name: registry2
+          image: 'resin/resin-registry2:VERSION'
+          imagePullPolicy: Always
+          ports:
+            -
+              name: defaultport
+              containerPort: 80
+          volumeMounts:
+            -
+              name: cgroup
+              mountPath: /sys/fs/cgroup
+          securityContext:
+            capabilities:
+              add:
+                - SYS_RESOURCE
+          env:
+            -
+              name: REGISTRY2_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: registry2-master
+                  key: REGISTRY2_HOST
+            -
+              name: TOKENAUTH_REALM
+              valueFrom:
+                configMapKeyRef:
+                  name: registry2-master
+                  key: TOKENAUTH_REALM
+            -
+              name: TOKENAUTH_ISSUER
+              valueFrom:
+                configMapKeyRef:
+                  name: registry2-master
+                  key: TOKENAUTH_ISSUER
+            -
+              name: REGISTRY2_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: registry2-master
+                  key: REGISTRY2_S3_BUCKET
+            -
+              name: COMMON_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: registry2-master
+                  key: COMMON_REGION
+            -
+              name: REGISTRY2_STORAGEPATH
+              valueFrom:
+                configMapKeyRef:
+                  name: registry2-master
+                  key: REGISTRY2_STORAGEPATH
+            -
+              name: CONFD_BACKEND
+              valueFrom:
+                configMapKeyRef:
+                  name: registry2-master
+                  key: CONFD_BACKEND
+            -
+              name: REGISTRY2_SECRETKEY
+              valueFrom:
+                secretKeyRef:
+                  name: registry2-master
+                  key: REGISTRY2_SECRETKEY
+            -
+              name: REGISTRY2_S3_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: registry2-master
+                  key: REGISTRY2_S3_KEY
+            -
+              name: REGISTRY2_S3_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: registry2-master
+                  key: REGISTRY2_S3_SECRET
+            -
+              name: API_TOKENAUTH_CRT
+              valueFrom:
+                secretKeyRef:
+                  name: registry2-master
+                  key: API_TOKENAUTH_CRT
+            -
+              name: LOGENTRIES_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: registry2-master
+                  key: LOGENTRIES_TOKEN
+      volumes:
+        -
+          name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup

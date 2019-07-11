@@ -1,0 +1,12 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: registry2-master
+data:
+  REGISTRY2_HOST: registry2.resindev.io
+  TOKENAUTH_REALM: 'https://api.resindev.io/auth/v1/token'
+  TOKENAUTH_ISSUER: api.resindev.io
+  REGISTRY2_S3_BUCKET: ""
+  COMMON_REGION: devenv
+  REGISTRY2_STORAGEPATH: /data
+  CONFD_BACKEND: ENV

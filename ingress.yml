@@ -1,0 +1,22 @@
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: registry2
+  annotations:
+     nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+spec:
+  tls:
+    -
+      secretName: registry2-defaultport-tls
+      hosts:
+        - registry2.resindev.io
+  rules:
+    -
+      host: registry2.resindev.io
+      http:
+        paths:
+          -
+            path: /
+            backend:
+              serviceName: registry2
+              servicePort: 80
