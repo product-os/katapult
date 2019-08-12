@@ -19,7 +19,7 @@ export const fromDirectory = async (
 		const stats = await fs.stat(filePath);
 
 		if (stats.isFile()) {
-			files[fp] = (await fs.readFile(filePath)).toString();
+			files[fp] = await fs.readFile(filePath, 'utf8');
 		} else if (stats.isDirectory()) {
 			const { files: directoryFiles } = await fromDirectory(filePath);
 

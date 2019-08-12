@@ -27,16 +27,6 @@ export interface BastionTarget {
 	bastion?: Bastion;
 }
 
-// export declare interface KubernetesDeployTargetAccess extends BastionTarget {
-// 	namespace: string;
-// 	endpoint: string;
-// 	kubeConfigPath: string;
-// }
-
-// export declare interface DockerDeployTargetAccess extends BastionTarget {
-// 	socket: string;
-// }
-
 export interface KubernetesConfigStoreAccess extends BastionTarget {
 	namespace: string;
 	endpoint: string;
@@ -51,41 +41,8 @@ export interface YamlConfigStoreAccess extends BastionTarget {
 	path: string;
 }
 
-// export declare interface DeployTargetAccess {
-// 	kubernetes?: KubernetesDeployTargetAccess;
-// 	compose?: DockerDeployTargetAccess;
-// }
-
 export interface ConfigStoreAccess {
 	envFile?: EnvConfigStoreAccess;
 	kubernetes?: KubernetesConfigStoreAccess;
 	yamlFile?: YamlConfigStoreAccess;
 }
-
-// export declare interface Environment {
-// 	productRepo: string;
-// 	archiveStore: string;
-// 	deployTarget: DeployTargetAccess;
-// 	configStore: ConfigStoreAccess;
-// 	encryptionKeyPath: string;
-// }
-
-// export declare interface BastionConfiguration {
-// 	host: string;
-// 	port?: string;
-// 	localPort?: string;
-// 	username: string;
-// }
-
-// export declare interface ConfigStoreAccessConfiguration {
-// 	type: string;
-// 	endpoint?: string;
-// 	namespace?: string;
-// 	envFile?: string;
-// 	bastion?: BastionConfiguration;
-// }
-
-// export declare interface KatapultFile {
-// 	version: string;
-// 	'config-store': ConfigStoreAccessConfiguration;
-// }

@@ -17,49 +17,18 @@ limitations under the License.
 import { TypedError } from 'typed-error';
 import { ConfigManifestItem } from './controllers/config-manifest/config-manifest-schema';
 
-export class ConfigStoreAdapterError extends TypedError {
-	constructor(message: string) {
-		super(message);
-	}
-}
-
-export class NotImplementedError extends TypedError {
-	constructor(message: string) {
-		super(message);
-	}
-}
-
-export class UnsupportedError extends TypedError {
-	constructor(message: string) {
-		super(message);
-	}
-}
-
-export class FileLoadError extends TypedError {
-	constructor(message: string) {
-		super(message);
-	}
-}
-
-export class URILoadError extends TypedError {
-	constructor(message: string) {
-		super(message);
-	}
-}
-
+export class ConfigStoreAdapterError extends TypedError {}
+export class ConfigStoreError extends TypedError {}
+export class FileLoadError extends TypedError {}
+export class NotImplementedError extends TypedError {}
 export class ValidationError extends TypedError {
-	public property: string;
-	public schema: ConfigManifestItem;
-
-	constructor(message: string, property: string, schema: ConfigManifestItem) {
-		super(message);
-		this.property = property;
-		this.schema = schema;
-	}
-}
-
-export class ConfigStoreError extends TypedError {
-	constructor(message: string) {
+	constructor(
+		message: string,
+		public property: string,
+		public schema: ConfigManifestItem,
+	) {
 		super(message);
 	}
 }
+export class UnsupportedError extends TypedError {}
+export class URILoadError extends TypedError {}

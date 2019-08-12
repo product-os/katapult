@@ -13,13 +13,14 @@ describe('frame-template', () => {
 		const ft = await frameTemplate.fromDirectory(frameTemplateDir);
 
 		// check some basics...
-		expect(Object.keys(ft.files)).length(1);
+		expect(Object.keys(ft.files)).to.have.lengthOf(1);
 		expect(ft.files['docker-compose.yml']).is.not.undefined;
 
 		// get the content of a file...
-		const dockerCompose = (await fs.readFile(
+		const dockerCompose = await fs.readFile(
 			path.join(frameTemplateDir, 'docker-compose.yml'),
-		)).toString();
+			'utf8',
+		);
 
 		// check the FrameTemplate version matches it...
 		expect(ft.files['docker-compose.yml']).to.equal(dockerCompose);

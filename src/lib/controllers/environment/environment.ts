@@ -22,7 +22,7 @@ export const loadEnvironment = async (
 	environmentPath: string,
 ): Promise<EnvironmentContext> => {
 	let environmentFile: string;
-	if (fs.statSync(environmentPath).isDirectory()) {
+	if ((await fs.stat(environmentPath)).isDirectory()) {
 		environmentFile = path.join(environmentPath, 'environment.yml');
 	} else {
 		environmentFile = environmentPath;

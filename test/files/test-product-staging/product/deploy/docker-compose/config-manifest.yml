@@ -2,5 +2,5 @@
 version: "1"
 title: Docker-Compose Config manifest
 properties:
-  - DOCKER_HOST:
-      type: string
+  DOCKER_HOST:
+    type: string

@@ -50,7 +50,7 @@ export function getAbsolutePath(path: string, basePath: string): string {
 export function getAbsoluteUri(uri: string, basePath: string): string {
 	if (isValidGitUri(uri)) {
 		throw new NotImplementedError('Git URI support not implemented yet');
-	} else if (localPathUri(uri)) {
+	} else if (isLocalPathUri(uri)) {
 		return getAbsolutePath(uri, basePath);
 	} else {
 		throw new UnsupportedError('URI type not supported yet');
@@ -80,9 +80,7 @@ export async function loadFromFile(
  * @returns {boolean}
  */
 export function isValidGitUri(uri: string): boolean {
-	return /((git|ssh|http|https)|(git@[\w\.]+))(:(\/\/)?)([\w\.@\:/\-]+)/.test(
-		uri,
-	);
+	return /(?:git|ssh|http|https|git@[\w\.]+):(?:\/\/)?[\w\.@\:/\-]+/.test(uri);
 }
 
 /**
@@ -90,8 +88,8 @@ export function isValidGitUri(uri: string): boolean {
  * @param {string} uri
  * @returns {boolean}
  */
-export function localPathUri(uri: string): boolean {
-	return /^([a-zA-Z0-9_/\-.])+$/.test(uri);
+export function isLocalPathUri(uri: string): boolean {
+	return /^[a-zA-Z0-9_/\-.]+$/.test(uri);
 }
 
 /**
@@ -114,7 +112,7 @@ export async function loadFromUri({
 	if (isValidGitUri(uri)) {
 		throw new UnsupportedError('Git URI support not implemented yet');
 	}
-	if (localPathUri(uri)) {
+	if (isLocalPathUri(uri)) {
 		return await loadFromFile(join(uri, path), errorMessage);
 	}
 	throw new URILoadError(`Error loading ${path} from ${uri}`);
@@ -182,7 +180,7 @@ export async function readFromUri({
 	// TODO: support git URI
 	if (isValidGitUri(uri)) {
 		throw new UnsupportedError('Git URI support not implemented yet');
-	} else if (localPathUri(uri)) {
+	} else if (isLocalPathUri(uri)) {
 		return (await fs.readFile(join(uri, path))).toString('utf8');
 	} else {
 		throw new UnsupportedError('URI type not supported yet');
@@ -208,7 +206,7 @@ export async function listUri({
 	// TODO: support git URI
 	if (isValidGitUri(uri)) {
 		throw new UnsupportedError('Git URI support not implemented yet');
-	} else if (localPathUri(uri)) {
+	} else if (isLocalPathUri(uri)) {
 		return await fs.readdir(join(uri, path));
 	} else {
 		throw new UnsupportedError('URI type not supported yet');
@@ -229,18 +227,19 @@ export async function unwrapKeyframe(
 	// TODO: keyframe layering
 	let keyFrame = await loadFromUri({ uri: productRepoURI, path: keyFramePath });
 
-	if (keyFrame) {
-		keyFrame = _.filter(
-			_.get(keyFrame, ['children', 'sw', 'containerized-application'], []),
-			component => component.type === 'sw.containerized-application',
-		);
-		keyFrame = _.mapValues(_.keyBy(keyFrame, 'slug'), o =>
-			_.merge(_.get(o, 'assets', {}), { version: _.get(o, 'version') }),
-		);
-		return keyFrame;
-	} else {
+	if (!keyFrame) {
 		return {};
 	}
+
+	keyFrame = _.filter(
+		_.get(keyFrame, ['children', 'sw', 'containerized-application'], []),
+		component => component.type === 'sw.containerized-application',
+	);
+	keyFrame = _.mapValues(_.keyBy(keyFrame, 'slug'), (o: any) => {
+		// _.merge(_.get(o, 'assets', {}), { version: _.get(o, 'version') }),
+		return { ...o.assets, version: o.version };
+	});
+	return keyFrame;
 }
 
 /**
@@ -252,7 +251,7 @@ export async function unwrapKeyframe(
  */
 export async function runInTunnel(
 	tnlConfig: tunnel.Config,
-	prom: Promise<any>,
+	prom: () => Promise<any>,
 	timeout: number,
 ): Promise<any> {
 	const tnl = await tunnelAsync(tnlConfig);
@@ -260,7 +259,7 @@ export async function runInTunnel(
 		tnl.close();
 		throw new TimeoutError('Timeout exceeded');
 	}, timeout);
-	return prom.then((ret: any) => {
+	return prom().then((ret: any) => {
 		clearTimeout(wait);
 		if (tnl) {
 			tnl.close();

@@ -42,14 +42,14 @@ export function validateConfig(
 	const schemaProperties = configManifestSchema.properties;
 	const configMap = validatorArgs.configMap;
 	const errors: ValidationError[] = [];
-	schemaProperties.forEach(property => {
+	for (const propertyName of _.keysIn(schemaProperties)) {
 		// We know there's only a single keyname, as the manifest schema is validated
-		const propertyName = _.keys(property)[0];
+		// const propertyName = _.keys(property);
 		const configValue = _.get(configMap, propertyName);
-		const configType = property[propertyName].type;
+		const configType = schemaProperties[propertyName].type;
 		// TBD: Add extra checking based on schema types based on propertyName
 		if (!configValue && !_.endsWith(configType, '?')) {
-			const propertySchema = property[propertyName];
+			const propertySchema = schemaProperties[propertyName];
 			errors.push(
 				new ValidationError(
 					'Missing property in config map',
@@ -58,7 +58,8 @@ export function validateConfig(
 				),
 			);
 		}
-	});
+	}
+
 	if (validatorArgs.throwErrors) {
 		throw errors;
 	}

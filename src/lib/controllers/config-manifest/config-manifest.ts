@@ -17,9 +17,13 @@ import * as Ajv from 'ajv';
 import * as _ from 'lodash';
 
 import { loadFromUri } from '../../tools';
-import { ConfigManifestSchema } from './config-manifest-schema';
+import {
+	ConfigManifestSchema,
+	ConfigManifestKeys,
+} from './config-manifest-schema';
 import { path } from 'temp';
 import { fs } from 'mz';
+import { type } from 'os';
 // tslint:disable-next-line:no-var-requires
 const configManifestSchemaJson = require('../../../../schemas/config-manifest-schema.json');
 
@@ -37,8 +41,17 @@ export type NameValueCollection = { [propName: string]: any };
 export type ConfigManifestRaw = {
 	version: string;
 	title: string;
-	properties: NameValueCollection[];
+	properties: ConfigManifestKeys;
 };
+
+export class InvalidManifestSchemaError extends Error {
+	public errors: Ajv.ErrorObject[];
+
+	constructor(errors: Ajv.ErrorObject[] | null = []) {
+		super('Invalid manifest schema');
+		this.errors = errors === null ? [] : errors;
+	}
+}
 
 export class ConfigManifest {
 	/**
@@ -51,7 +64,6 @@ export class ConfigManifest {
 		productRepoURI: string,
 		paths: string[] = [],
 	): Promise<ConfigManifest> {
-		// TODO: support configManifest layering
 		if (paths.length === 0) {
 			paths = ['config-manifest.yml'];
 		}
@@ -162,9 +174,7 @@ export class ConfigManifest {
 
 				if (key === 'properties') {
 					for (const el of _.keys(val)) {
-						if (_.isObject(el)) {
-							ConfigManifest.traverse(el);
-						}
+						ConfigManifest.traverse(el);
 					}
 				}
 				ConfigManifest.traverse(obj[key]);
@@ -172,7 +182,7 @@ export class ConfigManifest {
 		});
 	}
 
-	private readonly schema: object;
+	private readonly schema: object & { schema: ConfigManifestRaw };
 
 	/**
 	 * ConfigManifest constructor
@@ -180,24 +190,10 @@ export class ConfigManifest {
 	 */
 	public constructor(schemas: { schema: ConfigManifestRaw }[]) {
 		// get all the properties by manifest..
-		const propertiesByManifest: NameValueCollection[] = _.chain(schemas)
-			.map(schema =>
-				_.chain(schema.schema.properties)
-					.keyBy((p: NameValueCollection) => Object.getOwnPropertyNames(p)[0])
-					.mapValues((p, k) => p[k])
-					.value(),
-			)
-			.value();
+		const allProperties = _.map(schemas, s => s.schema.properties);
 
 		// merge the properies...
-		const properties = _.map(
-			_.assignIn({}, ...propertiesByManifest),
-			(p, k) => {
-				return {
-					[k]: p,
-				};
-			},
-		);
+		const properties = _.assignIn<ConfigManifestKeys>({}, ...allProperties);
 
 		// store the schema...
 		this.schema = {
@@ -221,13 +217,11 @@ export class ConfigManifest {
 	}
 
 	public getConfigManifestSchema(): ConfigManifestSchema {
-		const schema: any = _.cloneDeep(this.schema);
+		const schema = _.cloneDeep(this.schema);
 
 		// Validate against the schema that we have
 		if (!configManifestSchema(schema.schema)) {
-			throw new Error(
-				`Invalid manifest schema:\n${configManifestSchema.errors}`,
-			);
+			throw new InvalidManifestSchemaError(configManifestSchema.errors);
 		}
 
 		// This returned object can now be used as the manifest to test against

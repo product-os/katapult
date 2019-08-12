@@ -83,10 +83,6 @@ export class KubernetesConfigStore implements ConfigStore {
 		return new KubernetesConfigStore(access, client, tnlConfig);
 	}
 
-	readonly access: ConfigStoreAccess;
-	readonly tnlConfig: tunnel.Config | null;
-	private client: ApiClient;
-
 	/**
 	 * KubernetesConfigStoreAdapter constructor
 	 * @param {ConfigStoreAccess} access
@@ -94,14 +90,10 @@ export class KubernetesConfigStore implements ConfigStore {
 	 * @param {tunnel.Config | null} tnlConfig
 	 */
 	public constructor(
-		access: ConfigStoreAccess,
-		client: any,
-		tnlConfig: tunnel.Config | null,
-	) {
-		this.access = access;
-		this.tnlConfig = tnlConfig;
-		this.client = client;
-	}
+		public readonly access: ConfigStoreAccess,
+		private readonly client: any,
+		public readonly tnlConfig: tunnel.Config | null,
+	) {}
 
 	/**
 	 * Returns kubernetes ConfigStore ConfigMap
@@ -109,7 +101,7 @@ export class KubernetesConfigStore implements ConfigStore {
 	 */
 	async list(): Promise<ConfigMap> {
 		if (_.get(this.access.kubernetes, 'bastion') && this.tnlConfig) {
-			return await runInTunnel(this.tnlConfig, this.listSecretsVars(), 300000);
+			return await runInTunnel(this.tnlConfig, this.listSecretsVars, 300000);
 		}
 		return await this.listSecretsVars();
 	}
@@ -203,7 +195,7 @@ export class KubernetesConfigStore implements ConfigStore {
 		if (_.get(this.access.kubernetes, 'bastion') && this.tnlConfig) {
 			return await runInTunnel(
 				this.tnlConfig,
-				this.updateSecretsConfigMap(envvars),
+				() => this.updateSecretsConfigMap(envvars),
 				300000,
 			);
 		}
@@ -220,12 +212,8 @@ export class KubernetesConfigStore implements ConfigStore {
 	async updateExistingSecret({
 		name,
 		value,
-		secrets,
+		secrets = this.getOpaqueSecrets(),
 	}: UpdateSecretArgs): Promise<boolean> {
-		if (!secrets) {
-			secrets = this.getOpaqueSecrets();
-		}
-
 		for (const secret of secrets) {
 			const secretValue = _.get(secret.data, name);
 			if (secretValue) {

@@ -113,13 +113,6 @@ export class ConfigurationManager {
 			configManifest: this.configManifest,
 			throwErrors: false,
 		});
-		return reduce(
-			errors,
-			(result: any, e: ValidationError) => {
-				result[replace(e.property, /^instance\./g, '')] = e;
-				return result;
-			},
-			{} as ErrorMap,
-		);
+		return _.mapKeys(errors, e => replace(e.property, /^instance\./g, ''));
 	}
 }

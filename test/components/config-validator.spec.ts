@@ -70,6 +70,6 @@ describe('config-validator', () => {
 			throwErrors: false,
 		});
 
-		expect(errors.length).to.equal(0);
+		expect(errors).to.be.empty;
 	});
 });

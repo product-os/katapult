@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { ConfigMap } from '../../config-store/config-store';
 import { Frame, createFrame } from '../../frame/frame';
 import { FrameTemplate } from '..';
@@ -21,8 +22,8 @@ export const prepareRenderer = (
 		renderTemplate: (template: FrameTemplate) => {
 			const frame = createFrame();
 
-			Object.keys(template.files).forEach(
-				path => (frame.files[path] = render(template.files[path], configMap)),
+			frame.files = _.mapValues(template.files, file =>
+				render(file, configMap),
 			);
 
 			return frame;

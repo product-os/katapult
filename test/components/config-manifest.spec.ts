@@ -28,7 +28,10 @@ describe('config-manifest', () => {
 		);
 
 		// Request the native object manifest - should error
-		expect(() => configManifestObj.getConfigManifestSchema()).to.throw();
+		expect(() => configManifestObj.getConfigManifestSchema())
+			.to.throw('Invalid manifest schema')
+			.that.has.property('errors')
+			.that.has.length.greaterThan(0);
 	});
 
 	it('should read a valid config manifest and return it', async () => {
@@ -44,12 +47,11 @@ describe('config-manifest', () => {
 		// Test for expected version, title and properties
 		expect(configManifest)
 			.to.have.property('version')
-			.equal('1');
+			.that.equals('1');
 		expect(configManifest)
 			.to.have.property('title')
 			.equal('Config manifest');
-		expect(configManifest)
-			.to.have.property('properties')
-			.that.has.length(4);
+		expect(configManifest).to.have.property('properties');
+		expect(Object.keys(configManifest.properties)).to.have.lengthOf(4);
 	});
 });

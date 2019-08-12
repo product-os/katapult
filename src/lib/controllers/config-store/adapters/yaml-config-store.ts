@@ -64,7 +64,7 @@ export class YamlConfigStore implements ConfigStore {
 	 * @returns {Promise<ConfigMap>}
 	 */
 	async updateMany(changes: ConfigMap): Promise<ConfigMap> {
-		this.write(changes);
+		await this.write(changes);
 		return changes;
 	}
 
@@ -72,7 +72,7 @@ export class YamlConfigStore implements ConfigStore {
 	 * Writes yaml config-store file
 	 * @param {ConfigMap} config
 	 */
-	private write(config: ConfigMap): void {
-		return fs.writeFileSync(this.access.path, yaml.stringify(config, 4));
+	private async write(config: ConfigMap) {
+		return await fs.writeFile(this.access.path, yaml.stringify(config, 4));
 	}
 }

@@ -11,7 +11,7 @@
 export interface ConfigManifestSchema {
 	version: string;
 	title: string;
-	properties: ConfigManifestKeys[];
+	properties: ConfigManifestKeys;
 }
 export interface ConfigManifestKeys {
 	[k: string]: ConfigManifestItem;
