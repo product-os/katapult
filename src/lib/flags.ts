@@ -15,7 +15,7 @@ export const outputPath = flags.string({
 
 export const target = flags.string({
 	description: 'Which target to use.',
-	options: ['docker-compose'],
+	options: ['docker-compose', 'kubernetes'],
 	required: true,
 	char: 't',
 });

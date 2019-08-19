@@ -1,0 +1,58 @@
+# Main config schema for the product (test-product)
+version: "1"
+title: Config manifest
+properties:
+  VERSION:
+    type: string
+    description: >-
+      The version of the open-balena-registry image to use
+  REGISTRY2_HOST:
+    type: string
+    description: >-
+      The hostname of the registry
+  TOKENAUTH_REALM:
+    type: string
+    description: >-
+      The realm used for the token validation
+  TOKENAUTH_ISSUER:
+    type: string
+    description: >-
+      The domain of the token issuer
+  REGISTRY2_S3_BUCKET:
+    type: string?
+    description: >-
+      The bucket name to store images in
+  COMMON_REGION:
+    type: string
+    description: >-
+      The S3 region to connect to
+  REGISTRY2_STORAGEPATH:
+    type: string
+    description: >-
+      The path on the filesystem to store images to
+  CONFD_BACKEND:
+    type: string
+    description: >-
+      Where confd should look for values
+  
+  REGISTRY2_SECRETKEY:
+    type: string?
+    description: >-
+      Something
+  REGISTRY2_S3_KEY:
+    type: string?
+    description: >-
+      The S3 access key
+  REGISTRY2_S3_SECRET:
+    type: string?
+    description: >-
+      The S3 secret key
+  API_TOKENAUTH_CRT:
+    type: string?
+    description: >-
+      The certificate to validate the signed token
+  LOGENTRIES_TOKEN:
+    type: string?
+    description: >-
+      The API token to use logentries
+  
