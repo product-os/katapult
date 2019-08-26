@@ -28,7 +28,10 @@ import {
 	loadEnvironment,
 	EnvironmentContext,
 } from '../lib/controllers/environment/environment';
-import { filesystemExportAdapter } from '../lib/controllers/frame/adapter/filesystem';
+import {
+	filesystemExportAdapter,
+	InvalidOutputDirectory,
+} from '../lib/controllers/frame/adapter/filesystem';
 import { mustacheRenderer } from '../lib/controllers/frame-template/renderer/mustache';
 import { ConfigStoreError } from '../lib/error-types';
 
@@ -103,8 +106,13 @@ export default class Generate extends Command {
 		);
 
 		const outputTo = path.normalize(path.join(flags.outputPath, flags.target));
-		fs.mkdirSync(outputTo, { recursive: true });
-		await filesystemExportAdapter(outputTo).export(frame);
+		try {
+			await filesystemExportAdapter(outputTo).export(frame);
+		} catch (e) {
+			console.error('Unable to export frame to the filesystem');
+			console.error(e);
+			this.exit(2);
+		}
 	}
 }
 

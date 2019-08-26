@@ -40,6 +40,38 @@ describe('generate', () => {
 		.exit(2)
 		.it('should exit with an error code 2 when missing required flags');
 
+	test
+		.stdout()
+		.command([
+			'generate',
+			'-e',
+			configDir,
+			'-o',
+			'/a-really-bad-directory',
+			'-t',
+			'docker-compose',
+		])
+		.exit(2)
+		.it(
+			'should exit with an error code 2 when the output directory is bad/missing',
+		);
+
+	test
+		.stdout()
+		.command([
+			'generate',
+			'-e',
+			configDir,
+			'-o',
+			'/tmp/this-doesnt-exist',
+			'-t',
+			'docker-compose',
+		])
+		.exit(2)
+		.it(
+			'should exit with an error code 2 when the output directory is bad/missing',
+		);
+
 	it('should generate a Frame from a valid product repo (docker-compose)', async () => {
 		expect(outputDir).to.not.equal('');
 		await Generate.run([

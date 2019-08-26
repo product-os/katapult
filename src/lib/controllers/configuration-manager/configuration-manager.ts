@@ -77,11 +77,16 @@ export class ConfigurationManager {
 	 * @param {ConfigurationManagerArgs} args
 	 */
 	public constructor(args: ConfigurationManagerArgs) {
-		const { configManifest, configStore, configMap, mode } = args;
+		const {
+			configManifest,
+			configStore,
+			configMap,
+			mode = 'interactive',
+		} = args;
 		this.configManifest = configManifest;
 		this.configStore = configStore;
 		this.configMap = configMap;
-		this.mode = mode || 'interactive';
+		this.mode = mode;
 	}
 
 	/**

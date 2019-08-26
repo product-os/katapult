@@ -24,6 +24,7 @@ import {
 import { path } from 'temp';
 import { fs } from 'mz';
 import { type } from 'os';
+import { Dictionary } from 'lodash';
 // tslint:disable-next-line:no-var-requires
 const configManifestSchemaJson = require('../../../../schemas/config-manifest-schema.json');
 
@@ -69,21 +70,19 @@ export class ConfigManifest {
 		}
 
 		const schemas = await Promise.all(
-			paths.map(
-				p =>
-					loadFromUri({
+			paths.map(async p => {
+				return {
+					schema: (await loadFromUri({
 						uri: productRepoURI,
 						path: p,
 						errorMessage:
 							'Unable to find config-manifest.yml. See documentation_link for more info.\n',
-					}) as Promise<ConfigManifestRaw>,
-			),
-		);
-		return new ConfigManifest(
-			schemas.map(schema => {
-				return { schema };
+					})) as ConfigManifestRaw,
+				};
 			}),
 		);
+
+		return new ConfigManifest(schemas);
 	}
 
 	/**
@@ -94,10 +93,11 @@ export class ConfigManifest {
 	private static applyWhenCondition(obj: any, key: string): void {
 		const properties = _.get(obj, key);
 		const conditions: any = {};
-		const anyOf: any = [];
+		const anyOf: any[] = [];
 		_.forIn(properties, function(val, key) {
-			if (_.includes(_.get(val, 'when'), '==')) {
-				const depArray = _.split(_.get(val, 'when'), '==');
+			const when = _.get(val, 'when');
+			if (_.includes(when, '==')) {
+				const depArray = _.split(when, '==');
 				const dependency = _.trim(depArray[0]);
 				const value = _.trim(depArray[1], `'" `);
 				if (!_.get(conditions, dependency, false)) {
@@ -110,8 +110,8 @@ export class ConfigManifest {
 			}
 		});
 
-		for (const requirements of _.values(conditions)) {
-			for (const requirement of _.values(requirements)) {
+		for (const requirements of conditions) {
+			for (const requirement of requirements) {
 				const conditionProperties: any = {};
 				for (const name of requirement) {
 					conditionProperties[name] = properties[name];
