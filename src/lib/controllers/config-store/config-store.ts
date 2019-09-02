@@ -17,10 +17,9 @@ import { ConfigStoreAccess } from '../environment';
 import { EnvConfigStore } from './adapters/env-config-store';
 import { KubernetesConfigStore } from './adapters/kubernetes-config-store';
 import { YamlConfigStore } from './adapters/yaml-config-store';
+import { Dictionary } from 'lodash';
 
-export interface ConfigMap {
-	[key: string]: any;
-}
+export type ConfigMap = Dictionary<any>;
 
 export interface ConfigStore {
 	/**

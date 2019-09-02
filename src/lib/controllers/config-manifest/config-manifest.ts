@@ -90,9 +90,9 @@ export class ConfigManifest {
 	 * @param obj
 	 * @param {string} key
 	 */
-	private static applyWhenCondition(obj: any, key: string): void {
+	private static applyWhenCondition(obj: Dictionary<any>, key: string): void {
 		const properties = _.get(obj, key);
-		const conditions: any = {};
+		const conditions: Dictionary<any> = {};
 		const anyOf: any[] = [];
 		_.forIn(properties, function(val, key) {
 			const when = _.get(val, 'when');
@@ -110,7 +110,7 @@ export class ConfigManifest {
 			}
 		});
 
-		for (const requirements of conditions) {
+		for (const requirements of _.keys(conditions)) {
 			for (const requirement of requirements) {
 				const conditionProperties: any = {};
 				for (const name of requirement) {
@@ -134,16 +134,12 @@ export class ConfigManifest {
 	 * @param obj
 	 */
 	private static traverse(obj: any) {
+		const test = (val: any): val is [any, ...any[]] =>
+			_.isArray(val) && val.length >= 1;
 		// Convert array of properties to object
 		_.forIn(obj, function(val, key) {
-			if (_.isArray(val) && key === 'properties') {
-				obj['properties'] = _.reduce(
-					val,
-					(o, v) => {
-						return _.merge(o, v);
-					},
-					{},
-				);
+			if (key === 'properties' && test(val)) {
+				obj['properties'] = _.merge(...(val as [any, ...any[]]));
 				ConfigManifest.applyWhenCondition(obj, key);
 				obj['additionalProperties'] = true;
 			}
