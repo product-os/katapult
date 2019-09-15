@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import * as fs from 'mz/fs';
-import * as yaml from 'yamljs';
+import { safeDump } from 'js-yaml';
 
 import { ConfigStoreAdapterError } from '../../../error-types';
 import { loadFromFile } from '../../../tools';
@@ -73,6 +73,6 @@ export class YamlConfigStore implements ConfigStore {
 	 * @param {ConfigMap} config
 	 */
 	private async write(config: ConfigMap) {
-		return await fs.writeFile(this.access.path, yaml.stringify(config, 4));
+		return await fs.writeFile(this.access.path, safeDump(config));
 	}
 }

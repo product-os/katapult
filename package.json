@@ -20,6 +20,7 @@
     "dhparam": "^2.0.0",
     "dotenv": "^7.0.0",
     "inquirer": "^6.3.1",
+    "js-yaml": "^3.13.1",
     "jsonschema": "^1.2.4",
     "kubernetes-client": "^7.0.1",
     "lodash": "^4.17.11",
@@ -35,8 +36,7 @@
     "tslib": "^1.9.3",
     "tunnel-ssh": "^4.1.4",
     "typed-error": "^3.1.0",
-    "validator": "^10.11.0",
-    "yamljs": "^0.3.0"
+    "validator": "^10.11.0"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1.21.3",
@@ -46,6 +46,7 @@
     "@types/chai": "^4.1.7",
     "@types/dotenv": "^6.1.1",
     "@types/fs-extra": "^7.0.0",
+    "@types/js-yaml": "^3.12.1",
     "@types/inquirer": "^6.0.1",
     "@types/mocha": "^5.2.6",
     "@types/mustache": "^0.8.32",
@@ -57,7 +58,6 @@
     "@types/pvutils": "0.0.1",
     "@types/tunnel-ssh": "^4.1.0",
     "@types/validator": "^10.11.0",
-    "@types/yamljs": "^0.2.30",
     "chai": "^4.2.0",
     "globby": "^8.0.2",
     "husky": "^2.2.0",

@@ -5,4 +5,15 @@ import { FrameTemplateRenderer } from './index';
 export const mustacheRenderer: FrameTemplateRenderer = (
 	content: string,
 	configMap: ConfigMap,
-) => mustache.render(content, configMap);
+) => {
+	configMap = {
+		...configMap,
+		...{
+			base64: () => (input: string, render: (i: any) => string) => {
+				return Buffer.from(render(input)).toString('base64');
+			},
+		},
+	};
+
+	return mustache.render(content, configMap);
+};

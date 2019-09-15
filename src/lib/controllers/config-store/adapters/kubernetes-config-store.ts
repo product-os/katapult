@@ -118,7 +118,7 @@ export class KubernetesConfigStore implements ConfigStore {
 		const ret: ConfigMap = {};
 		for (const secret of secrets.body.items) {
 			if (secret.type === 'Opaque') {
-				for (const name of _.keys(secret.data)) {
+				for (const name in secret.data) {
 					ret[name] =
 						secret.data[name] == null
 							? ''
@@ -217,9 +217,7 @@ export class KubernetesConfigStore implements ConfigStore {
 		for (const secret of secrets) {
 			const secretValue = _.get(secret.data, name);
 			if (secretValue) {
-				if (
-					value.toString() !== Buffer.from(secretValue, 'base64').toString()
-				) {
+				if (value !== Buffer.from(secretValue, 'base64').toString()) {
 					await this.patchSecret({
 						k8sSecretName: secret.metadata.name,
 						name,
@@ -272,7 +270,7 @@ export class KubernetesConfigStore implements ConfigStore {
 	async updateSecretsConfigMap(envvars: ConfigMap): Promise<ConfigMap> {
 		const secrets = await this.getOpaqueSecrets();
 		const envvarPairs = configMapToPairs(envvars);
-		for (const name of _.keys(envvarPairs)) {
+		for (const name in envvarPairs) {
 			await this.updateSecret({
 				name,
 				value: envvarPairs[name].toString(),

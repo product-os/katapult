@@ -1,6 +1,6 @@
-import * as yamljs from 'yamljs';
 import * as fs from 'mz/fs';
 import * as path from 'path';
+import { safeLoad } from 'js-yaml';
 
 export interface EnvFileConfigStoreDefinition {
 	path: string;
@@ -30,7 +30,7 @@ export const loadEnvironment = async (
 
 	const directory = path.dirname(environmentFile);
 	const yaml = await fs.readFile(environmentFile, 'utf8');
-	const environment = yamljs.parse(yaml) as Environment;
+	const environment = safeLoad(yaml) as Environment;
 
 	return {
 		directory,

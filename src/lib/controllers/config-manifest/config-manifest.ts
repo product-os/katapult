@@ -37,7 +37,6 @@ const configManifestSchema = ajv.compile(configManifestSchemaJson);
  */
 // WIP notes: Kept this only because it provides the ability to return either
 // 	a JSON schema or valid ConfigManifest at this point
-export type NameValueCollection = { [propName: string]: any };
 
 export type ConfigManifestRaw = {
 	version: string;
@@ -110,7 +109,7 @@ export class ConfigManifest {
 			}
 		});
 
-		for (const requirements of _.keys(conditions)) {
+		for (const requirements in conditions) {
 			for (const requirement of requirements) {
 				const conditionProperties: any = {};
 				for (const name of requirement) {
@@ -169,7 +168,7 @@ export class ConfigManifest {
 				}
 
 				if (key === 'properties') {
-					for (const el of _.keys(val)) {
+					for (const el in val) {
 						ConfigManifest.traverse(el);
 					}
 				}

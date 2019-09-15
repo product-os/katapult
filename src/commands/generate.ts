@@ -54,22 +54,22 @@ export default class Generate extends Command {
 		const { flags } = this.parse(Generate);
 
 		// get our directory context correct
-		const getRepoDirectory = (p: string) => {
-			if (fs.statSync(p).isDirectory()) {
+		const getEnvironmentDirectory = async (p: string) => {
+			if ((await fs.stat(p)).isDirectory()) {
 				return p;
 			}
 
 			return path.dirname(p);
 		};
 
-		const repoDir = getRepoDirectory(flags.environmentPath);
-		const productDir = path.join(repoDir, 'product');
+		const environmentDir = await getEnvironmentDirectory(flags.environmentPath);
+		const productDir = path.join(environmentDir, 'product');
 
 		// find the manifests to use...
 		const manifestFiles = [
 			'config-manifest.yml', // product-specific manifest
 			`deploy/${flags.target}/config-manifest.yml`, // target-specific manifest
-		].filter(p => fs.existsSync(path.join(productDir, p)));
+		].filter(async p => await fs.exists(path.join(productDir, p)));
 
 		// create a merged manifest...
 		const configManifest = await ConfigManifest.create(
@@ -78,7 +78,7 @@ export default class Generate extends Command {
 		);
 
 		// create a context for the environment...
-		const context = await loadEnvironment(repoDir);
+		const context = await loadEnvironment(environmentDir);
 
 		// create an Environment ConfigStore instance
 		const configStore = await getConfigStore(context);

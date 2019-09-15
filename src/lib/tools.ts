@@ -26,7 +26,7 @@ import {
 } from './error-types';
 
 import { TimeoutError } from 'bluebird';
-import * as yamljs from 'yamljs';
+import * as yaml from 'js-yaml';
 import { ConfigMap } from './controllers/config-store/config-store';
 
 export const tunnelAsync = Bluebird.promisify(tunnel);
@@ -68,7 +68,7 @@ export async function loadFromFile(
 	errorMessage: string = '',
 ): Promise<object> {
 	try {
-		return yamljs.parse(await fs.readFile(filePath, 'utf8'));
+		return yaml.safeLoad(await fs.readFile(filePath, 'utf8'));
 	} catch (e) {
 		throw new FileLoadError(errorMessage + e.message);
 	}
@@ -108,14 +108,11 @@ export async function loadFromUri({
 	path: string;
 	errorMessage?: string;
 }): Promise<object> {
-	// TODO: support git URI
-	if (isValidGitUri(uri)) {
-		throw new UnsupportedError('Git URI support not implemented yet');
+	if (!isLocalPathUri(uri)) {
+		throw new URILoadError(`Error loading ${path} from ${uri}`);
 	}
-	if (isLocalPathUri(uri)) {
-		return await loadFromFile(join(uri, path), errorMessage);
-	}
-	throw new URILoadError(`Error loading ${path} from ${uri}`);
+
+	return await loadFromFile(join(uri, path), errorMessage);
 }
 
 /**
@@ -141,15 +138,15 @@ export function convertRelativePaths({
 	basePath: string;
 }): any {
 	// Convert relative to absolute URIs
-	const keys = [
+	const keys: Array<_.PropertyPath> = [
 		'productRepo',
 		'archiveStore',
 		'encryptionKeyPath',
-		'envFile.path',
-		'yamlFile.path',
-		'kubernetes.kubeConfigPath',
-		'kubernetes.bastion.key',
-		'compose.socket',
+		['envFile', 'path'],
+		['yamlFile', 'path'],
+		['kubernetes', 'kubeConfigPath'],
+		['kubernetes', 'bastion', 'key'],
+		['compose', 'socket'],
 	];
 
 	for (const key of keys) {
@@ -171,20 +168,16 @@ export function convertRelativePaths({
 export async function readFromUri({
 	uri,
 	path,
-	cachePath,
 }: {
 	uri: string;
 	path: string;
 	cachePath?: string;
 }): Promise<string> {
-	// TODO: support git URI
-	if (isValidGitUri(uri)) {
-		throw new UnsupportedError('Git URI support not implemented yet');
-	} else if (isLocalPathUri(uri)) {
-		return (await fs.readFile(join(uri, path))).toString('utf8');
-	} else {
+	if (!isLocalPathUri(uri)) {
 		throw new UnsupportedError('URI type not supported yet');
 	}
+
+	return await fs.readFile(join(uri, path), 'utf8');
 }
 
 /**
@@ -197,20 +190,16 @@ export async function readFromUri({
 export async function listUri({
 	uri,
 	path,
-	cachePath,
 }: {
 	uri: string;
 	path: string;
 	cachePath?: string;
 }): Promise<string[]> {
-	// TODO: support git URI
-	if (isValidGitUri(uri)) {
-		throw new UnsupportedError('Git URI support not implemented yet');
-	} else if (isLocalPathUri(uri)) {
-		return await fs.readdir(join(uri, path));
-	} else {
+	if (!isLocalPathUri(uri)) {
 		throw new UnsupportedError('URI type not supported yet');
 	}
+
+	return await fs.readdir(join(uri, path));
 }
 
 /**
@@ -287,10 +276,8 @@ export function configMapToPairs(configMap: ConfigMap): ConfigMap {
 	}
 	traverse(configMap);
 	for (const keyPath of keyPaths) {
-		ret[_.replace(keyPath, new RegExp('\\.', 'g'), '___')] = _.get(
-			configMap,
-			keyPath,
-		);
+		// replace period (.) with ___
+		ret[_.replace(keyPath, /\./g, '___')] = _.get(configMap, keyPath);
 	}
 	return ret;
 }

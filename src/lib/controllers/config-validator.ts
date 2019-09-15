@@ -42,9 +42,8 @@ export function validateConfig(
 	const schemaProperties = configManifestSchema.properties;
 	const configMap = validatorArgs.configMap;
 	const errors: ValidationError[] = [];
-	for (const propertyName of _.keysIn(schemaProperties)) {
+	for (const propertyName in schemaProperties) {
 		// We know there's only a single keyname, as the manifest schema is validated
-		// const propertyName = _.keys(property);
 		const configValue = _.get(configMap, propertyName);
 		const configType = schemaProperties[propertyName].type;
 		// TBD: Add extra checking based on schema types based on propertyName

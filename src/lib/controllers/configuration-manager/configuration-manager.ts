@@ -34,9 +34,7 @@ interface ConfigurationManagerCreateArgs {
 	configMap?: ConfigMap;
 	mode?: string;
 }
-interface ErrorMap {
-	[key: string]: ValidationError;
-}
+type ErrorMap = _.Dictionary<ValidationError>;
 
 /**
  * ConfigurationManager class

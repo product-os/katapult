@@ -99,5 +99,9 @@ describe('frame-generator', () => {
 		expect(frame.files['docker-compose.yml']).contains(
 			'BALENA_TLD: fish.local',
 		);
+		expect(frame.files['docker-compose.yml']).contains(
+			'WEB_TOKEN_BASE64: ' +
+				Buffer.from('1234567890abcdef123456').toString('base64'),
+		);
 	});
 });

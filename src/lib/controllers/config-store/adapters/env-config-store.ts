@@ -44,7 +44,7 @@ export class EnvConfigStore implements ConfigStore {
 		}
 
 		this.access = {
-			path: access.envFile.path || 'env',
+			path: access.envFile.path,
 		};
 	}
 
@@ -82,7 +82,7 @@ export class EnvConfigStore implements ConfigStore {
 		const envvarPairs = configMapToPairs(envvars);
 		const conf = await this.listPairs();
 
-		for (const name of _.keys(envvarPairs)) {
+		for (const name in envvarPairs) {
 			conf[name] = envvarPairs[name];
 		}
 		await this.writeEnvFile(conf);
@@ -96,7 +96,7 @@ export class EnvConfigStore implements ConfigStore {
 	 */
 	private writeEnvFile(config: ConfigMap): Promise<void> {
 		let dotenvString = '';
-		for (const name of _.keys(config)) {
+		for (const name in config) {
 			dotenvString += `${name}="${config[name]}"\n`;
 		}
 
