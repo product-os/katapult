@@ -1,10 +1,12 @@
 import { Frame } from '../frame';
-import { filesystemExportAdapter } from './filesystem';
+import { filesystemDeployAdapter } from './filesystem';
+import { kubernetesDeployAdapter } from './kubernetes';
 
-export interface FrameExportAdapter {
-	export: (frame: Frame) => Promise<void>;
+export interface FrameDeployAdapter {
+	deploy: (frame: Frame) => Promise<void>;
 }
 
-export const exportAdapters = {
-	filesystem: filesystemExportAdapter,
+export const deployAdapters = {
+	filesystem: filesystemDeployAdapter,
+	kubernetes: kubernetesDeployAdapter,
 };

@@ -18,7 +18,7 @@ import * as _ from 'lodash';
 
 import { ConfigManifest } from '../../src/lib/controllers/config-manifest/config-manifest';
 import { createConfigStore } from '../../src/lib/controllers/config-store/config-store';
-import { EnvConfigStoreAccess } from '../../src/lib/controllers/environment';
+import { EnvConfigStoreAccess } from '../../src/lib/controllers/config-store';
 import { ConfigurationManager } from '../../src/lib/controllers/configuration-manager/configuration-manager';
 import { getTestDir } from '../files';
 

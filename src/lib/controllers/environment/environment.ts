@@ -6,10 +6,33 @@ export interface EnvFileConfigStoreDefinition {
 	path: string;
 }
 
+export interface KubernetesConfigStoreDefinition {
+	// kubeconfig: ... OR from ENV KATAPULT_KUBE_CONFIG
+	// endpoint: "https://fkjhfvbwfdjhvbdwsjvhb.com:443/abb1/" OR from ENV KATAPULT_KUBE_ENDPOINT
+	// bastion:
+	//   host: "1.2.3.4"   OR from ENV KATAPULT_BASTION_HOST
+	//   user: "bastion"   OR from ENV KATAPULT_BASTION_USER
+	//   key: "kjnackjnaskcjcnkj"   OR from ENV KATAPULT_BASTION_KEY
+	//   passphrase: "secret"   OR from ENV KATAPULT_BASTION_PASSPHRASE
+
+	kubeconfig?: string; // should be Base64
+	namespace?: string;
+	bastion?: {
+		apiHost?: string;
+		apiPort?: string;
+		host?: string;
+		port?: string;
+		user?: string;
+		key?: string;
+		passphrase?: string;
+	};
+}
+
 export interface Environment {
 	version: string;
 	'config-store': {
 		envfile?: EnvFileConfigStoreDefinition;
+		kubernetes?: KubernetesConfigStoreDefinition;
 	};
 }
 

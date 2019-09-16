@@ -13,33 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import {
-	ApiClient as ApiClientBase,
-	Client1_13 as Client,
-	config,
-} from 'kubernetes-client';
-
 import * as _ from 'lodash';
-import * as fs from 'mz/fs';
-import * as tunnel from 'tunnel-ssh';
 
-import {
-	configMapToPairs,
-	kvPairsToConfigMap,
-	runInTunnel,
-} from '../../../tools';
-import { ConfigStoreAccess } from '../../environment';
-
+import * as kubernetes from '../../../kubernetes';
+import { configMapToPairs, kvPairsToConfigMap } from '../../../tools';
+import { ConfigStoreAccess } from '../';
 import { ConfigMap, ConfigStore } from '../config-store';
-
-interface ApiVersion {
-	v1: any;
-}
-
-export interface ApiClient extends ApiClientBase {
-	api: ApiVersion;
-	loadSpec(): any;
-}
+import { fs } from 'mz';
+import temp = require('temp');
+import { PathLike } from 'fs';
 
 interface SecretOperationArgs {
 	k8sSecretName: string;
@@ -59,88 +41,86 @@ interface UpdateSecretArgs {
  */
 export class KubernetesConfigStore implements ConfigStore {
 	public static async create(access: ConfigStoreAccess) {
-		const kubeConfig = config.fromKubeconfig(
-			_.get(access.kubernetes, 'kubeConfigPath', './kube/config'),
-		);
-		const client = new Client({ config: kubeConfig });
-		let tnlConfig: tunnel.Config | null = null;
-		if (_.get(access.kubernetes, ['bastion', 'host'])) {
-			const privateKey = await fs.readFile(
-				_.get(access.kubernetes, ['bastion', 'key']),
-			);
-			tnlConfig = {
-				username: _.get(access.kubernetes, ['bastion', 'username']),
-				host: _.get(access.kubernetes, ['bastion', 'host']),
-				dstHost: _.get(access.kubernetes, 'endpoint', 'kubernetes'),
-				port: parseInt(_.get(access.kubernetes, ['bastion', 'port'], 22), 10),
-				dstPort: 443,
-				privateKey: privateKey.toString(),
-				localHost: '127.0.0.1',
-				localPort: 8443,
-				passphrase: _.get(access.kubernetes, ['bastion', 'keyPassword']),
+		if (access.kubernetes === undefined) {
+			throw new Error("This isn't a Kubernetes access config");
+		}
+
+		const kubeConfigStoreAccess: kubernetes.AccessConfig = {
+			kubeconfig: access.kubernetes.kubeconfig,
+			namespace: access.kubernetes.namespace,
+			bastion: undefined,
+		};
+
+		if (access.kubernetes.bastion !== undefined) {
+			kubeConfigStoreAccess.bastion = {
+				apiHost: access.kubernetes.bastion.apiHost,
+				apiPort: access.kubernetes.bastion.apiPort || 443,
+				sshHost: access.kubernetes.bastion.host,
+				sshPort: access.kubernetes.bastion.port || 22,
+				sshUser: access.kubernetes.bastion.username,
+				sshKey: Buffer.from(access.kubernetes.bastion.key, 'base64'),
+				sshKeyPassphrase: access.kubernetes.bastion.keyPassphrase,
 			};
 		}
-		return new KubernetesConfigStore(access, client, tnlConfig);
+
+		return new KubernetesConfigStore(kubeConfigStoreAccess);
 	}
 
-	/**
-	 * KubernetesConfigStoreAdapter constructor
-	 * @param {ConfigStoreAccess} access
-	 * @param client
-	 * @param {tunnel.Config | null} tnlConfig
-	 */
-	public constructor(
-		public readonly access: ConfigStoreAccess,
-		private readonly client: any,
-		public readonly tnlConfig: tunnel.Config | null,
-	) {}
+	constructor(public readonly accessConfig: kubernetes.AccessConfig) {}
 
 	/**
 	 * Returns kubernetes ConfigStore ConfigMap
 	 * @returns {Promise<ConfigMap>}
 	 */
 	async list(): Promise<ConfigMap> {
-		if (_.get(this.access.kubernetes, 'bastion') && this.tnlConfig) {
-			return await runInTunnel(this.tnlConfig, this.listSecretsVars, 300000);
-		}
 		return await this.listSecretsVars();
+	}
+
+	/**
+	 * Updates ConfigStore with envvars ConfigMap
+	 * @param {ConfigMap} envvars
+	 * @returns {Promise<ConfigMap>}
+	 */
+	async updateMany(envvars: ConfigMap): Promise<ConfigMap> {
+		return await this.updateSecretsConfigMap(envvars);
 	}
 
 	/**
 	 * Lists raw secrets pairs
 	 * @returns {Promise<ConfigMap>}
 	 */
-	async listSecretsVars(): Promise<ConfigMap> {
-		await this.client.loadSpec();
-		const secrets = await this.client.api.v1
-			.namespaces(_.get(this.access.kubernetes, 'namespace'))
-			.secrets.get();
-		const ret: ConfigMap = {};
-		for (const secret of secrets.body.items) {
-			if (secret.type === 'Opaque') {
-				for (const name in secret.data) {
-					ret[name] =
-						secret.data[name] == null
-							? ''
-							: Buffer.from(secret.data[name], 'base64').toString();
+	private async listSecretsVars(): Promise<ConfigMap> {
+		const access = await kubernetes.getKubernetesAccess(this.accessConfig);
+		return await access.begin(async function(client) {
+			const secrets = await client.api.v1
+				.namespaces(this.accessConfig.namespace)
+				.secrets.get();
+			const ret: ConfigMap = {};
+			for (const secret of secrets.body.items) {
+				if (secret.type === 'Opaque') {
+					for (const name in secret.data) {
+						ret[name] =
+							secret.data[name] == null
+								? ''
+								: Buffer.from(secret.data[name], 'base64').toString();
+					}
 				}
 			}
-		}
-		return kvPairsToConfigMap(ret);
+			return kvPairsToConfigMap(ret);
+		});
 	}
 
-	/**
-	 * Patch a k8s secret in ConfigStore
-	 * @param {string} k8sSecretName
-	 * @param {string} name
-	 * @param {string} value
-	 * @returns {Promise<void>}
-	 */
-	async patchSecret({
-		k8sSecretName,
-		name,
-		value,
-	}: SecretOperationArgs): Promise<void> {
+	// /**
+	//  * Patch a k8s secret in ConfigStore
+	//  * @param {string} k8sSecretName
+	//  * @param {string} name
+	//  * @param {string} value
+	//  * @returns {Promise<void>}
+	//  */
+	private async patchSecret(
+		client: any,
+		{ k8sSecretName, name, value }: SecretOperationArgs,
+	): Promise<void> {
 		const patchManifest = {
 			APIVersion: 'v1',
 			Kind: 'Secret',
@@ -152,24 +132,23 @@ export class KubernetesConfigStore implements ConfigStore {
 				[name]: Buffer.from(value).toString('base64'),
 			},
 		};
-		await this.client.api.v1
-			.namespaces(_.get(this.access.kubernetes, 'namespace'))
+		await client.api.v1
+			.namespaces(this.accessConfig.namespace)
 			.secrets(k8sSecretName)
 			.patch({ body: patchManifest });
 	}
 
-	/**
-	 * Put a k8s secret to ConfigStore
-	 * @param {string} k8sSecretName
-	 * @param {string} name
-	 * @param {string} value
-	 * @returns {Promise<void>}
-	 */
-	async putSecret({
-		k8sSecretName,
-		name,
-		value,
-	}: SecretOperationArgs): Promise<void> {
+	// /**
+	//  * Put a k8s secret to ConfigStore
+	//  * @param {string} k8sSecretName
+	//  * @param {string} name
+	//  * @param {string} value
+	//  * @returns {Promise<void>}
+	//  */
+	private async putSecret(
+		client: any,
+		{ k8sSecretName, name, value }: SecretOperationArgs,
+	): Promise<void> {
 		const postManifest = {
 			APIVersion: 'v1',
 			Kind: 'Secret',
@@ -181,44 +160,27 @@ export class KubernetesConfigStore implements ConfigStore {
 				[name]: Buffer.from(value).toString('base64'),
 			},
 		};
-		await this.client.api.v1
-			.namespaces(_.get(this.access.kubernetes, 'namespace'))
+		await client.api.v1
+			.namespaces(this.accessConfig.namespace)
 			.secrets.post({ body: postManifest });
 	}
 
-	/**
-	 * Updates ConfigStore with envvars ConfigMap
-	 * @param {ConfigMap} envvars
-	 * @returns {Promise<ConfigMap>}
-	 */
-	async updateMany(envvars: ConfigMap): Promise<ConfigMap> {
-		if (_.get(this.access.kubernetes, 'bastion') && this.tnlConfig) {
-			return await runInTunnel(
-				this.tnlConfig,
-				() => this.updateSecretsConfigMap(envvars),
-				300000,
-			);
-		}
-		return await this.updateSecretsConfigMap(envvars);
-	}
-
-	/**
-	 * Updates a secret if exists
-	 * @param {string} name
-	 * @param {string} value
-	 * @param secrets
-	 * @returns {Promise<boolean>} True if secret exists, otherwise False
-	 */
-	async updateExistingSecret({
-		name,
-		value,
-		secrets = this.getOpaqueSecrets(),
-	}: UpdateSecretArgs): Promise<boolean> {
+	// /**
+	//  * Updates a secret if exists
+	//  * @param {string} name
+	//  * @param {string} value
+	//  * @param secrets
+	//  * @returns {Promise<boolean>} True if secret exists, otherwise False
+	//  */
+	private async updateExistingSecret(
+		client: any,
+		{ name, value, secrets = this.getOpaqueSecrets(client) }: UpdateSecretArgs,
+	): Promise<boolean> {
 		for (const secret of secrets) {
 			const secretValue = _.get(secret.data, name);
 			if (secretValue) {
 				if (value !== Buffer.from(secretValue, 'base64').toString()) {
-					await this.patchSecret({
+					await this.patchSecret(client, {
 						k8sSecretName: secret.metadata.name,
 						name,
 						value,
@@ -230,53 +192,59 @@ export class KubernetesConfigStore implements ConfigStore {
 		return false;
 	}
 
-	/**
-	 * Updates a secret
-	 * @param {string} name
-	 * @param {string} value
-	 * @param {any} secrets
-	 * @returns {Promise<void>}
-	 */
-	async updateSecret({
-		name,
-		value,
-		secrets,
-	}: UpdateSecretArgs): Promise<void> {
+	// /**
+	//  * Updates a secret
+	//  * @param {string} name
+	//  * @param {string} value
+	//  * @param {any} secrets
+	//  * @returns {Promise<void>}
+	//  */
+	private async updateSecret(
+		client: any,
+		{ name, value, secrets }: UpdateSecretArgs,
+	): Promise<void> {
 		if (!secrets) {
-			secrets = this.getOpaqueSecrets();
+			secrets = this.getOpaqueSecrets(client);
 		}
-		if (!(await this.updateExistingSecret({ name, value, secrets }))) {
+		if (!(await this.updateExistingSecret(client, { name, value, secrets }))) {
 			const k8sSecretName = name.toLowerCase().replace(/_/g, '-');
-			await this.putSecret({ k8sSecretName, name, value });
+			await this.putSecret(client, { k8sSecretName, name, value });
 		}
 	}
 
-	/**
-	 * Gets Opaque secrets
-	 * @returns {Promise<any>}
-	 */
-	async getOpaqueSecrets(): Promise<any> {
-		const secrets = await this.client.api.v1
-			.namespaces(_.get(this.access.kubernetes, 'namespace'))
+	// /**
+	//  * Gets Opaque secrets
+	//  * @returns {Promise<any>}
+	//  */
+	private async getOpaqueSecrets(client: any): Promise<any> {
+		const secrets = await client.api.v1
+			.namespaces(this.accessConfig.namespace)
 			.secrets.get();
 		return _.filter(secrets.body.items, { type: 'Opaque' });
 	}
 
-	/**
-	 * Updates config-store secrets of envvars ConfigMap
-	 * @param {ConfigMap} envvars
-	 * @returns {Promise<ConfigMap>}
-	 */
-	async updateSecretsConfigMap(envvars: ConfigMap): Promise<ConfigMap> {
-		const secrets = await this.getOpaqueSecrets();
-		const envvarPairs = configMapToPairs(envvars);
-		for (const name in envvarPairs) {
-			await this.updateSecret({
-				name,
-				value: envvarPairs[name].toString(),
-				secrets,
+	private async updateSecretsConfigMap(envvars: ConfigMap): Promise<ConfigMap> {
+		const self = this;
+		const access = await kubernetes.getKubernetesAccess(this.accessConfig);
+
+		return await access.begin(async function(client) {
+			const opaqueSecretsResponse = await client.api.v1
+				.namespaces(this.accessConfig.namespace)
+				.secrets.get();
+
+			const opaqueSecrets = _.filter(opaqueSecretsResponse.body.items, {
+				type: 'Opaque',
 			});
-		}
-		return await this.listSecretsVars();
+
+			const envvarPairs = configMapToPairs(envvars);
+			for (const name in envvarPairs) {
+				await self.updateSecret(client, {
+					name,
+					value: envvarPairs[name].toString(),
+					secrets: opaqueSecrets,
+				});
+			}
+			return await self.listSecretsVars();
+		});
 	}
 }

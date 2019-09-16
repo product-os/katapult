@@ -18,7 +18,7 @@ import { safeDump } from 'js-yaml';
 
 import { ConfigStoreAdapterError } from '../../../error-types';
 import { loadFromFile } from '../../../tools';
-import { ConfigStoreAccess, YamlConfigStoreAccess } from '../../environment';
+import { ConfigStoreAccess, YamlConfigStoreAccess } from '../';
 
 import { ConfigMap, ConfigStore } from '../config-store';
 

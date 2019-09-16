@@ -13,36 +13,3 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // */
-
-export interface Bastion {
-	host: string;
-	port?: string;
-	localPort?: string;
-	username: string;
-	key: string;
-	keyPassword?: string;
-}
-
-export interface BastionTarget {
-	bastion?: Bastion;
-}
-
-export interface KubernetesConfigStoreAccess extends BastionTarget {
-	namespace: string;
-	endpoint: string;
-	kubeConfigPath: string;
-}
-
-export interface EnvConfigStoreAccess extends BastionTarget {
-	path: string;
-}
-
-export interface YamlConfigStoreAccess extends BastionTarget {
-	path: string;
-}
-
-export interface ConfigStoreAccess {
-	envFile?: EnvConfigStoreAccess;
-	kubernetes?: KubernetesConfigStoreAccess;
-	yamlFile?: YamlConfigStoreAccess;
-}

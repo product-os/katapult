@@ -1,0 +1,17 @@
+version: "3.0"
+services:
+  sshd:
+    build:
+      context: ./scripts/
+      dockerfile: Dockerfile.sshd
+    network_mode: host
+
+  tests:
+    build:
+      context: ../
+      dockerfile: ./test/scripts/Dockerfile.tests
+    depends_on:
+      - sshd
+    network_mode: host
+    environment:
+      - KATAPULT_KUBE_CONFIG

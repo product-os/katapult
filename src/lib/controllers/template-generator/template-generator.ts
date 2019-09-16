@@ -15,10 +15,10 @@ limitations under the License.
 */
 import * as _ from 'lodash';
 
-import { Frame } from '../frame/frame';
 import { TemplateGenerator } from './index';
 import { Keyframe } from '../keyframe/index';
 import { prepareRenderer, TemplateGeneratorRenderer } from './renderer/index';
+import { FrameTemplate } from '../frame-template';
 
 /**
  * generate
@@ -27,10 +27,10 @@ import { prepareRenderer, TemplateGeneratorRenderer } from './renderer/index';
  * from the config stores.
  */
 export async function generate(
-	frameTemplate: TemplateGenerator,
-	frameTemplateRenderer: TemplateGeneratorRenderer,
+	templateGenerator: TemplateGenerator,
+	templateGeneratorRenderer: TemplateGeneratorRenderer,
 	keyframe: Keyframe,
-): Promise<Frame> {
-	const templateRenderer = prepareRenderer(frameTemplateRenderer, keyframe);
-	return templateRenderer.renderTemplate(frameTemplate);
+): Promise<FrameTemplate> {
+	const preparedRenderer = prepareRenderer(templateGeneratorRenderer, keyframe);
+	return preparedRenderer.renderTemplate(templateGenerator);
 }
