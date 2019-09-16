@@ -29,66 +29,19 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`katapult deploy -e <environment_name> -t <target_name>`](#katapult-deploy-file)
-* [`katapult generate -e <environment_name> -t <target_name>`](#katapult-generate)
-* [`katapult help [COMMAND]`](#katapult-help-command)
-
-## `katapult deploy [FILE]`
-
-Generate and deploy Deploy Spec from environment configuration
-
-```
-USAGE
-  $ katapult deploy -e <environment_name> -t <target_name>
-
-OPTIONS
-  -c, --configuration=configuration            [default: ./] URI to deploy-template folder/repo
-  -e, --environment=environment                (required) Name of the selected environment
-  -k, --keyframe=keyframe                      [default: ./keyframe.yml] Path to keyframe file, if available
-
-  -m, --mode=interactive|defensive|aggressive  [default: interactive] Determine how to resolve data which is missing at
-                                               runtime.
-
-  -t, --target=target                          Name of the selected target
-```
-
-_See code: [src/commands/deploy.ts](https://github.com/balena-io/katapult/blob/v0.0.0/src/commands/deploy.ts)_
+* [`katapult generate -e <environment> -t <target> -o <directory>`](#katapult-generate)
 
 ## `katapult generate`
 
-Generate Deploy Spec from environment configuration
+Generate a frame.
 
 ```
 USAGE
-  $ katapult generate -e <environment_name> -t <target_name>
+  $ katapult deploy -e <environment> -t <target> -o <directory>
 
 OPTIONS
-  -c, --configuration=configuration            [default: ./] URI to deploy-template folder/repo
-  -e, --environment=environment                (required) Name of the selected environment
-  -k, --keyframe=keyframe                      [default: ./keyframe.yml] Path to keyframe file, if available
-
-  -m, --mode=interactive|defensive|aggressive  [default: interactive] Determine how to resolve data which is missing at
-                                               runtime.
-
-  -t, --target=target                          Name of the selected target
+  -e=environment                (required) Name of the selected environment
+  -t=target                     (required) Name of the selected target
+  -o=directory                  (required) The directory to output the frame to
 ```
-
-_See code: [src/commands/generate.ts](https://github.com/balena-io/katapult/blob/v0.0.0/src/commands/generate.ts)_
-
-## `katapult help [COMMAND]`
-
-Display help for katapult
-
-```
-USAGE
-  $ katapult help [COMMAND]
-
-ARGUMENTS
-  COMMAND  command to show help for
-
-OPTIONS
-  --all  see all commands in CLI
-```
-
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.1.6/src/commands/help.ts)_
 <!-- commandsstop -->

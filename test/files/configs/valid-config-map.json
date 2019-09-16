@@ -1,0 +1,5 @@
+{
+    "BALENA_TLD": "fish.local",
+    "PRODUCTION_MODE": "true",
+    "JSON_WEB_TOKEN_SECRET": "1234567890abcdef123456"
+}
