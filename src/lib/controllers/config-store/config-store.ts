@@ -18,6 +18,7 @@ import { EnvConfigStore } from './adapters/env-config-store';
 import { KubernetesConfigStore } from './adapters/kubernetes-config-store';
 import { YamlConfigStore } from './adapters/yaml-config-store';
 import { Dictionary } from 'lodash';
+import * as _ from 'lodash';
 
 export type ConfigMap = Dictionary<any>;
 
@@ -35,6 +36,35 @@ export interface ConfigStore {
 	updateMany(config: ConfigMap): Promise<ConfigMap>;
 }
 
+export class CompoundConfigStore implements ConfigStore {
+	stores: ConfigStore[] = [];
+
+	constructor(stores: ConfigStore[]) {
+		this.stores = stores;
+	}
+
+	list = (): Promise<ConfigMap> =>
+		Promise.all(this.stores.map(s => s.list())).then(maps =>
+			_.assign({}, ...maps),
+		);
+
+	updateMany = (config: ConfigMap): Promise<ConfigMap> =>
+		Promise.all(
+			this.stores.map(s =>
+				s
+					.list()
+					.then(existingMap => _.pickBy(config, k => existingMap[k] != null))
+					.then(filteredMap => s.updateMany(filteredMap)),
+			),
+		).then(updatedMaps => _.assign({}, ...updatedMaps));
+}
+
+export class ProcessEnvironmentConfigStore implements ConfigStore {
+	list = (): Promise<Dictionary<any>> => Promise.resolve(process.env);
+	updateMany = (config: Dictionary<any>): Promise<Dictionary<any>> =>
+		Promise.resolve(config);
+}
+
 /**
  * Create ConfigStore using:
  * @param {ConfigStoreAccess} access
@@ -43,14 +73,25 @@ export interface ConfigStore {
 export async function createConfigStore(
 	access: ConfigStoreAccess,
 ): Promise<ConfigStore> {
+	const processEnvConfigStore = new ProcessEnvironmentConfigStore();
+
 	if (access.kubernetes) {
-		return await KubernetesConfigStore.create(access);
+		return new CompoundConfigStore([
+			processEnvConfigStore,
+			await KubernetesConfigStore.create(access),
+		]);
 	}
 	if (access.envFile) {
-		return new EnvConfigStore(access);
+		return new CompoundConfigStore([
+			processEnvConfigStore,
+			new EnvConfigStore(access),
+		]);
 	}
 	if (access.yamlFile) {
-		return new YamlConfigStore(access);
+		return new CompoundConfigStore([
+			processEnvConfigStore,
+			new YamlConfigStore(access),
+		]);
 	}
 	throw new Error('Not implemented');
 }

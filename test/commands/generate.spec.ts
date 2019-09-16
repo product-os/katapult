@@ -74,6 +74,9 @@ describe('generate', () => {
 
 	it('should generate a Frame from a valid product repo (docker-compose)', async () => {
 		expect(outputDir).to.not.equal('');
+
+		process.env.GENERATE_TEST = 'value_from_env';
+
 		await Generate.run([
 			'-e',
 			configDir,
@@ -87,6 +90,9 @@ describe('generate', () => {
 		for (const file of ['docker-compose/docker-compose.yml']) {
 			const filePath = path.join(outputDir, file);
 			expect(await fs.exists(filePath)).to.equal(true);
+
+			const content = await fs.readFile(filePath, 'utf8');
+			expect(content).contains('value_from_env');
 		}
 	});
 });
