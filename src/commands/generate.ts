@@ -13,16 +13,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { Command, flags } from '@oclif/command';
+import * as Bluebird from 'bluebird';
 import * as _ from 'lodash';
+import { fs } from 'mz';
+import * as path from 'path';
+import * as flags from '../lib/flags';
+import * as frameGenerator from '../lib/controllers/frame/frame-generator';
+import * as frameTemplate from '../lib/controllers/frame-template';
 
-import { ArtifactsGenerator } from '../lib/controllers/artifacts-generator/artifacts-generator';
+import { Command } from '@oclif/command';
 import { ConfigManifest } from '../lib/controllers/config-manifest/config-manifest';
-import { ConfigStore } from '../lib/controllers/config-store/config-store';
+import { createConfigStore } from '../lib/controllers/config-store/config-store';
 import { ConfigurationManager } from '../lib/controllers/configuration-manager/configuration-manager';
-import { EnvironmentEditor } from '../lib/controllers/environment/environment-editor';
-import { convertRelativePaths, getBasePath, loadFromUri } from '../lib/tools';
-import { initFlags } from './init';
+import {
+	loadEnvironment,
+	EnvironmentContext,
+} from '../lib/controllers/environment/environment';
+import {
+	filesystemExportAdapter,
+	InvalidOutputDirectory,
+} from '../lib/controllers/frame/adapter/filesystem';
+import { mustacheRenderer } from '../lib/controllers/frame-template/renderer/mustache';
+import { ConfigStoreError } from '../lib/error-types';
 
 /**
  * Generate Command class
@@ -30,44 +42,98 @@ import { initFlags } from './init';
  * If an environment configuration doesn't exist, or is out of sync, it's generated/synced.
  */
 export default class Generate extends Command {
-	static description = 'Generate Deploy Spec from environment configuration';
+	static description = 'Generate a Frame from an Environment';
 
-	static flags = initFlags;
+	static flags = {
+		environmentPath: flags.environmentPath,
+		outputPath: flags.outputPath,
+		target: flags.target,
+	};
 
 	async run() {
 		// Parse command flags
 		const { flags } = this.parse(Generate);
 
-		// Get or create the katapult environment object, resolving relative paths
-		const environment = convertRelativePaths({
-			conf: await (await EnvironmentEditor.create(flags)).initializeEnvironment(
-				false,
-			),
-			basePath: getBasePath(flags.configurationPath),
-		});
+		// get our directory context correct
+		const getEnvironmentDirectory = async (p: string) => {
+			if ((await fs.stat(p)).isDirectory()) {
+				return p;
+			}
 
-		// Environment ConfigStore instance
-		const configStore = await ConfigStore.create(
-			_.get(environment, 'configStore'),
+			return path.dirname(p);
+		};
+
+		const environmentDir = await getEnvironmentDirectory(flags.environmentPath);
+		const productDir = path.join(environmentDir, 'product');
+
+		// find the manifests to use...
+		const manifestFiles = await Bluebird.filter(
+			[
+				'config-manifest.yml', // product-specific manifest
+				`deploy/${flags.target}/config-manifest.yml`, // target-specific manifest
+			],
+			async p => await fs.exists(path.join(productDir, p)),
 		);
 
-		// Environment ConfigManifest instance
-		const configManifest = new ConfigManifest(
-			await loadFromUri({
-				uri: _.get(environment, 'productRepo'),
-				path: 'config-manifest.yml',
-			}),
+		// create a merged manifest...
+		const configManifest = await ConfigManifest.create(
+			productDir,
+			manifestFiles,
 		);
 
-		// Sync the environment configmap
-		const configMap = (await ConfigurationManager.create({
-			mode: flags.mode,
+		// create a context for the environment...
+		const context = await loadEnvironment(environmentDir);
+
+		// create an Environment ConfigStore instance
+		const configStore = await getConfigStore(context);
+
+		// sync the environment configmap
+		const configManager = await ConfigurationManager.create({
+			mode: 'quiet',
 			configManifest,
 			configStore,
-		})).sync();
+		});
 
-		// Generate environment artifacts
-		const generator = await ArtifactsGenerator.create(environment, configMap);
-		await generator.generate();
+		// ensure the config map is synced
+		await configManager.sync();
+
+		// create the frame
+		const frameTemplateDir = path.normalize(
+			path.join(productDir, `deploy/${flags.target}/templates`),
+		);
+
+		const ft = await frameTemplate.fromDirectory(frameTemplateDir);
+		const frame = await frameGenerator.generate(
+			ft,
+			mustacheRenderer,
+			configStore,
+		);
+
+		const outputTo = path.normalize(path.join(flags.outputPath, flags.target));
+		try {
+			await filesystemExportAdapter(outputTo).export(frame);
+		} catch (e) {
+			console.error('Unable to export frame to the filesystem');
+			console.error(e);
+			this.exit(2);
+		}
 	}
 }
+
+const getConfigStore = async (ctx: EnvironmentContext) => {
+	const configStoreDefinition = ctx.environment['config-store'];
+
+	if (configStoreDefinition.envfile != null) {
+		return await createConfigStore({
+			envFile: {
+				path: path.normalize(
+					path.join(ctx.directory, configStoreDefinition.envfile.path),
+				),
+			},
+		});
+	} else {
+		throw new ConfigStoreError(
+			'Unable to create a config store for the chosen provider',
+		);
+	}
+};

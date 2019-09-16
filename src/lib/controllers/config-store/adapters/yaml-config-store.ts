@@ -14,18 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import * as fs from 'mz/fs';
-import * as yaml from 'yamljs';
+import { safeDump } from 'js-yaml';
 
 import { ConfigStoreAdapterError } from '../../../error-types';
 import { loadFromFile } from '../../../tools';
 import { ConfigStoreAccess, YamlConfigStoreAccess } from '../../environment';
-import { ConfigMap } from '../index';
+
+import { ConfigMap, ConfigStore } from '../config-store';
 
 /**
  * YamlConfigStoreAdapter class
  * Used for interacting with yaml config-stores
  */
-export class YamlConfigStoreAdapter {
+export class YamlConfigStore implements ConfigStore {
 	private readonly access: YamlConfigStoreAccess;
 
 	/**
@@ -39,7 +40,7 @@ export class YamlConfigStoreAdapter {
 
 		this.access = {
 			path: access.yamlFile.path || 'environment.yml',
-		} as YamlConfigStoreAccess;
+		};
 	}
 
 	/**
@@ -48,10 +49,10 @@ export class YamlConfigStoreAdapter {
 	 */
 	async list(): Promise<ConfigMap> {
 		try {
-			return (await loadFromFile(this.access.path)) as ConfigMap;
+			return await loadFromFile(this.access.path);
 		} catch (e) {
 			if (e.code === 'ENOENT') {
-				return {} as ConfigMap;
+				return {};
 			}
 			throw e;
 		}
@@ -63,7 +64,7 @@ export class YamlConfigStoreAdapter {
 	 * @returns {Promise<ConfigMap>}
 	 */
 	async updateMany(changes: ConfigMap): Promise<ConfigMap> {
-		this.write(changes);
+		await this.write(changes);
 		return changes;
 	}
 
@@ -71,7 +72,7 @@ export class YamlConfigStoreAdapter {
 	 * Writes yaml config-store file
 	 * @param {ConfigMap} config
 	 */
-	private write(config: ConfigMap): void {
-		return fs.writeFileSync(this.access.path, yaml.stringify(config, 4));
+	private async write(config: ConfigMap) {
+		return await fs.writeFile(this.access.path, safeDump(config));
 	}
 }

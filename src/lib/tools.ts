@@ -26,8 +26,8 @@ import {
 } from './error-types';
 
 import { TimeoutError } from 'bluebird';
-import * as yamljs from 'yamljs';
-import { ConfigMap } from './controllers/config-store';
+import * as yaml from 'js-yaml';
+import { ConfigMap } from './controllers/config-store/config-store';
 
 export const tunnelAsync = Bluebird.promisify(tunnel);
 
@@ -48,9 +48,9 @@ export function getAbsolutePath(path: string, basePath: string): string {
  * @returns {string}
  */
 export function getAbsoluteUri(uri: string, basePath: string): string {
-	if (gitUri(uri)) {
+	if (isValidGitUri(uri)) {
 		throw new NotImplementedError('Git URI support not implemented yet');
-	} else if (localPathUri(uri)) {
+	} else if (isLocalPathUri(uri)) {
 		return getAbsolutePath(uri, basePath);
 	} else {
 		throw new UnsupportedError('URI type not supported yet');
@@ -68,7 +68,7 @@ export async function loadFromFile(
 	errorMessage: string = '',
 ): Promise<object> {
 	try {
-		return yamljs.parse(await fs.readFile(filePath, 'utf8'));
+		return yaml.safeLoad(await fs.readFile(filePath, 'utf8'));
 	} catch (e) {
 		throw new FileLoadError(errorMessage + e.message);
 	}
@@ -79,10 +79,8 @@ export async function loadFromFile(
  * @param {string} uri
  * @returns {boolean}
  */
-export function gitUri(uri: string): boolean {
-	return /((git|ssh|http|https)|(git@[\w\.]+))(:(\/\/)?)([\w\.@\:/\-]+)/.test(
-		uri,
-	);
+export function isValidGitUri(uri: string): boolean {
+	return /(?:git|ssh|http|https|git@[\w\.]+):(?:\/\/)?[\w\.@\:/\-]+/.test(uri);
 }
 
 /**
@@ -90,8 +88,8 @@ export function gitUri(uri: string): boolean {
  * @param {string} uri
  * @returns {boolean}
  */
-export function localPathUri(uri: string): boolean {
-	return /^([a-zA-Z0-9_/\-.])+$/.test(uri);
+export function isLocalPathUri(uri: string): boolean {
+	return /^[a-zA-Z0-9_/\-.]+$/.test(uri);
 }
 
 /**
@@ -110,14 +108,11 @@ export async function loadFromUri({
 	path: string;
 	errorMessage?: string;
 }): Promise<object> {
-	// TODO: support git URI
-	if (gitUri(uri)) {
-		throw new UnsupportedError('Git URI support not implemented yet');
+	if (!isLocalPathUri(uri)) {
+		throw new URILoadError(`Error loading ${path} from ${uri}`);
 	}
-	if (localPathUri(uri)) {
-		return await loadFromFile(join(uri, path), errorMessage);
-	}
-	throw new URILoadError(`Error loading ${path} from ${uri}`);
+
+	return await loadFromFile(join(uri, path), errorMessage);
 }
 
 /**
@@ -143,15 +138,15 @@ export function convertRelativePaths({
 	basePath: string;
 }): any {
 	// Convert relative to absolute URIs
-	const keys = [
+	const keys: Array<_.PropertyPath> = [
 		'productRepo',
 		'archiveStore',
 		'encryptionKeyPath',
-		'envFile.path',
-		'yamlFile.path',
-		'kubernetes.kubeConfigPath',
-		'kubernetes.bastion.key',
-		'compose.socket',
+		['envFile', 'path'],
+		['yamlFile', 'path'],
+		['kubernetes', 'kubeConfigPath'],
+		['kubernetes', 'bastion', 'key'],
+		['compose', 'socket'],
 	];
 
 	for (const key of keys) {
@@ -173,20 +168,16 @@ export function convertRelativePaths({
 export async function readFromUri({
 	uri,
 	path,
-	cachePath,
 }: {
 	uri: string;
 	path: string;
 	cachePath?: string;
 }): Promise<string> {
-	// TODO: support git URI
-	if (gitUri(uri)) {
-		throw new UnsupportedError('Git URI support not implemented yet');
-	} else if (localPathUri(uri)) {
-		return (await fs.readFile(join(uri, path))).toString('utf8');
-	} else {
+	if (!isLocalPathUri(uri)) {
 		throw new UnsupportedError('URI type not supported yet');
 	}
+
+	return await fs.readFile(join(uri, path), 'utf8');
 }
 
 /**
@@ -199,20 +190,16 @@ export async function readFromUri({
 export async function listUri({
 	uri,
 	path,
-	cachePath,
 }: {
 	uri: string;
 	path: string;
 	cachePath?: string;
 }): Promise<string[]> {
-	// TODO: support git URI
-	if (gitUri(uri)) {
-		throw new UnsupportedError('Git URI support not implemented yet');
-	} else if (localPathUri(uri)) {
-		return await fs.readdir(join(uri, path));
-	} else {
+	if (!isLocalPathUri(uri)) {
 		throw new UnsupportedError('URI type not supported yet');
 	}
+
+	return await fs.readdir(join(uri, path));
 }
 
 /**
@@ -229,18 +216,19 @@ export async function unwrapKeyframe(
 	// TODO: keyframe layering
 	let keyFrame = await loadFromUri({ uri: productRepoURI, path: keyFramePath });
 
-	if (keyFrame) {
-		keyFrame = _.filter(
-			_.get(keyFrame, ['children', 'sw', 'containerized-application'], []),
-			component => component.type === 'sw.containerized-application',
-		);
-		keyFrame = _.mapValues(_.keyBy(keyFrame, 'slug'), o =>
-			_.merge(_.get(o, 'assets', {}), { version: _.get(o, 'version') }),
-		);
-		return keyFrame;
-	} else {
+	if (!keyFrame) {
 		return {};
 	}
+
+	keyFrame = _.filter(
+		_.get(keyFrame, ['children', 'sw', 'containerized-application'], []),
+		component => component.type === 'sw.containerized-application',
+	);
+	keyFrame = _.mapValues(_.keyBy(keyFrame, 'slug'), (o: any) => {
+		// _.merge(_.get(o, 'assets', {}), { version: _.get(o, 'version') }),
+		return { ...o.assets, version: o.version };
+	});
+	return keyFrame;
 }
 
 /**
@@ -252,7 +240,7 @@ export async function unwrapKeyframe(
  */
 export async function runInTunnel(
 	tnlConfig: tunnel.Config,
-	prom: Promise<any>,
+	prom: () => Promise<any>,
 	timeout: number,
 ): Promise<any> {
 	const tnl = await tunnelAsync(tnlConfig);
@@ -260,7 +248,7 @@ export async function runInTunnel(
 		tnl.close();
 		throw new TimeoutError('Timeout exceeded');
 	}, timeout);
-	return prom.then((ret: any) => {
+	return prom().then((ret: any) => {
 		clearTimeout(wait);
 		if (tnl) {
 			tnl.close();
@@ -288,10 +276,8 @@ export function configMapToPairs(configMap: ConfigMap): ConfigMap {
 	}
 	traverse(configMap);
 	for (const keyPath of keyPaths) {
-		ret[_.replace(keyPath, new RegExp('\\.', 'g'), '___')] = _.get(
-			configMap,
-			keyPath,
-		);
+		// replace period (.) with ___
+		ret[_.replace(keyPath, /\./g, '___')] = _.get(configMap, keyPath);
 	}
 	return ret;
 }

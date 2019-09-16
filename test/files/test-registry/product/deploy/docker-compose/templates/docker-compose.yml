@@ -1,0 +1,8 @@
+version: "2.0"
+
+services:
+  api:
+    image: "balena/api:master"
+    environment:
+      BALENA_TLD: {{BALENA_TLD}}
+      DOCKER_HOST: {{{DOCKER_HOST}}}

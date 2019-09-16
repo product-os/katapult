@@ -1,0 +1,2 @@
+cat config-manifest-schema.json | ../node_modules/.bin/json2ts > ../src/lib/controllers/config-manifest/config-manifest-schema.d.ts
+
