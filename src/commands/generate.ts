@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+import * as Bluebird from 'bluebird';
 import * as _ from 'lodash';
 import { fs } from 'mz';
 import * as path from 'path';
@@ -66,10 +67,13 @@ export default class Generate extends Command {
 		const productDir = path.join(environmentDir, 'product');
 
 		// find the manifests to use...
-		const manifestFiles = [
-			'config-manifest.yml', // product-specific manifest
-			`deploy/${flags.target}/config-manifest.yml`, // target-specific manifest
-		].filter(async p => await fs.exists(path.join(productDir, p)));
+		const manifestFiles = await Bluebird.filter(
+			[
+				'config-manifest.yml', // product-specific manifest
+				`deploy/${flags.target}/config-manifest.yml`, // target-specific manifest
+			],
+			async p => await fs.exists(path.join(productDir, p)),
+		);
 
 		// create a merged manifest...
 		const configManifest = await ConfigManifest.create(
