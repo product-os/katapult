@@ -1,7 +1,7 @@
 {
   "name": "katapult",
   "description": "A tool for launching container-based products",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "author": "Michael Angelos Simos <michalis@balena.io>",
   "bin": {
