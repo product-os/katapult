@@ -87,7 +87,7 @@ describe('config-manager', async () => {
 		// Ensure the config map is synced
 		const configMap = await configManager.sync();
 
-		expect(configMap).to.have.keys(
+		expect(configMap).to.include.keys(
 			'BALENA_TLD',
 			'BALENA_DEVICE_UUID',
 			'PRODUCTION_MODE',

@@ -7,3 +7,4 @@ services:
       BALENA_TLD: {{BALENA_TLD}}
       DOCKER_HOST: {{{DOCKER_HOST}}}
       WEB_TOKEN_BASE64: {{#base64}}{{{JSON_WEB_TOKEN_SECRET}}}{{/base64}}
+      GENERATE_TEST: {{{GENERATE_TEST}}}

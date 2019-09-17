@@ -16,3 +16,5 @@ properties:
   JSON_WEB_TOKEN_SECRET:
     type: string
     pattern: ^[0-9A-Za-z_]{16,64}$
+  GENERATE_TEST:
+    type: string?
