@@ -1,0 +1,29 @@
+name: Test Product Staging
+slug: test-product-staging-keyframe
+type: meta.keyframe
+markers: []
+tags: []
+links: {}
+active: true
+requires: []
+capabilities: []
+children:
+  sw:
+    containerized-application:
+      balena-api:
+        name: Test Balena API
+        slug: balena-api-server
+        type: sw.containerized-application
+        markers: []
+        tags: []
+        links: {}
+        active: true
+        requires: []
+        capabilities: []
+        data:
+          assets:
+            image:
+              url: 'balena/api:master'
+            repo:
+              url: 'https://github.com/balena-io/balena-api.git'
+        version: master

@@ -86,6 +86,15 @@ describe('generate', () => {
 			'docker-compose',
 		]);
 
+		const templateDirectory = path.join(
+			configDir,
+			'product/deploy/docker-compose/templates',
+		);
+		const templateCheckDirectory = path.join(
+			configDir,
+			'product/deploy/docker-compose/templates_check',
+		);
+
 		// make sure the files exist...
 		for (const file of ['docker-compose/docker-compose.yml']) {
 			const filePath = path.join(outputDir, file);
@@ -93,6 +102,21 @@ describe('generate', () => {
 
 			const content = await fs.readFile(filePath, 'utf8');
 			expect(content).contains('value_from_env');
+		}
+
+		// make sure the tempates where correctly generated
+		for (const file of ['docker-compose.yml']) {
+			const filePathGenerated = path.join(templateDirectory, file);
+			expect(await fs.exists(filePathGenerated)).to.equal(true);
+
+			const generatedcontent = await fs.readFile(filePathGenerated, 'utf8');
+
+			const filePath = path.join(templateCheckDirectory, file);
+			expect(await fs.exists(filePath)).to.equal(true);
+
+			const assertedcontent = await fs.readFile(filePath, 'utf8');
+
+			expect(generatedcontent).to.be.equal(assertedcontent);
 		}
 	});
 });

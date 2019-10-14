@@ -8,7 +8,7 @@ describe('frame-template', () => {
 	it('should create a FrameTemplate from a directory of files', async () => {
 		// create a FrameTemplate from a directory of files...
 		const frameTemplateDir = await getTestDir(
-			'test-product-staging/product/deploy/docker-compose/templates',
+			'test-product-staging/product/deploy/docker-compose/templates_check',
 		);
 		const ft = await frameTemplate.fromDirectory(frameTemplateDir);
 
