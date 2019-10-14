@@ -1,24 +1,18 @@
 import * as fs from 'mz/fs';
 import * as path from 'path';
 
-export interface FrameTemplateFiles {
-	[path: string]: any;
+export interface TemplateGeneratorFiles {
+	[path: string]: string;
 }
 
-export interface FrameTemplate {
-	files: FrameTemplateFiles;
-}
-
-export function createFrameTemplate(): FrameTemplate {
-	return {
-		files: {},
-	};
+export interface TemplateGenerator {
+	files: TemplateGeneratorFiles;
 }
 
 export const fromDirectory = async (
 	directory: string,
-): Promise<FrameTemplate> => {
-	const files: FrameTemplateFiles = {};
+): Promise<TemplateGenerator> => {
+	const files: TemplateGeneratorFiles = {};
 
 	for (const fp of await fs.readdir(directory)) {
 		const filePath = path.join(directory, fp);

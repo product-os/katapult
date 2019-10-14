@@ -19,6 +19,7 @@ import { fs } from 'mz';
 import * as path from 'path';
 import * as flags from '../lib/flags';
 import * as frameGenerator from '../lib/controllers/frame/frame-generator';
+import * as templateGenerator from '../lib/controllers/template-generator/template-generator';
 import * as frameTemplate from '../lib/controllers/frame-template';
 
 import { Command } from '@oclif/command';
@@ -29,12 +30,13 @@ import {
 	loadEnvironment,
 	EnvironmentContext,
 } from '../lib/controllers/environment/environment';
-import {
-	filesystemExportAdapter,
-	InvalidOutputDirectory,
-} from '../lib/controllers/frame/adapter/filesystem';
-import { mustacheRenderer } from '../lib/controllers/frame-template/renderer/mustache';
+import * as frameAdapter from '../lib/controllers/frame/adapter/filesystem';
+import * as templateAdapter from '../lib/controllers/frame-template/adapter/filesystem';
+import * as templateRenderer from '../lib/controllers/frame-template/renderer/mustache';
+import * as generatorRenderer from '../lib/controllers/template-generator/renderer/mustache';
 import { ConfigStoreError } from '../lib/error-types';
+import { loadKeyframe } from '../lib/controllers/keyframe/index';
+import { join } from 'path';
 
 /**
  * Generate Command class
@@ -48,6 +50,7 @@ export default class Generate extends Command {
 		environmentPath: flags.environmentPath,
 		outputPath: flags.outputPath,
 		target: flags.target,
+		keyframe: flags.keyframePath,
 	};
 
 	async run() {
@@ -65,6 +68,8 @@ export default class Generate extends Command {
 
 		const environmentDir = await getEnvironmentDirectory(flags.environmentPath);
 		const productDir = path.join(environmentDir, 'product');
+
+		const keyframeUri = flags.keyframe || path.join(productDir, 'keyframe.yml');
 
 		// find the manifests to use...
 		const manifestFiles = await Bluebird.filter(
@@ -98,20 +103,51 @@ export default class Generate extends Command {
 		await configManager.sync();
 
 		// create the frame
+		const frameGeneratorDir = path.normalize(
+			path.join(productDir, `deploy/${flags.target}/generators`),
+		);
+
+		// create the frame templates
 		const frameTemplateDir = path.normalize(
 			path.join(productDir, `deploy/${flags.target}/templates`),
 		);
 
-		const ft = await frameTemplate.fromDirectory(frameTemplateDir);
+		// read the keyframe
+		const keyframe = await loadKeyframe(keyframeUri);
+
+		// read the generators
+		const frameGenerators = await frameTemplate.fromDirectory(
+			frameGeneratorDir,
+		);
+
+		const generatedFrameTemplates = await templateGenerator.generate(
+			frameGenerators,
+			generatorRenderer.Renderer,
+			keyframe,
+		);
+
+		try {
+			await templateAdapter
+				.filesystemExportAdapter(frameTemplateDir)
+				.export(generatedFrameTemplates);
+		} catch (e) {
+			console.error('Unable to export frame to the filesystem');
+			console.error(e);
+			this.exit(2);
+		}
+
+		// read the generators
+		const frameTemplates = await frameTemplate.fromDirectory(frameTemplateDir);
+
 		const frame = await frameGenerator.generate(
-			ft,
-			mustacheRenderer,
+			frameTemplates,
+			templateRenderer.Renderer,
 			configStore,
 		);
 
 		const outputTo = path.normalize(path.join(flags.outputPath, flags.target));
 		try {
-			await filesystemExportAdapter(outputTo).export(frame);
+			await frameAdapter.filesystemExportAdapter(outputTo).export(frame);
 		} catch (e) {
 			console.error('Unable to export frame to the filesystem');
 			console.error(e);

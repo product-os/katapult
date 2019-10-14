@@ -2,7 +2,7 @@ import { Frame } from '../../src/lib/controllers/frame/frame';
 import * as frameGenerator from '../../src/lib/controllers/frame/frame-generator';
 import * as frameTemplate from '../../src/lib/controllers/frame-template';
 import { exportAdapters } from '../../src/lib/controllers/frame/adapter';
-import { mustacheRenderer } from '../../src/lib/controllers/frame-template/renderer/mustache';
+import { Renderer } from '../../src/lib/controllers/frame-template/renderer/mustache';
 import {
 	ConfigStore,
 	ConfigMap,
@@ -35,7 +35,7 @@ describe('frame-generator', () => {
 	before(async () => {
 		tempDir = temp.track().mkdirSync();
 		frameTemplateDir = await getTestDir(
-			'test-product-staging/product/deploy/docker-compose/templates',
+			'test-product-staging/product/deploy/docker-compose/templates_check',
 		);
 	});
 
@@ -45,7 +45,7 @@ describe('frame-generator', () => {
 
 	it('should create a Frame from a mustache-formatted FrameTemplate', async () => {
 		const ft = await frameTemplate.fromDirectory(frameTemplateDir);
-		frame = await frameGenerator.generate(ft, mustacheRenderer, configStore);
+		frame = await frameGenerator.generate(ft, Renderer, configStore);
 
 		expect(frame.files['docker-compose.yml']).is.not.undefined;
 		expect(frame.files['docker-compose.yml']).contains(
@@ -89,11 +89,7 @@ describe('frame-generator', () => {
 
 		// create the frame
 		const ft = await frameTemplate.fromDirectory(frameTemplateDir);
-		const frame = await frameGenerator.generate(
-			ft,
-			mustacheRenderer,
-			configStore,
-		);
+		const frame = await frameGenerator.generate(ft, Renderer, configStore);
 
 		expect(frame.files['docker-compose.yml']).is.not.undefined;
 		expect(frame.files['docker-compose.yml']).contains(

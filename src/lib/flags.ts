@@ -7,6 +7,12 @@ export const environmentPath = flags.string({
 	char: 'e',
 });
 
+export const keyframePath = flags.string({
+	description: 'URI of the keyframe path',
+	required: false,
+	char: 'k',
+});
+
 export const outputPath = flags.string({
 	description: 'Directory to output the frame to',
 	required: true,

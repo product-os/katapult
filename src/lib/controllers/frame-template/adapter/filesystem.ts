@@ -1,6 +1,6 @@
-import { FrameExportAdapter } from './index';
-import { Frame } from '../frame';
-import { promises as fs } from 'fs';
+import { FrameTemplateExportAdapter } from './index';
+import { FrameTemplate } from '../';
+import { promises as fs, constants } from 'fs';
 import * as path from 'path';
 
 export class InvalidOutputDirectory extends Error {
@@ -11,11 +11,11 @@ export class InvalidOutputDirectory extends Error {
 
 export const filesystemExportAdapter = (
 	directory: string,
-): FrameExportAdapter => {
+): FrameTemplateExportAdapter => {
 	return {
-		export: async (frame: Frame) => {
+		export: async (frameTemplate: FrameTemplate) => {
 			// write out each file to the filesystem...
-			for (const fp of Object.keys(frame.files)) {
+			for (const fp of Object.keys(frameTemplate.files)) {
 				const fullPath = path.join(directory, fp);
 				const dir = path.dirname(fullPath);
 
@@ -24,7 +24,7 @@ export const filesystemExportAdapter = (
 				} catch (_) {
 					await fs.mkdir(dir, { recursive: true });
 				}
-				await fs.writeFile(fullPath, frame.files[fp]);
+				await fs.writeFile(fullPath, frameTemplate.files[fp]);
 			}
 		},
 	};
