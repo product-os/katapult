@@ -23,7 +23,7 @@ import {
 	kvPairsToConfigMap,
 	readFromUri,
 } from '../../../tools';
-import { ConfigStoreAccess, EnvConfigStoreAccess } from '../../environment';
+import { ConfigStoreAccess, EnvConfigStoreAccess } from '../';
 
 import { ConfigMap, ConfigStore } from '../config-store';
 

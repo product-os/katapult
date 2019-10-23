@@ -13,11 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { ConfigStoreAccess } from '../environment';
+import { Dictionary } from 'lodash';
+import { ConfigStoreAccess } from './';
 import { EnvConfigStore } from './adapters/env-config-store';
 import { KubernetesConfigStore } from './adapters/kubernetes-config-store';
 import { YamlConfigStore } from './adapters/yaml-config-store';
-import { Dictionary } from 'lodash';
 import * as _ from 'lodash';
 
 export type ConfigMap = Dictionary<any>;
@@ -37,11 +37,11 @@ export interface ConfigStore {
 }
 
 export class CompoundConfigStore implements ConfigStore {
-	stores: ConfigStore[] = [];
+	constructor(public stores: ConfigStore[] = []) {}
 
-	constructor(stores: ConfigStore[]) {
-		this.stores = stores;
-	}
+	appendStore = (store: ConfigStore) => {
+		this.stores.push(store);
+	};
 
 	list = (): Promise<ConfigMap> =>
 		Promise.all(this.stores.map(s => s.list())).then(maps =>
@@ -74,24 +74,17 @@ export async function createConfigStore(
 	access: ConfigStoreAccess,
 ): Promise<ConfigStore> {
 	const processEnvConfigStore = new ProcessEnvironmentConfigStore();
+	const compoundConfigStore = new CompoundConfigStore([processEnvConfigStore]);
 
 	if (access.kubernetes) {
-		return new CompoundConfigStore([
-			processEnvConfigStore,
-			await KubernetesConfigStore.create(access),
-		]);
+		compoundConfigStore.appendStore(await KubernetesConfigStore.create(access));
 	}
 	if (access.envFile) {
-		return new CompoundConfigStore([
-			processEnvConfigStore,
-			new EnvConfigStore(access),
-		]);
+		compoundConfigStore.appendStore(new EnvConfigStore(access));
 	}
 	if (access.yamlFile) {
-		return new CompoundConfigStore([
-			processEnvConfigStore,
-			new YamlConfigStore(access),
-		]);
+		compoundConfigStore.appendStore(new YamlConfigStore(access));
 	}
-	throw new Error('Not implemented');
+
+	return compoundConfigStore;
 }

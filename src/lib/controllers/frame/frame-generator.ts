@@ -36,5 +36,8 @@ export async function generate(
 ): Promise<Frame> {
 	const configMap = await configStore.list();
 	const templateRenderer = prepareRenderer(frameTemplateRenderer, configMap);
-	return templateRenderer.renderTemplate(frameTemplate);
+	return {
+		...templateRenderer.renderTemplate(frameTemplate),
+		...{ configMap },
+	};
 }

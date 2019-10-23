@@ -1,7 +1,7 @@
 import { Frame } from '../../src/lib/controllers/frame/frame';
 import * as frameGenerator from '../../src/lib/controllers/frame/frame-generator';
 import * as frameTemplate from '../../src/lib/controllers/frame-template';
-import { exportAdapters } from '../../src/lib/controllers/frame/adapter';
+import { deployAdapters } from '../../src/lib/controllers/frame/adapter';
 import { Renderer } from '../../src/lib/controllers/frame-template/renderer/mustache';
 import {
 	ConfigStore,
@@ -14,7 +14,7 @@ import * as fs from 'mz/fs';
 import * as path from 'path';
 import * as temp from 'temp';
 import { getTestFile, getTestDir } from '../files';
-import { EnvConfigStoreAccess } from '../../src/lib/controllers/environment';
+import { EnvConfigStoreAccess } from '../../src/lib/controllers/config-store';
 import { ConfigManifest } from '../../src/lib/controllers/config-manifest/config-manifest';
 import { ConfigurationManager } from '../../src/lib/controllers/configuration-manager/configuration-manager';
 
@@ -29,7 +29,7 @@ describe('frame-generator', () => {
 	};
 
 	let frameTemplateDir = '';
-	let frame: Frame = { files: {} };
+	let frame: Frame = { files: {}, configMap: {} };
 	let tempDir = '';
 
 	before(async () => {
@@ -55,7 +55,7 @@ describe('frame-generator', () => {
 
 	it('should export the Frame to the filesystem', async () => {
 		// export the Frame to the filesystem...
-		await exportAdapters.filesystem(tempDir).export(frame);
+		await deployAdapters.filesystem(tempDir).deploy(frame);
 
 		// make sure the files exist...
 		for (const file of ['docker-compose.yml']) {

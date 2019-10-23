@@ -1,0 +1,12 @@
+FROM sickp/alpine-sshd:7.5-r2
+
+RUN passwd -d root
+COPY bastion-id-*.pub /root/.ssh/
+
+RUN cat /root/.ssh/bastion-id-*.pub > /root/.ssh/authorized_keys
+
+RUN echo 'ChallengeResponseAuthentication no' >> /etc/ssh/sshd_config
+RUN echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config
+RUN echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config
+RUN echo 'Port 2222' >> /etc/ssh/sshd_config
+

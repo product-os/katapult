@@ -1,4 +1,4 @@
-import { FrameExportAdapter } from './index';
+import { FrameDeployAdapter } from './index';
 import { Frame } from '../frame';
 import { promises as fs } from 'fs';
 import * as path from 'path';
@@ -9,11 +9,11 @@ export class InvalidOutputDirectory extends Error {
 	}
 }
 
-export const filesystemExportAdapter = (
+export const filesystemDeployAdapter = (
 	directory: string,
-): FrameExportAdapter => {
+): FrameDeployAdapter => {
 	return {
-		export: async (frame: Frame) => {
+		deploy: async (frame: Frame) => {
 			// write out each file to the filesystem...
 			for (const fp of Object.keys(frame.files)) {
 				const fullPath = path.join(directory, fp);

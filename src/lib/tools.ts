@@ -17,7 +17,6 @@ import * as Bluebird from 'bluebird';
 import * as _ from 'lodash';
 import * as fs from 'mz/fs';
 import { dirname, isAbsolute, join, resolve } from 'path';
-import * as tunnel from 'tunnel-ssh';
 import {
 	FileLoadError,
 	NotImplementedError,
@@ -28,8 +27,7 @@ import {
 import { TimeoutError } from 'bluebird';
 import * as yaml from 'js-yaml';
 import { ConfigMap } from './controllers/config-store/config-store';
-
-export const tunnelAsync = Bluebird.promisify(tunnel);
+import { SSHConnection } from './external/node-ssh-tunnel';
 
 /**
  * Returns an absolute path for a path, when in basePath
@@ -230,31 +228,60 @@ export async function unwrapKeyframe(
 	});
 	return keyFrame;
 }
-
+export type CommandFnOptions = {
+	assignedPort: number;
+};
+export type CommandFn = (config: CommandFnOptions) => Promise<any>;
+export type TunnelConfig = {
+	host: string;
+	port: number;
+	localPort: number;
+	dstHost: string;
+	dstPort: number;
+	username: string;
+	privateKey: Buffer;
+	passphrase?: string;
+};
 /**
  * Creates an ssh tunnel for executing a promise
- * @param tnlConfig: ssh2 tunnel configuration object
- * @param prom: promise
- * @param timeout: tunnel timeout.
+ * @param config: ssh2 tunnel configuration object
+ * @param command: promise
  * @returns {Promise<any>}
  */
-export async function runInTunnel(
-	tnlConfig: tunnel.Config,
-	prom: () => Promise<any>,
-	timeout: number,
-): Promise<any> {
-	const tnl = await tunnelAsync(tnlConfig);
-	const wait = setTimeout(function() {
-		tnl.close();
-		throw new TimeoutError('Timeout exceeded');
-	}, timeout);
-	return prom().then((ret: any) => {
-		clearTimeout(wait);
-		if (tnl) {
-			tnl.close();
-		}
-		return ret;
+export async function runInTunnel(config: TunnelConfig, command: CommandFn) {
+	const {
+		host,
+		port,
+		localPort,
+		dstHost,
+		dstPort,
+		username,
+		privateKey,
+		passphrase,
+	} = config;
+
+	const sshConnection = new SSHConnection({
+		endHost: host,
+		endPort: port,
+		bastionHost: host,
+		username,
+		privateKey,
+		passphrase,
 	});
+
+	const { assignedPort } = await sshConnection.forward({
+		fromPort: 0,
+		toPort: dstPort,
+		toHost: dstHost,
+	});
+
+	try {
+		return await command({
+			assignedPort,
+		});
+	} finally {
+		await sshConnection.shutdown();
+	}
 }
 
 /**

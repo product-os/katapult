@@ -43,3 +43,36 @@ export abstract class BaseConfigStore implements ConfigStore {
 
 	abstract updateMany(config: ConfigMap): Promise<ConfigMap>;
 }
+
+export interface Bastion {
+	apiHost: string;
+	apiPort?: number;
+	host: string;
+	port?: number;
+	username: string;
+	key: string;
+	keyPassphrase?: string;
+}
+
+export interface BastionTarget {
+	bastion?: Bastion;
+}
+
+export interface KubernetesConfigStoreAccess extends BastionTarget {
+	namespace: string;
+	kubeconfig: string;
+}
+
+export interface EnvConfigStoreAccess {
+	path: string;
+}
+
+export interface YamlConfigStoreAccess {
+	path: string;
+}
+
+export interface ConfigStoreAccess {
+	envFile?: EnvConfigStoreAccess;
+	kubernetes?: KubernetesConfigStoreAccess;
+	yamlFile?: YamlConfigStoreAccess;
+}

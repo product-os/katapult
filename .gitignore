@@ -76,3 +76,5 @@ Thumbs.db
 /yarn.lock
 release/
 /environment.yml
+/test/external/*
+!/test/external/README.md
