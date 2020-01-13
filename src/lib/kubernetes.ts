@@ -131,7 +131,6 @@ export const getKubernetesAccess = async (
 			return await linkToCluster.run(async ({ kubeconfig }) => {
 				const tempFiles = temp.track();
 				config.kubeconfig = tempFiles.path();
-				let result = null;
 
 				try {
 					await fs.writeFile(
@@ -145,13 +144,11 @@ export const getKubernetesAccess = async (
 
 					const boundFn = fn.bind({ accessConfig: config, kubeconfig });
 
-					result = await boundFn(client);
+					return await boundFn(client);
 				} finally {
 					// tidy up
 					await fs.writeFile(config.kubeconfig, '');
 					await Bluebird.fromCallback(callback => tempFiles.cleanup(callback));
-
-					return result;
 				}
 			});
 		},
