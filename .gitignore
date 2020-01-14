@@ -78,3 +78,7 @@ release/
 /environment.yml
 /test/external/*
 !/test/external/README.md
+
+lib
+oclif.manifest.json
+tsconfig.tsbuildinfo
