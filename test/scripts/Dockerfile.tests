@@ -7,7 +7,7 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.16.0/b
 
 COPY package* ./
 
-RUN npm i
+RUN npm ci
 
 COPY . .
 
