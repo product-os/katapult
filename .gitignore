@@ -79,6 +79,6 @@ release/
 /test/external/*
 !/test/external/README.md
 
-lib
+/lib
 oclif.manifest.json
 tsconfig.tsbuildinfo
