@@ -112,14 +112,22 @@ describe('productOs contracts', () => {
 	// productOS blueprint.
 
 	// Blueprint format is changed comparing to existing examples.
+	// Compare to https://github.com/balena-io/contracts/blob/11cf69c31e6895b0c5bd88ece72ca1508183125b/contracts/sw.blueprint/device-instructions/contract.json
 	const productOsBlueprint = {
 		type: 'blueprint',
 		slug: 'productOs',
 
 		data: {
 			// Selector now queries contracts giving an instance name ("as"). Slug is used by default.
+			// Selector definition is very close to requirements definition, but also allows setting the cardinality.
+			// Default cardinality is 1.
 			selector: [
-				{ slug: 'jellyfish-api', as: 'api' },
+				{
+					slug: 'jellyfish-api',
+					as: 'api',
+					version: '^1.3.0',
+					cardinality: '1',
+				},
 				{ slug: 'jellyfish-ui', as: 'ui' },
 				{ slug: 'jellyfish-action-server', as: 'action-server' },
 				{ slug: 'jellyfish-tick-server', as: 'tick-server' },
@@ -129,17 +137,12 @@ describe('productOs contracts', () => {
 			],
 
 			output: {
-				type: 'keyframe',
 				slug: 'productOs-keyframe',
+				// TODO: Agree on the typ here.
+				// type: '?',
 
 				data: {
-					'behaviour-config': [
-						// Katapult k8s adapter will use this config for replicas count.
-						// Name convention: {instance-name}.{config-key-suffix}
-						{ name: 'api.replicas', type: 'int' },
-						// ...
-					],
-
+					// Connections define how exactly we satisfy the component requirements.
 					connections: {
 						// Key: instance name ("as" in "requires").
 						api: {
@@ -161,6 +164,19 @@ describe('productOs contracts', () => {
 						},
 						livechat: {
 							'jellyfish-api': 'api',
+						},
+					},
+
+					'behaviour-config': [
+						{ name: 'api.replicas', type: 'int' },
+						// ...
+					],
+
+					// TODO: Discuss scaling.
+					scaling: {
+						api: {
+							type: 'static',
+							count: 'api.replicas',
 						},
 					},
 				},
@@ -219,6 +235,9 @@ describe('productOs contracts', () => {
 
 			data: {
 				connections: productOsBlueprint.data.output.data.connections,
+				scaling: productOsBlueprint.data.output.data.scaling,
+				'behaviour-config':
+					productOsBlueprint.data.output.data['behaviour-config'],
 			},
 		});
 	});
@@ -228,6 +247,17 @@ describe('productOs contracts', () => {
 			yamlFile: { path: 'example-config.yaml' },
 		});
 		const k8sSpecs = katapult(keyframe, configStore);
+
+		it('includes the namespace spec', () => {
+			expect(k8sSpecs.namespace).to.have.length(1);
+			expect(k8sSpecs.namespace[0]).to.be.deep.equal({
+				apiVersion: 'app/v1',
+				kind: 'Namespace',
+				metadata: {
+					name: 'productOs',
+				},
+			});
+		});
 
 		it('have correct deployment definitions', () => {
 			expect(k8sSpecs.deployments).to.have.length(5);
@@ -468,6 +498,7 @@ describe('productOs contracts', () => {
 });
 
 const katapult = (keyframe: any, configStore: ConfigStore) => ({
+	namespace: [],
 	deployments: [],
 	services: [],
 	ingress: [],
