@@ -4,55 +4,55 @@ import "list"
 
 for name, k in keyframes {
 
-    // Namespaces per product keyframe.
-    k8s: namespace: {
-      "\(name)": {}
-    }
+	// Namespaces per product keyframe.
+	k8s: namespace: {
+		"\(name)": {}
+	}
 
-    k8s: d: "\(name)": {
-        // Service account per component.
-        serviceAccount: {
-            for componentRef in k.children {
-              "\(componentRef.as)": {}
-            }
-        }
+	k8s: d: "\(name)": {
+		// Service account per component.
+		serviceAccount: {
+			for componentRef in k.children {
+				"\(componentRef.as)": {}
+			}
+		}
 
-        // Services for corresponding component types.
-        service: {
-            httpExposedTypes = [
-                "sw.containerized-web-service"
-            ]
+		// Services for corresponding component types.
+		service: {
+			httpExposedTypes = [
+				"sw.containerized-web-service",
+			]
 
-            for componentRef in k.children {
-                component = contracts[componentRef.slug]
-                componentType = component.type
-                if (list.Contains(serviceTypes, componentType)) {
-                    "\(componentRef.as)": spec: {
-                        httpsPorts = [
-                            {
-                                name: "https"
-                                port: 443
-                                targetPort: capability.as
-                                protocol: capability.data.protocol | *"TCP"
-                            }
-                            for capability in component.provides if capability.type == "endpoint" && capability.as == "main-endpoint"
-                        ]
-                        httpPorts = [
-                            {
-                                name: "http"
-                                port: 80
-                                targetPort: "main-endpoint" // TODO: Derive from the capability.
-                                protocol: "TCP"
-                            } if list.Contains(httpExposedTypes, componentType)
-                        ]
-                        ports: list.FlattenN([httpsPorts, httpPorts], 2)
-                    }
-                }
-            }
-        }
+			for componentRef in k.children {
+				component = contracts[componentRef.slug]
+				componentType = component.type
+				if (list.Contains(serviceTypes, componentType)) {
+					"\(componentRef.as)": spec: {
+						httpsPorts = [
+							{
+								name:       "https"
+								port:       443
+								targetPort: capability.as
+								protocol:   capability.data.protocol | *"TCP"
+							}
+							for capability in component.provides if capability.type == "endpoint" && capability.as == "main-endpoint"
+						]
+						httpPorts = [
+							{
+								name:       "http"
+								port:       80
+								targetPort: "main-endpoint" // TODO: Derive from the capability.
+								protocol:   "TCP"
+							} if list.Contains(httpExposedTypes, componentType)
+						]
+						ports: list.FlattenN([httpsPorts, httpPorts], 2)
+					}
+				}
+			}
+		}
 
-        deployment: {
-            // TODO: iterate over children.
-        }
-    }
+		deployment: {
+			// TODO: iterate over children.
+		}
+	}
 }
