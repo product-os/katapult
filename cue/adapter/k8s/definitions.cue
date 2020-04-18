@@ -1,13 +1,15 @@
-package katapult
+package k8s
 
 import (
 	"list"
 	"strings"
 )
 
+// TODO: Import from k8s API.
+
 namespace :: string
 
-k8sBase :: {
+Base :: {
 	apiVersion: string
 	kind:       "Deployment" | "Service" | "ConfigMap" | "SealedSecret" | "ServiceAccount" | "Namespace"
 	metadata: {
@@ -17,9 +19,14 @@ k8sBase :: {
 	...
 }
 
+Data: close({
+    namespace: [string]: {}
+    d: {}
+})
+
 // Common namespace data layout.
 
-k8s: namespace: [Name=_]: k8sBase & {
+Data: namespace: [Name=_]: Base & {
 	apiVersion: "v1"
 	kind:       "Namespace"
 	metadata: name: Name
@@ -27,11 +34,11 @@ k8s: namespace: [Name=_]: k8sBase & {
 
 // Common parts of definitions that belong to a namespace.
 
-k8sNamespaced :: k8sBase & {
+Namespaced :: Base & {
 	metadata: namespace: string
 }
 
-k8s: d: [Namespace=_]: [string]: [Name=_]: k8sNamespaced & {
+Data: d: [Namespace=_]: [string]: [Name=_]: Namespaced & {
 	metadata: namespace: Namespace
 	metadata: name:      Name
 	metadata: labels: {
@@ -42,7 +49,7 @@ k8s: d: [Namespace=_]: [string]: [Name=_]: k8sNamespaced & {
 }
 
 for kindName in ["deployment", "service", "serviceAccount"] {
-	k8s: d: [namespace]: "\(kindName)": [string]: k8sNamespaced & {
+	Data: d: [namespace]: "\(kindName)": [string]: Namespaced & {
 		apiVersion: string | *"v1"
 		kind:       strings.ToTitle(kindName)
 	}
@@ -54,7 +61,7 @@ containerPort :: {
 	protocol:      *"TCP" | "UDP"
 }
 
-k8s: d: [namespace]: deployment: [Name=_]: {
+Data: d: [namespace]: deployment: [Name=_]: {
 	apiVersion: "apps/v1"
 	labelsData = {
 		"app.kubernetes.io/instance": Name
@@ -71,7 +78,7 @@ k8s: d: [namespace]: deployment: [Name=_]: {
 				containers: [{
 					name:            Name
 					imagePullPolicy: "IfNotPresent"
-					//image: string
+					image: string
 
 					ports: [...containerPort]
 
@@ -100,24 +107,18 @@ k8s: d: [namespace]: deployment: [Name=_]: {
 	}
 }
 
-k8sPort :: {
+ServicePort :: {
 	name:       string
 	port:       number
 	protocol:   "TCP" | "UDP"
 	targetPort: string
 }
 
-k8s: d: [namespace]: service: [Name=_]: spec: {
+Data: d: [namespace]: service: [Name=_]: spec: {
 	type: "LoadBalancer"
 	selector: {
 		"app.kubernetes.io/instance": Name
 		"app.kubernetes.io/name":     Name
 	}
-	ports: [...k8sPort]
-}
-
-k8s: {
-	allNamespaced = [ spec for nsData in k8s.d for kindData in nsData for spec in kindData ]
-	namespaces = [ spec for spec in k8s.namespace ]
-	all: list.FlattenN([ namespaces, allNamespaced], 2)
+	ports: [...ServicePort]
 }

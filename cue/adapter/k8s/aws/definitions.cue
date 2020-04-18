@@ -1,8 +1,11 @@
-package katapult
+package aws
 
-// AWS-specific definitions.
+import (
+    "github.com/balena-io/katapult/cue/adapter/k8s"
+)
 
-k8s: d: [string]: service: [string]: {
+Data: k8s.Data
+Data: d: [string]: service: [string]: {
 	metadata: annotations: {
 		"service.beta.kubernetes.io/aws-load-balancer-backend-protocol":                  string | *"http"
 		"service.beta.kubernetes.io/aws-load-balancer-ssl-ports":                         string | *"https"
