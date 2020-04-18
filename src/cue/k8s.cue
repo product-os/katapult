@@ -73,7 +73,7 @@ k8s: d: [namespace]: service: [Name=_]: {
 }
 
 k8s: {
-	allNamespaced = [] // data for data in k8s.d[ns] for ns, _ in k8s.d
-	allSets = list.FlattenN([ k8s.namespace, allNamespaced], 2)
-	all: [ x for v in allSets for x in v ]
+	allNamespaced = [ spec for nsData in k8s.d for kindData in nsData for spec in kindData ]
+	namespaces = [ spec for spec in k8s.namespace ]
+	all: list.FlattenN([ namespaces, allNamespaced], 2)
 }

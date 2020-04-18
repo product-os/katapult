@@ -10,22 +10,23 @@ for name, k in keyframes {
 	}
 
 	k8s: d: "\(name)": {
-		// Service account per component.
-		serviceAccount: {
-			for componentRef in k.children {
-				"\(componentRef.as)": {}
+		for componentRef in k.children {
+			component = contracts[componentRef.slug]
+			componentType = component.type
+
+			// Service account per component.
+			serviceAccount: {
+				for componentRef in k.children {
+					"\(componentRef.as)": {}
+				}
 			}
-		}
 
-		// Services for corresponding component types.
-		service: {
-			httpExposedTypes = [
-				"sw.containerized-web-service",
-			]
+			// Services for corresponding component types.
+			service: {
+				httpExposedTypes = [
+					"sw.containerized-web-service",
+				]
 
-			for componentRef in k.children {
-				component = contracts[componentRef.slug]
-				componentType = component.type
 				if (list.Contains(serviceTypes, componentType)) {
 					"\(componentRef.as)": spec: {
 						httpsPorts = [
@@ -49,10 +50,13 @@ for name, k in keyframes {
 					}
 				}
 			}
-		}
 
-		deployment: {
-			// TODO: iterate over children.
+			// Deployment per component.
+			deployment: {
+				"\(componentRef.as)": spec: {
+
+				}
+			}
 		}
 	}
 }
