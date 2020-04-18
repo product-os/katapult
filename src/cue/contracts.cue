@@ -1,5 +1,7 @@
 package katapult
 
+import "list"
+
 contractBase: {
   type?: string
   slug?: string
@@ -23,6 +25,12 @@ capabilityType: endpoint: {
   }
 }
 
+serviceTypes :: [
+    "sw.containerized-service",
+    "sw.containerized-scalable-service",
+    "sw.containerized-web-service"
+]
+
 Contract :: contractBase & {
   type: string
   slug: string
@@ -31,7 +39,7 @@ Contract :: contractBase & {
   provides?: [...ref]
 
   // Default capabilities inferred from the type.
-  if (type == "sw.containerized-scalable-service" || type == "sw.containerized-service") {
+  if (list.Contains(serviceTypes, type)) {
     provides: [...ref] | *[capabilityType.endpoint & { as: "main-endpoint" }]
   }
 }
@@ -40,9 +48,10 @@ contracts: [Name=_]: Contract & {
   slug: Name
 }
 
+// Contracts data is added with the import script.
 contracts: {
-  "balena-dashboard": {
-    type: "sw.containerized-scalable-service",
+  "balena-ui": {
+    type: "sw.containerized-web-service",
     requires: [
       { slug: "balena-api" },
       { slug: "balena-data" }

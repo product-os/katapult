@@ -11,8 +11,8 @@ Blueprint :: Contract & {
   }
 }
 
-blueprints: [Name=_]: Blueprint & {
-  slug: "\(Name)-blueprint"
+blueprint: Blueprint & {
+  slug: "balena-blueprint"
 }
 
 blueprints: balenaCloud: {
@@ -42,13 +42,14 @@ blueprints: balenaCloud: {
   }
 }
 
-Keyframe :: Contract & {
+Keyframe :: contractBase & {
   type: "keyframe"
+  children: [...ref]
 }
 
 keyframes: [Name=_]: Keyframe & {
   slug: Name
-  requires: [
+  children: [
     {
       as: sel.as
       cardinality: sel.as
@@ -62,7 +63,7 @@ keyframes: [Name=_]: Keyframe & {
 }
 
 keyframes: balenaCloud: {
-  requires: [
+  children: [
     { slug: "balena-api", version: "TODO"},
     { slug: "balena-ui", version: "TODO"},
     { slug: "balena-data", version: "TODO"},

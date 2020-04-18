@@ -1,51 +1,58 @@
 package katapult
 
-// Namespaces per product keyframe.
-k8s: namespace: {
-  for name, k in keyframes {
-    "\(name)": {}
-  }
-}
+import "list"
 
-// Service account per component.
-k8s: serviceAccount: {
-  for name, k in keyframes {
-    for r in k.requires {
-      "\(r.as)": {
-        metadata: namespace: name
-      }
+for name, k in keyframes {
+
+    // Namespaces per product keyframe.
+    k8s: namespace: {
+      "\(name)": {}
     }
-  }
-}
 
-// Generate services.
-k8s: service: {
-  for name, k in keyframes {
-    for r in k.requires {
-      if (contracts[r.slug].type == "sw.containerized-service" || contracts[r.slug].type == "sw.containerized-scalable-service") {
-        "\(r.as)": {
-          metadata: namespace: name
-          spec: ports: [
-            {
-              name: "https"
-              port: 443
-              targetPort: capability.as
-              protocol: capability.data.protocol | *"TCP"
+    k8s: d: "\(name)": {
+        // Service account per component.
+        serviceAccount: {
+            for componentRef in k.children {
+              "\(componentRef.as)": {}
             }
-            for capability in contracts[r.slug].provides if capability.type == "endpoint" && capability.as == "main-endpoint"
-          ]
         }
-      }
-    }
-  }
-}
 
-// Generate deployments from keyframe.
-k8s: deployment: {
-  for k in keyframes {
-    for r in k.requires {
-      // TODO
-    }
-  }
-}
+        // Services for corresponding component types.
+        service: {
+            httpExposedTypes = [
+                "sw.containerized-web-service"
+            ]
 
+            for componentRef in k.children {
+                component = contracts[componentRef.slug]
+                componentType = component.type
+                if (list.Contains(serviceTypes, componentType)) {
+                    "\(componentRef.as)": spec: {
+                        httpsPorts = [
+                            {
+                                name: "https"
+                                port: 443
+                                targetPort: capability.as
+                                protocol: capability.data.protocol | *"TCP"
+                            }
+                            for capability in component.provides if capability.type == "endpoint" && capability.as == "main-endpoint"
+                        ]
+                        httpPorts = [
+                            {
+                                name: "http"
+                                port: 80
+                                targetPort: "main-endpoint" // TODO: Derive from the capability.
+                                protocol: "TCP"
+                            } if list.Contains(httpExposedTypes, componentType)
+                        ]
+                        ports: list.FlattenN([httpsPorts, httpPorts], 2)
+                    }
+                }
+            }
+        }
+
+        deployment: {
+            // TODO: iterate over children.
+        }
+    }
+}
