@@ -36,13 +36,13 @@ for name, k in keyframes {
 								targetPort: capability.as
 								protocol:   capability.data.protocol | *"TCP"
 							}
-							for capability in component.provides if capability.type == "endpoint" && capability.as == "main-endpoint"
+							for capability in component.provides if capability.type == "endpoint" && capability.as == "main"
 						]
 						httpPorts = [
 							{
 								name:       "http"
 								port:       80
-								targetPort: "main-endpoint" // TODO: Derive from the capability.
+								targetPort: "main" // TODO: Derive from the capability.
 								protocol:   "TCP"
 							} if list.Contains(httpExposedTypes, componentType)
 						]
@@ -55,7 +55,7 @@ for name, k in keyframes {
 			deployment: {
 				if (list.Contains(serviceTypes, componentType)) {
 					"\(componentRef.as)": {
-						template: spec: containers: [{
+						spec: template: spec: containers: [{
 							image: "balena/\(component.slug):\(componentRef.version)"
 							ports: [
 								{

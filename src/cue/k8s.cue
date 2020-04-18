@@ -60,40 +60,42 @@ k8s: d: [namespace]: deployment: [Name=_]: {
 		"app.kubernetes.io/instance": Name
 		"app.kubernetes.io/name":     Name
 	}
-	selector: matchLabels: labelsData
-	template: {
-		metadata: labels: labelsData
-		spec: {
-			terminationGracePeriodSeconds: 60
-			imagePullSecrets: name: "image-pull-secret"
-			serviceAccountName: Name
-			containers: [{
-				name:            Name
-				imagePullPolicy: "IfNotPresent"
-				//image: string
+	spec: {
+		selector: matchLabels: labelsData
+		template: {
+			metadata: labels: labelsData
+			spec: {
+				terminationGracePeriodSeconds: 60
+				imagePullSecrets: [{name: "image-pull-secret"}]
+				serviceAccountName: Name
+				containers: [{
+					name:            Name
+					imagePullPolicy: "IfNotPresent"
+					//image: string
 
-				ports: [...containerPort]
+					ports: [...containerPort]
 
-				probe :: {
-					httpGet: {
-						path:   "/ping"
-						port:   "main-endpoint"
-						scheme: "HTTP"
+					probe :: {
+						httpGet: {
+							path:   "/ping"
+							port:   "main-endpoint"
+							scheme: "HTTP"
+						}
+						periodSeconds: int
+						...
 					}
-					periodSeconds: int
-					...
-				}
-				livenessProbe: probe & {
-					initialDelaySeconds: 60
-					periodSeconds:       6
-					timeoutSeconds:      5
-				}
-				readinessProbe: probe & {
-					failureThreshold: 6
-					periodSeconds:    10
-				}
-				// TODO: env, volumes, logging
-			}]
+					livenessProbe: probe & {
+						initialDelaySeconds: 60
+						periodSeconds:       6
+						timeoutSeconds:      5
+					}
+					readinessProbe: probe & {
+						failureThreshold: 6
+						periodSeconds:    10
+					}
+					// TODO: env, volumes, logging
+				}]
+			}
 		}
 	}
 }
@@ -105,17 +107,13 @@ k8sPort :: {
 	targetPort: string
 }
 
-k8s: d: [namespace]: service: [Name=_]: {
-	annotations?: {[string]: string}
-
-	spec: {
-		type: "LoadBalancer"
-		selector: {
-			"app.kubernetes.io/instance": Name
-			"app.kubernetes.io/name":     Name
-		}
-		ports: [...k8sPort]
+k8s: d: [namespace]: service: [Name=_]: spec: {
+	type: "LoadBalancer"
+	selector: {
+		"app.kubernetes.io/instance": Name
+		"app.kubernetes.io/name":     Name
 	}
+	ports: [...k8sPort]
 }
 
 k8s: {

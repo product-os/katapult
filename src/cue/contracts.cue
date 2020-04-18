@@ -40,7 +40,7 @@ Contract :: contractBase & {
 
 	// Default capabilities inferred from the type.
 	if (list.Contains(serviceTypes, type)) {
-		provides: [...ref] | *[capabilityType.endpoint & {as: "main-endpoint"}]
+		provides: [...ref] | *[capabilityType.endpoint & {as: "main"}]
 	}
 }
 
@@ -62,8 +62,8 @@ contracts: {
 		type: "sw.containerized-scalable-service"
 		requires: [{slug: "redis"}]
 		provides: [
-			{type: "endpoint", data: {port: 80}, as:   "main-endpoint"},
-			{type: "endpoint", data: {port: 8000}, as: "metrics-endpoint"},
+			{type: "endpoint", data: {port: 80}, as:   "main"},
+			{type: "endpoint", data: {port: 8000}, as: "metrics"},
 		]
 	}
 

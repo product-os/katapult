@@ -15,7 +15,7 @@ blueprint: Blueprint & {
 	slug: "balena-blueprint"
 }
 
-blueprints: balenaCloud: {
+blueprints: "balena-cloud": {
 	data: selector: [
 		{slug: "balena-api", as:       "api", version: "^1.3.0", cardinality: "1"},
 		{slug: "balena-ui", as:        "ui"},
@@ -62,7 +62,7 @@ keyframes: [Name=_]: Keyframe & {
 	data: links: blueprints[Name].data.links
 }
 
-keyframes: balenaCloud: {
+keyframes: "balena-cloud": {
 	children: [
 		{slug: "balena-api", version:  "TODO"},
 		{slug: "balena-ui", version:   "TODO"},

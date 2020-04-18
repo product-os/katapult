@@ -3,7 +3,7 @@ package katapult
 // AWS-specific definitions.
 
 k8s: d: [string]: service: [string]: {
-	annotations: {
+	metadata: annotations: {
 		"service.beta.kubernetes.io/aws-load-balancer-backend-protocol":                  string | *"http"
 		"service.beta.kubernetes.io/aws-load-balancer-ssl-ports":                         string | *"https"
 		"service.beta.kubernetes.io/aws-load-balancer-ssl-cert":                          "TODO" // arn:aws:acm:us-east-1:account:certificate/uuid
