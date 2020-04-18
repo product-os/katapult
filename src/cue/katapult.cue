@@ -51,10 +51,21 @@ for name, k in keyframes {
 				}
 			}
 
-			// Deployment per component.
+			// Deployment per service component.
 			deployment: {
-				"\(componentRef.as)": spec: {
-
+				if (list.Contains(serviceTypes, componentType)) {
+					"\(componentRef.as)": {
+						template: spec: containers: [{
+							image: "balena/\(component.slug):\(componentRef.version)"
+							ports: [
+								{
+									containerPort: capability.data.port
+									name:          capability.as
+									protocol:      capability.data.protocol | *"TCP"
+								} for capability in component.provides if capability.type == "endpoint"
+							]
+						}]
+					}
 				}
 			}
 		}

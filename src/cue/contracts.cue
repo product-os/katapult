@@ -20,7 +20,7 @@ capabilityType: [Name=_]: contractBase & {
 
 capabilityType: endpoint: {
 	data: {
-		port:     uint | *3000
+		port:     uint | *8000
 		protocol: "TCP" | "UDP" | *"TCP"
 	}
 }
@@ -62,8 +62,8 @@ contracts: {
 		type: "sw.containerized-scalable-service"
 		requires: [{slug: "redis"}]
 		provides: [
-			{type: "endpoint", data: {portNumber: 80}, as:   "main-endpoint"},
-			{type: "endpoint", data: {portNumber: 8000}, as: "metrics-endpoint"},
+			{type: "endpoint", data: {port: 80}, as:   "main-endpoint"},
+			{type: "endpoint", data: {port: 8000}, as: "metrics-endpoint"},
 		]
 	}
 

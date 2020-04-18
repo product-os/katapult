@@ -48,8 +48,54 @@ for kindName in ["deployment", "service", "serviceAccount"] {
 	}
 }
 
-k8s: d: [namespace]: deployment: [string]: {
+containerPort :: {
+	containerPort: number
+	name:          string
+	protocol:      *"TCP" | "UDP"
+}
+
+k8s: d: [namespace]: deployment: [Name=_]: {
 	apiVersion: "apps/v1"
+	labelsData = {
+		"app.kubernetes.io/instance": Name
+		"app.kubernetes.io/name":     Name
+	}
+	selector: matchLabels: labelsData
+	template: {
+		metadata: labels: labelsData
+		spec: {
+			terminationGracePeriodSeconds: 60
+			imagePullSecrets: name: "image-pull-secret"
+			serviceAccountName: Name
+			containers: [{
+				name:            Name
+				imagePullPolicy: "IfNotPresent"
+				//image: string
+
+				ports: [...containerPort]
+
+				probe :: {
+					httpGet: {
+						path:   "/ping"
+						port:   "main-endpoint"
+						scheme: "HTTP"
+					}
+					periodSeconds: int
+					...
+				}
+				livenessProbe: probe & {
+					initialDelaySeconds: 60
+					periodSeconds:       6
+					timeoutSeconds:      5
+				}
+				readinessProbe: probe & {
+					failureThreshold: 6
+					periodSeconds:    10
+				}
+				// TODO: env, volumes, logging
+			}]
+		}
+	}
 }
 
 k8sPort :: {
