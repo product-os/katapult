@@ -14,7 +14,7 @@ Ref :: Base & {
 	version?:     string
 }
 
-capabilityType: [Name=_]: Base & {
+capabilityType: [Name=string]: Base & {
 	type: Name
 }
 
@@ -38,6 +38,6 @@ Structure :: Base & {
 	}
 }
 
-Data: [Name=_]: Structure & {
+Data: [Name=string]: Structure & {
 	slug: Name
 }

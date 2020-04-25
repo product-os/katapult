@@ -1,7 +1,7 @@
 package aws
 
 import (
-    "github.com/balena-io/katapult/cue/adapter/k8s"
+	"github.com/balena-io/katapult/cue/adapter/k8s"
 )
 
 Data: k8s.Data

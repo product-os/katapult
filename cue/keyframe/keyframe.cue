@@ -1,7 +1,7 @@
 package keyframe
 
 import (
-    "github.com/balena-io/katapult/cue/contract"
+	"github.com/balena-io/katapult/cue/contract"
 )
 
 Structure :: contract.Base & {
@@ -9,13 +9,13 @@ Structure :: contract.Base & {
 	children: [...contract.Ref]
 }
 
-Data: [Name=_]: Structure & {
-	slug:     Name
+Data: [Name=string]: Structure & {
+	slug: Name
 	children: [
-        ...contract.Ref & {
-			as:          string | *slug
-			version:     string
-			slug:        string
-		}
+		...contract.Ref & {
+			as:      string | *slug
+			version: string
+			slug:    string
+		},
 	]
 }

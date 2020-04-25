@@ -5,28 +5,14 @@ import (
 	"strings"
 )
 
-// TODO: Import from k8s API.
-
-namespace :: string
-
-Base :: {
-	apiVersion: string
-	kind:       "Deployment" | "Service" | "ConfigMap" | "SealedSecret" | "ServiceAccount" | "Namespace"
-	metadata: {
-		name: string
-		...
-	}
-	...
-}
-
 Data: close({
-    namespace: [string]: {}
-    d: {}
+	namespace: [string]: {}
+	d: {}
 })
 
 // Common namespace data layout.
 
-Data: namespace: [Name=_]: Base & {
+Data: namespace: [Name=string]: Base & {
 	apiVersion: "v1"
 	kind:       "Namespace"
 	metadata: name: Name
@@ -34,17 +20,13 @@ Data: namespace: [Name=_]: Base & {
 
 // Common parts of definitions that belong to a namespace.
 
-Namespaced :: Base & {
-	metadata: namespace: string
-}
-
-Data: d: [Namespace=_]: [string]: [Name=_]: Namespaced & {
+Data: d: [Namespace=string]: [string]: [Name=string]: Namespaced & {
 	metadata: namespace: Namespace
 	metadata: name:      Name
 	metadata: labels: {
 		"app.kubernetes.io/instance": Name
 		"app.kubernetes.io/name":     Name
-		"app.kubernetes.io/version":  "TODO"
+		"app.kubernetes.io/version":  string
 	}
 }
 
@@ -61,7 +43,7 @@ containerPort :: {
 	protocol:      *"TCP" | "UDP"
 }
 
-Data: d: [namespace]: deployment: [Name=_]: {
+Data: d: [namespace]: deployment: [Name=string]: {
 	apiVersion: "apps/v1"
 	labelsData = {
 		"app.kubernetes.io/instance": Name
@@ -78,7 +60,7 @@ Data: d: [namespace]: deployment: [Name=_]: {
 				containers: [{
 					name:            Name
 					imagePullPolicy: "IfNotPresent"
-					image: string
+					image:           string
 
 					ports: [...containerPort]
 
@@ -107,14 +89,7 @@ Data: d: [namespace]: deployment: [Name=_]: {
 	}
 }
 
-ServicePort :: {
-	name:       string
-	port:       number
-	protocol:   "TCP" | "UDP"
-	targetPort: string
-}
-
-Data: d: [namespace]: service: [Name=_]: spec: {
+Data: d: [namespace]: service: [Name=string]: spec: {
 	type: "LoadBalancer"
 	selector: {
 		"app.kubernetes.io/instance": Name

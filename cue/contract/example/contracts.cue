@@ -1,7 +1,7 @@
 package example
 
 import (
-    "github.com/balena-io/katapult/cue/contract"
+	"github.com/balena-io/katapult/cue/contract"
 )
 
 Data: contract.Data
@@ -11,6 +11,9 @@ Data: {
 		requires: [
 			{slug: "balena-api"},
 			{slug: "balena-data"},
+		]
+		config: [
+		    {name: "LOG_LEVEL", value: "error" | "debug" | "info"}
 		]
 	}
 

@@ -11,6 +11,6 @@ Blueprint :: Contract & {
 	}
 }
 
-blueprints: [Name=_]: Blueprint & {
-    slug: "\(Name)-blueprint"
+blueprints: [Name=string]: Blueprint & {
+	slug: "\(Name)-blueprint"
 }
