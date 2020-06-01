@@ -32,6 +32,9 @@ Structure :: Base & {
 	requires?: [...Ref]
 	provides?: [...Ref]
 
+    // TODO: Work on the config.
+    config?: [...{name: string, required: bool | *true, value: _}]
+
 	// Default capabilities inferred from the type.
 	if (list.Contains(ServiceTypes, type)) {
 		provides: [...Ref] | *[capabilityType.endpoint & {as: "main"}]

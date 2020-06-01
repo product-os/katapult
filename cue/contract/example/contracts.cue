@@ -12,9 +12,10 @@ Data: {
 			{slug: "balena-api"},
 			{slug: "balena-data"},
 		]
-		config: [
-		    {name: "LOG_LEVEL", value: "error" | "debug" | "info"}
-		]
+		// TODO: Work on the config.
+//		config: [
+//		    {name: "LOG_LEVEL", required: false, value: "error" | "debug" | "info"}
+//		]
 	}
 
 	"balena-api": {
