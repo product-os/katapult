@@ -8,14 +8,11 @@ Base: {
 	data?: {...}
 }
 
-// Possible references to this location:
-// contract/contract.cue:40:17
 #Ref: Base & {
 	as?:          string
 	cardinality?: string
 	version?:     string
 }
-Ref: #Ref @tmpNoExportNewDef(2170)
 
 capabilityType: [Name=string]: Base & {
 	type: Name
@@ -39,7 +36,7 @@ capabilityType: endpoint: {
 
 	// Default capabilities inferred from the type.
 	if (list.Contains(ServiceTypes, type)) {
-		provides: [...Ref] | *[capabilityType.endpoint & {as: "main"}]
+		provides: [...#Ref] | *[capabilityType.endpoint & {as: "main"}]
 	}
 }
 

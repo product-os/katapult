@@ -37,14 +37,11 @@ for kindName in ["deployment", "service", "serviceAccount"] {
 	}
 }
 
-// Possible references to this location:
-// adapter/k8s/definitions.cue:65:17
 #containerPort: {
 	containerPort: number
 	name:          string
 	protocol:      *"TCP" | "UDP"
 }
-containerPort: #containerPort @tmpNoExportNewDef(64b7)
 
 Data: d: [#namespace]: deployment: [Name=string]: {
 	apiVersion: "apps/v1"
@@ -65,7 +62,7 @@ Data: d: [#namespace]: deployment: [Name=string]: {
 					imagePullPolicy: "IfNotPresent"
 					image:           string
 
-					ports: [...containerPort]
+					ports: [...#containerPort]
 
 					#probe: {
 						httpGet: {
