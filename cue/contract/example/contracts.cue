@@ -29,7 +29,7 @@ Data: {
 
 	"balena-git": {
 		type: "sw.containerized-service"
-		requires: [{type: "hw.disk", data: {path: "/mnt/git-data"}}]
+		requires: [{type: "hw.disk", data: {path: "/mnt/git-data"}, as: "disk"}]
 	}
 
 	"balena-data": {

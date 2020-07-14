@@ -67,9 +67,6 @@ Data: d: [#namespace]: deployment: [Name=string]: {
 
 					ports: [...containerPort]
 
-					// Possible references to this location:
-					// adapter/k8s/definitions.cue:76:21
-					// adapter/k8s/definitions.cue:81:22
 					#probe: {
 						httpGet: {
 							path:   "/ping"
@@ -79,13 +76,12 @@ Data: d: [#namespace]: deployment: [Name=string]: {
 						periodSeconds: int
 						...
 					}
-					probe:         #probe @tmpNoExportNewDef(c059)
-					livenessProbe: probe & {
+					livenessProbe: #probe & {
 						initialDelaySeconds: 60
 						periodSeconds:       6
 						timeoutSeconds:      5
 					}
-					readinessProbe: probe & {
+					readinessProbe: #probe & {
 						failureThreshold: 6
 						periodSeconds:    10
 					}

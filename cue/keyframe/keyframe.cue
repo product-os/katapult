@@ -7,6 +7,7 @@ import (
 #Structure: contract.Base & {
 	type: "keyframe"
 	children: [...contract.#Ref]
+	links: [string]: [string]: string
 }
 
 Data: [Name=string]: #Structure & {

@@ -8,8 +8,8 @@ import (
 )
 
 k8sAll: {
-	let allNamespaced = [ for nsData in k8sData.d for kindData in nsData for spec in kindData { spec } ]
-	let namespaces = [ for spec in k8sData.namespace { spec } ]
+	let allNamespaced = [ for nsData in k8sData.d for kindData in nsData for spec in kindData {spec}]
+	let namespaces = [ for spec in k8sData.namespace {spec}]
 	data: list.FlattenN([namespaces, allNamespaced], 2)
 }
 
@@ -28,14 +28,14 @@ command: k8sApply: {
 
 command: dumpContracts: {
 	task: print: cli.Print & {
-		let selectedContracts = [ for c in contracts { c } ]
+		let selectedContracts = [ for c in contracts {c}]
 		text: yaml.MarshalStream(selectedContracts)
 	}
 }
 
 command: dumpKeyframes: {
 	task: print: cli.Print & {
-		let selectedKeyframes = [ for k in keyframes { k } ]
+		let selectedKeyframes = [ for k in keyframes {k}]
 		text: yaml.MarshalStream(selectedKeyframes)
 	}
 }
