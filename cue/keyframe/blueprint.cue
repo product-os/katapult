@@ -1,6 +1,6 @@
 package keyframe
 
-Blueprint :: Contract & {
+#Blueprint: Contract & {
 	type: "blueprint"
 	data: {
 		selector: [...ref]
@@ -11,6 +11,6 @@ Blueprint :: Contract & {
 	}
 }
 
-blueprints: [Name=string]: Blueprint & {
+blueprints: [Name=string]: #Blueprint & {
 	slug: "\(Name)-blueprint"
 }

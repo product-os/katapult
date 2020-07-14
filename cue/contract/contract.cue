@@ -8,11 +8,14 @@ Base: {
 	data?: {...}
 }
 
-Ref :: Base & {
+// Possible references to this location:
+// contract/contract.cue:40:17
+#Ref: Base & {
 	as?:          string
 	cardinality?: string
 	version?:     string
 }
+Ref: #Ref @tmpNoExportNewDef(2170)
 
 capabilityType: [Name=string]: Base & {
 	type: Name
@@ -24,16 +27,15 @@ capabilityType: endpoint: {
 		protocol: "TCP" | "UDP" | *"TCP"
 	}
 }
-
-Structure :: Base & {
+#Structure: Base & {
 	type: string
 	slug: string
 
-	requires?: [...Ref]
-	provides?: [...Ref]
+	requires?: [...#Ref]
+	provides?: [...#Ref]
 
-    // TODO: Work on the config.
-    config?: [...{name: string, required: bool | *true, value: _}]
+	// TODO: Work on the config.
+	config?: [...{name: string, required: bool | *true, value: _}]
 
 	// Default capabilities inferred from the type.
 	if (list.Contains(ServiceTypes, type)) {
@@ -41,6 +43,6 @@ Structure :: Base & {
 	}
 }
 
-Data: [Name=string]: Structure & {
+Data: [Name=string]: #Structure & {
 	slug: Name
 }

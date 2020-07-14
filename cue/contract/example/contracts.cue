@@ -13,9 +13,9 @@ Data: {
 			{slug: "balena-data"},
 		]
 		// TODO: Work on the config.
-//		config: [
-//		    {name: "LOG_LEVEL", required: false, value: "error" | "debug" | "info"}
-//		]
+		//  config: [
+		//      {name: "LOG_LEVEL", required: false, value: "error" | "debug" | "info"}
+		//  ]
 	}
 
 	"balena-api": {

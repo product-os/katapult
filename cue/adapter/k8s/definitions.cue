@@ -12,7 +12,7 @@ Data: close({
 
 // Common namespace data layout.
 
-Data: namespace: [Name=string]: Base & {
+Data: namespace: [Name=string]: #Base & {
 	apiVersion: "v1"
 	kind:       "Namespace"
 	metadata: name: Name
@@ -20,7 +20,7 @@ Data: namespace: [Name=string]: Base & {
 
 // Common parts of definitions that belong to a namespace.
 
-Data: d: [Namespace=string]: [string]: [Name=string]: Namespaced & {
+Data: d: [Namespace=string]: [string]: [Name=string]: #Namespaced & {
 	metadata: namespace: Namespace
 	metadata: name:      Name
 	metadata: labels: {
@@ -31,21 +31,24 @@ Data: d: [Namespace=string]: [string]: [Name=string]: Namespaced & {
 }
 
 for kindName in ["deployment", "service", "serviceAccount"] {
-	Data: d: [namespace]: "\(kindName)": [string]: Namespaced & {
+	Data: d: [#namespace]: "\(kindName)": [string]: #Namespaced & {
 		apiVersion: string | *"v1"
 		kind:       strings.ToTitle(kindName)
 	}
 }
 
-containerPort :: {
+// Possible references to this location:
+// adapter/k8s/definitions.cue:65:17
+#containerPort: {
 	containerPort: number
 	name:          string
 	protocol:      *"TCP" | "UDP"
 }
+containerPort: #containerPort @tmpNoExportNewDef(64b7)
 
-Data: d: [namespace]: deployment: [Name=string]: {
+Data: d: [#namespace]: deployment: [Name=string]: {
 	apiVersion: "apps/v1"
-	labelsData = {
+	let labelsData = {
 		"app.kubernetes.io/instance": Name
 		"app.kubernetes.io/name":     Name
 	}
@@ -64,7 +67,10 @@ Data: d: [namespace]: deployment: [Name=string]: {
 
 					ports: [...containerPort]
 
-					probe :: {
+					// Possible references to this location:
+					// adapter/k8s/definitions.cue:76:21
+					// adapter/k8s/definitions.cue:81:22
+					#probe: {
 						httpGet: {
 							path:   "/ping"
 							port:   "main-endpoint"
@@ -73,6 +79,7 @@ Data: d: [namespace]: deployment: [Name=string]: {
 						periodSeconds: int
 						...
 					}
+					probe:         #probe @tmpNoExportNewDef(c059)
 					livenessProbe: probe & {
 						initialDelaySeconds: 60
 						periodSeconds:       6
@@ -89,11 +96,11 @@ Data: d: [namespace]: deployment: [Name=string]: {
 	}
 }
 
-Data: d: [namespace]: service: [Name=string]: spec: {
+Data: d: [#namespace]: service: [Name=string]: spec: {
 	type: "LoadBalancer"
 	selector: {
 		"app.kubernetes.io/instance": Name
 		"app.kubernetes.io/name":     Name
 	}
-	ports: [...ServicePort]
+	ports: [...#ServicePort]
 }

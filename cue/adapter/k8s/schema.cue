@@ -1,10 +1,8 @@
 package k8s
 
 // TODO: Import from k8s API.
-
-namespace :: string
-
-Base :: {
+#namespace: string
+#Base: {
 	apiVersion: string
 	kind:       "Deployment" | "Service" | "ConfigMap" | "SealedSecret" | "ServiceAccount" | "Namespace"
 	metadata: {
@@ -13,12 +11,10 @@ Base :: {
 	}
 	...
 }
-
-Namespaced :: Base & {
+#Namespaced: #Base & {
 	metadata: namespace: string
 }
-
-ServicePort :: {
+#ServicePort: {
 	name:       string
 	port:       number
 	protocol:   "TCP" | "UDP"
