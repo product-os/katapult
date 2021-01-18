@@ -1,1 +1,2 @@
-module: "github.com/balena-io/katapult/cue"
+module: "github.com/product-os/katapult/cue"
+

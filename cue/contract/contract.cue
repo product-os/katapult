@@ -14,6 +14,14 @@ Base: {
 	version?:     string
 }
 
+// TODO: flesh out contract and contract reference types
+#HwDiskRef: #Ref & {
+	type: "hw.disk",
+	data: {
+		target: string
+	}
+}
+
 capabilityType: [Name=string]: Base & {
 	type: Name
 }
@@ -24,15 +32,17 @@ capabilityType: endpoint: {
 		protocol: "TCP" | "UDP" | *"TCP"
 	}
 }
-#Structure: Base & {
+
+#Contract: Base & {
 	type: string
 	slug: string
+	version: string
 
-	requires?: [...#Ref]
+	requires: [...#Ref]
 	provides?: [...#Ref]
 
 	// TODO: Work on the config.
-	config?: [...{name: string, required: bool | *true, value: _}]
+	config?: [string]: {required: bool | *true, value: _}
 
 	// Default capabilities inferred from the type.
 	if (list.Contains(ServiceTypes, type)) {
@@ -40,6 +50,4 @@ capabilityType: endpoint: {
 	}
 }
 
-Data: [Name=string]: #Structure & {
-	slug: Name
-}
+contracts: [Name=string]: #Contract

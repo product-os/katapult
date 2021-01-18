@@ -39,3 +39,16 @@ command: dumpKeyframes: {
 		text: yaml.MarshalStream(selectedKeyframes)
 	}
 }
+
+command: dumpCompose: {
+	task: print: cli.Print & {
+		let selectedKeyframes = [ for k in keyframes {k}]
+		text: yaml.MarshalStream(selectedKeyframes)
+	}
+}
+
+command: printCompose: {
+    task: print: cli.Print & {
+		text: yaml.MarshalStream(composes)
+	}
+}

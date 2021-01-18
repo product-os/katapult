@@ -1,13 +1,9 @@
-package keyframe
+package contract
 
-#Blueprint: Contract & {
+#Blueprint: Base & {
 	type: "blueprint"
 	data: {
-		selector: [...ref]
-		links: {
-			// TODO
-			...
-		}
+		selector: [...#Ref]
 	}
 }
 
