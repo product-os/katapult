@@ -1,18 +1,10 @@
 package contract
 
-#Keyframe: Base & {
+#Keyframe: #Contract & {
 	type: "keyframe"
-	children: [...#Ref]
-	links: [string]: [string]: string
-}
-
-keyframes: [Name=string]: #Keyframe & {
-	slug: Name
-	children: [
-		...#Ref & {
-			as:      string | *slug
-			version: string
-			slug:    string
-		},
-	]
+	version: "1.0.0"
+	data: close({
+		children: [string]: #SwContainerizedService
+		links: [string]: [string]: string
+	})
 }

@@ -1,12 +1,10 @@
 package contract
 
-#Blueprint: Base & {
+#Blueprint: #Contract & {
 	type: "blueprint"
-	data: {
+	version: "1.0.0"
+	data: close({
 		selector: [...#Ref]
-	}
-}
-
-blueprints: [Name=string]: #Blueprint & {
-	slug: "\(Name)-blueprint"
+		links: [string]: string
+	})
 }

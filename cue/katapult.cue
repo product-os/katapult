@@ -2,27 +2,25 @@ package katapult
 
 import (
     "github.com/product-os/katapult/cue/contract"
+	"github.com/product-os/katapult/cue/environment"
 )
 
-contracts: contract.contracts
-keyframes: contract.keyframes
-blueprints: contract.blueprints
-distribution: slug: string
-input: {}
-composes: {}
+contracts: [Name=string]: contract.#Contract
+contracts: environment.contracts
 
-for name, blueprint in blueprints {
+keyframes: [Name=string]: contract.#Keyframe & {
+	slug: "\(Name)-keyframe"
+} 
 
-    keyframes: "\(name)": {
-        slug: name,
-        children: [
-            for ref in blueprint.data.selector {
-                let _contract = contracts[ref.slug]
-
-                slug: _contract.slug
-                version: _contract.version
-                type: _contract.type
-            }
-        ]
-    }
+blueprints: [Name=string]: contract.#Blueprint & {
+	slug: "\(Name)-blueprint"
 }
+blueprints: environment.blueprints
+
+input: {
+	product: string
+	environment: string
+	config: {...}
+}
+
+configs: [Name=string]: contract.#Contract & {}

@@ -11,9 +11,10 @@ contracts: {
 		slug:    "open-balena-api"
 		type:    "sw.containerized-service"
 		version: "v0.109.2"
-		data: {
+		data: {			
 			image:    "balena/open-balena-api:\(version)"
 			replicas: *1 | >1 // scalable
+			repository: "git@github.com:balena-io/open-balena.git"
 		}
 		requires: [
 			{slug: "open-balena-db", type: "sw.containerized-service"},
@@ -142,6 +143,7 @@ contracts: {
 		version: "v2.13.11"
 		data: {
 			image: "balena/open-balena-registry:\(version)"
+			repository: "git@github.com:balena-io/open-balena-registry.git"
 		}
 		requires: [
 			{slug: "open-balena-s3", type: "sw.containerized-service"},
@@ -207,6 +209,7 @@ contracts: {
 		version: "v9.16.1"
 		data: {
 			image: "balena/open-balena-vpn:\(version)"
+			repository: "git@github.com:balena-io/open-balena-vpn.git"
 		}
 		requires: [
 			{slug: "open-balena-api", type: "sw.containerized-service"},
@@ -259,6 +262,7 @@ contracts: {
 		version: "v4.1.0"
 		data: {
 			image: "balena/open-balena-db:\(version)"
+			repository: "git@github.com:balena-io/open-balena-db.git"
 		}
 		requires: [
 			{slug: "open-balena-api", type: "sw.containerized-service"},
@@ -271,6 +275,7 @@ contracts: {
 		version: "v2.9.9"
 		data: {
 			image: "balena/open-balena-s3:\(version)"
+			repository: "git@github.com:balena-io/open-balena-s3.git"
 		}
 		requires: [
 			{slug: "open-balena-api", type: "sw.containerized-service"},

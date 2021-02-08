@@ -1,28 +1,21 @@
 package contract
 
-import "list"
+// import "list"
 
-Base: {
+#Base: {
 	type?: string
 	slug?: string
 	data?: {...}
+	...
 }
 
-#Ref: Base & {
+#Ref: #Base & {
 	as?:          string
 	cardinality?: string
 	version?:     string
 }
 
-// TODO: flesh out contract and contract reference types
-#HwDiskRef: #Ref & {
-	type: "hw.disk",
-	data: {
-		target: string
-	}
-}
-
-capabilityType: [Name=string]: Base & {
+capabilityType: [Name=string]: {
 	type: Name
 }
 
@@ -33,21 +26,53 @@ capabilityType: endpoint: {
 	}
 }
 
-#Contract: Base & {
+#Contract: {
+
 	type: string
+	name?: string	
 	slug: string
 	version: string
-
+	
+	data: {...}
 	requires: [...#Ref]
-	provides?: [...#Ref]
-
-	// TODO: Work on the config.
-	config?: [string]: {required: bool | *true, value: _}
+	provides: [...#Ref]	
+	config: [string]: {required: bool | *true, value: _}
 
 	// Default capabilities inferred from the type.
-	if (list.Contains(ServiceTypes, type)) {
-		provides: [...#Ref] | *[capabilityType.endpoint & {as: "main"}]
-	}
+	// if (list.Contains(ServiceTypes, type)) {
+	// 	provides: [...#Ref] | *[capabilityType.endpoint & {as: "main"}]
+	// }
 }
 
-contracts: [Name=string]: #Contract
+#SwContainerizedService: #Contract & {
+	type: "sw.containerized-service"
+	data: close({
+		replicas: *1 | number
+		assets: {			
+			image: url: string
+			repo: {
+				https: string
+				ssh: string
+			}
+		}
+	})
+}
+
+#DiskRef: #Ref & {
+	type: "disk",
+	data: close({
+		name: string
+		target: string
+		readonly: string
+	})
+}
+
+#HealthcheckRef: #Ref & {
+	type: "healthcheck"
+	data: close({
+		interval: string
+		retries: number
+		timeout: string
+		test: [...string]
+	})
+}
