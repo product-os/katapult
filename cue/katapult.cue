@@ -1,7 +1,7 @@
 package katapult
 
 import (
-    "github.com/product-os/katapult/cue/contract"
+    "github.com/product-os/katapult/cue/contract"		
 	"github.com/product-os/katapult/cue/environment"
 )
 
@@ -10,6 +10,7 @@ contracts: environment.contracts
 
 keyframes: [Name=string]: contract.#Keyframe & {
 	slug: "\(Name)-keyframe"
+	data: children: [string]: #SwContainerizedService
 } 
 
 blueprints: [Name=string]: contract.#Blueprint & {

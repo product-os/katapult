@@ -45,12 +45,10 @@ contracts: {
             }
         }		
 		requires: [
-            { type: "cap_add", data: { value: ["SYS_RESOURCE", "SYS_ADMIN"] } },
-            { type: "security_opt", data: { value: "apparmor=unconfined" } },
-            { type: "tmpfs", data: { path: "/run" } },
-            { type: "tmpfs", data: { path: "/sys/fs/cgroup"} },
-			{ type: "label", data: { name: "io.balena.features.dbus", value: "1" } },
-			{ type: "label", data: { name: "io.balena.features.supervisor-api", value: "1"} }
+            { type: "capabilities", data: { add: ["SYS_RESOURCE", "SYS_ADMIN"], drop: [] } },
+            { type: "security_opt", data: { labels: ["apparmor=unconfined"] } },
+            { type: "tmpfs", data: { paths: ["/run", "/sys/fs/cgroup"] } },            
+			{ type: "label", data: { labels: ["io.balena.features.dbus=1", "io.balena.features.supervisor-api=1"] } },			
         ]
 		config: {
 			MDNS_TLD:        { value: string }

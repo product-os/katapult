@@ -10,7 +10,7 @@ package contract
 }
 
 #Ref: #Base & {
-	as?:          string
+	as:          string
 	cardinality?: string
 	version?:     string
 }
@@ -30,6 +30,7 @@ capabilityType: endpoint: {
 
 	type: string
 	name?: string	
+	as?: string
 	slug: string
 	version: string
 	
@@ -42,37 +43,4 @@ capabilityType: endpoint: {
 	// if (list.Contains(ServiceTypes, type)) {
 	// 	provides: [...#Ref] | *[capabilityType.endpoint & {as: "main"}]
 	// }
-}
-
-#SwContainerizedService: #Contract & {
-	type: "sw.containerized-service"
-	data: close({
-		replicas: *1 | number
-		assets: {			
-			image: url: string
-			repo: {
-				https: string
-				ssh: string
-			}
-		}
-	})
-}
-
-#DiskRef: #Ref & {
-	type: "disk",
-	data: close({
-		name: string
-		target: string
-		readonly: string
-	})
-}
-
-#HealthcheckRef: #Ref & {
-	type: "healthcheck"
-	data: close({
-		interval: string
-		retries: number
-		timeout: string
-		test: [...string]
-	})
 }

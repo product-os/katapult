@@ -87,5 +87,43 @@ contracts: {
 			}
 		}
 		version: "28.13.1"
+	},
+	"balena-redis": {
+		name: "Redis"
+		slug: "redis"
+		type: "sw.containerized-service"
+		requires: []
+		provides: []
+		data: {						
+			assets: {
+				image: {
+					url: "balena/balena-redis"					
+				}
+				repo: {
+					https: "https://github.com/product-os/balena-redis.git"
+					ssh: "git@github.com:product-os/balena-redis.git"
+				}
+			}
+			command: ["sh", "-c", "redis-server /usr/local/etc/redis/redis.conf --save ''"]
+		}
+		version: "0.0.3"
+	},
+	"open-balena-db": {		
+		slug: "open-balena-db"
+		type: "sw.containerized-service"
+		requires: []
+		provides: []
+		data: {		
+			assets: {
+				image: {
+					url: "balena/open-balena-db"					
+				}
+				repo: {
+					https: "https://github.com/balena-io/open-balena-db.git"
+					ssh: "git@github.com:balena-io/open-balena-db.git"
+				}
+			}
+		}
+		version: "4.1.0"
 	}
 }

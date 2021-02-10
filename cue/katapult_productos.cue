@@ -26,23 +26,14 @@ input: {
 //     keyframes: "\(input.product.slug)": data: children: "\(key)": child
 // }
 
-keyframes: "\(input.product)": data: children: "jellyfish-action-server": data: replicas: 2
+keyframes: "\(input.product)": data: children: {
+    "worker": data: {
+        replicas: 2
+    }
+}
 
 configs: "\(input.product)": {
     data: {
-        services: {
-            postgres: {
-                image: "balena/open-balena-db:4.1.0"
-                restart: "always"
-                networks: internal: {}
-            },
-            redis: {
-                image: "balena/balena-redis:0.0.3"
-                command: ["sh", "-c", "redis-server /usr/local/etc/redis/redis.conf --save ''"]
-                restart: "always"
-                networks: internal: {}
-            },
-        }
         networks: internal: {}
     }
 }

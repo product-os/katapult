@@ -4,7 +4,7 @@ package contract
 	type: "keyframe"
 	version: "1.0.0"
 	data: close({
-		children: [string]: #SwContainerizedService
+		children: [string]: #Contract
 		links: [string]: [string]: string
 	})
 }

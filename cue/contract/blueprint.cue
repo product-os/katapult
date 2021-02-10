@@ -5,6 +5,6 @@ package contract
 	version: "1.0.0"
 	data: close({
 		selector: [...#Ref]
-		links: [string]: string
+		links: [string]: [string]: string  // source: alias: target
 	})
 }
