@@ -1,59 +1,59 @@
 import (
-    "github.com/product-os/katapult/cue/contract"
+	"github.com/product-os/katapult/cue/contract"
 )
 
 #SwContainerizedService: contract.#Contract & {
 	type: "sw.containerized-service"
 	data: close({
 		command?: string | [...string]
-		restart: *"no" | "always" | "on-failure" | "unless-stopped"
+		restart:  *"no" | "always" | "on-failure" | "unless-stopped"
 		replicas: *1 | number
-		assets: {						
+		assets: {
 			image: {
-				url: string				
+				url: string
 			}
 			repo: {
 				https: string
-				ssh: string
+				ssh:   string
 			}
 		}
 	})
 }
 
 #CapabilitiesRef: contract.#Ref & {
-    type: "capabilities"
-    data: close({
-        add: [...string]
-        drop: [...string]
-    })
+	type: "capabilities"
+	data: close({
+		add: [...string]
+		drop: [...string]
+	})
 }
 
 #SecurityOptRef: contract.#Ref & {
-    type: "security_opt"
-    data: close({
-        labels: [...string]
-    })
+	type: "security_opt"
+	data: close({
+		labels: [...string]
+	})
 }
 
 #TmpfsRef: contract.#Ref & {
-    type: "tmpfs"
-    data: close({
-        paths: [...string]
-    })
+	type: "tmpfs"
+	data: close({
+		paths: [...string]
+	})
 }
 
 #LabelRef: contract.#Ref & {
-    type: "label"
-    data: close({
-        labels: [...string]
-    })
+	type: "label"
+	data: close({
+		labels: [...string]
+	})
 }
 
 #DiskRef: contract.#Ref & {
-	type: "disk",
+	type: "disk"
 	data: close({
-		name: string
-		target: string
+		name:     string
+		target:   string
 		readonly: string
 	})
 }
@@ -62,8 +62,8 @@ import (
 	type: "healthcheck"
 	data: close({
 		interval: string
-		retries: number
-		timeout: string
+		retries:  number
+		timeout:  string
 		test: [...string]
 	})
 }

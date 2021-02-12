@@ -1,5 +1,5 @@
-#ref: { slug: "custom_type" }
+#ref: {slug: "custom_type"}
 
-isMatch: (#ref&{ slug: "custom_type" }) != _|_
+isMatch: (#ref & {slug: "custom_type"}) != _|_
 
-isMismatch: (#ref&{ slug: "wrong_type" }) == _|_
+isMismatch: (#ref & {slug: "wrong_type"}) == _|_

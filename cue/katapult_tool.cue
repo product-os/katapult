@@ -48,7 +48,7 @@ command: dumpCompose: {
 }
 
 command: printCompose: {
-    task: print: cli.Print & {
+	task: print: cli.Print & {
 		text: yaml.MarshalStream(composes)
 	}
 }

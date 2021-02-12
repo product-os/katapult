@@ -54,8 +54,8 @@ package compose
 			weight?: int
 			weight_device?: [...#blkio_weight]
 		}
-		cap_add?:       [...string]
-		cap_drop?:      [...string]
+		cap_add?: [...string]
+		cap_drop?: [...string]
 		cgroup_parent?: string
 		command?:       string | [...string]
 		configs?: [...string | {
@@ -88,30 +88,30 @@ package compose
 			{[=~"^[a-zA-Z0-9._-]+$" & !~"^()$"]: condition: "service_started" | "service_healthy"}
 		}
 		device_cgroup_rules?: #list_of_strings
-		devices?:             [...string]
-		dns?:                 #string_or_list
-		dns_opt?:             [...string]
-		dns_search?:          #string_or_list
-		domainname?:          string
-		entrypoint?:          string | [...string]
-		env_file?:            #string_or_list
-		environment?:         #list_or_dict
-		expose?:              [...number | string]
-		extends?:             string | {
+		devices?: [...string]
+		dns?: #string_or_list
+		dns_opt?: [...string]
+		dns_search?:  #string_or_list
+		domainname?:  string
+		entrypoint?:  string | [...string]
+		env_file?:    #string_or_list
+		environment?: #list_or_dict
+		expose?: [...number | string]
+		extends?: string | {
 			service: string
 			file?:   string
 		}
 		external_links?: [...string]
-		extra_hosts?:    #list_or_dict
-		group_add?:      [...number | string]
-		healthcheck?:    #healthcheck
-		hostname?:       string
-		image?:          string
-		init?:           bool
-		ipc?:            string
-		isolation?:      string
-		labels?:         #list_or_dict
-		links?:          [...string]
+		extra_hosts?: #list_or_dict
+		group_add?: [...number | string]
+		healthcheck?: #healthcheck
+		hostname?:    string
+		image?:       string
+		init?:        bool
+		ipc?:         string
+		isolation?:   string
+		labels?:      #list_or_dict
+		links?: [...string]
 		logging?: {
 			driver?: string
 			options?: {
@@ -129,7 +129,7 @@ package compose
 		network_mode?:    string
 		networks?:        #list_of_strings | {
 			{[=~"^[a-zA-Z0-9._-]+$" & !~"^()$"]: {
-								aliases?: #list_of_strings, ipv4_address?: string, ipv6_address?: string, link_local_ips?: #list_of_strings, priority?: number
+				aliases?: #list_of_strings, ipv4_address?: string, ipv6_address?: string, link_local_ips?: #list_of_strings, priority?: number
 
 				{[=~"^x-" & !~"^(aliases|ipv4_address|ipv6_address|link_local_ips|priority)$"]: _}
 			} | null
@@ -140,7 +140,7 @@ package compose
 		pid?:              null | string
 		pids_limit?:       number | string
 		platform?:         string
-		ports?:            [...number | string | {
+		ports?: [...number | string | {
 			mode?:      string
 			target?:    int
 			published?: int
@@ -148,15 +148,15 @@ package compose
 
 			{[=~"^x-" & !~"^(mode|target|published|protocol)$"]: _}
 		}]
-		privileged?:   bool
-		profiles?:     #list_of_strings
-		pull_policy?:  "always" | "never" | "if_not_present" | "build"
-		read_only?:    bool
-		restart?:      string
-		runtime?:      string @deprecated()
-		scale?:        int
+		privileged?:  bool
+		profiles?:    #list_of_strings
+		pull_policy?: "always" | "never" | "if_not_present" | "build"
+		read_only?:   bool
+		restart?:     string
+		runtime?:     string @deprecated()
+		scale?:       int
 		security_opt?: [...string]
-		shm_size?:     number | string
+		shm_size?: number | string
 		secrets?: [...string | {
 			source?: string
 			target?: string
@@ -174,7 +174,7 @@ package compose
 		tty?:               bool
 		ulimits?: {
 			{[=~"^[a-z]+$" & !~"^()$"]: int | {
-							hard: int, soft: int
+				hard: int, soft: int
 
 				{[=~"^x-" & !~"^(hard|soft)$"]: _}
 			}}
@@ -182,7 +182,7 @@ package compose
 		}
 		user?:        string
 		userns_mode?: string
-		volumes?:     [...string | {
+		volumes?: [...string | {
 			type:         string
 			source?:      string
 			target?:      string
@@ -207,7 +207,7 @@ package compose
 			{[=~"^x-" & !~"^(type|source|target|read_only|consistency|bind|volume|tmpfs)$"]: _}
 		}]
 		volumes_from?: [...string]
-		working_dir?:  string
+		working_dir?: string
 
 		// {[=~"^x-" & !~"^(deploy|build|blkio_config|cap_add|cap_drop|cgroup_parent|command|configs|container_name|cpu_count|cpu_percent|cpu_shares|cpu_quota|cpu_period|cpu_rt_period|cpu_rt_runtime|cpus|cpuset|credential_spec|depends_on|device_cgroup_rules|devices|dns|dns_opt|dns_search|domainname|entrypoint|env_file|environment|expose|extends|external_links|extra_hosts|group_add|healthcheck|hostname|image|init|ipc|isolation|labels|links|logging|mac_address|mem_limit|mem_reservation|mem_swappiness|memswap_limit|network_mode|networks|oom_kill_disable|oom_score_adj|pid|pids_limit|platform|ports|privileged|profiles|pull_policy|read_only|restart|runtime|scale|security_opt|shm_size|secrets|sysctls|stdin_open|stop_grace_period|stop_signal|tmpfs|tty|ulimits|user|userns_mode|volumes|volumes_from|working_dir)$"]: _}
 		...
@@ -406,13 +406,11 @@ package compose
 	#list_of_strings: [...string]
 
 	// #list_or_dict: {
-	// 	{[=~".+" & !~"^()$"]: null | number | string}
+	//  {[=~".+" & !~"^()$"]: null | number | string}
 	// } | [...string]
 	#list_or_dict: {
 		{[=~".+" & !~"^()$"]: null | number | string}
 	} | [...string]
-
-
 
 	#blkio_limit: {
 		path?: string

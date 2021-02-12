@@ -1,22 +1,22 @@
 #Animal: {
-    data: {...}
+	data: {...}
 }
 
-#Dog: #Animal & { // conjunction inherit open/closed constraints
+#Dog: #Animal & {// conjunction inherit open/closed constraints
 
-    #Animal // "embed" does not inherit constraints
+	#Animal// "embed" does not inherit constraints
 
-    data: close({  // Required to close #Animal.data
-        hasBone: bool
-    })
+	data: close({// Required to close #Animal.data
+		hasBone: bool
+	})
 
-    hello: "world" // not allowed since #Animal is closed
+	hello: "world" // not allowed since #Animal is closed
 }
 
 puppy: #Dog & {
-    data: {
-        hasCollar: true
-    }
+	data: {
+		hasCollar: true
+	}
 
-    anything: "baby!" // not allowed since #Animal is closed
+	anything: "baby!" // not allowed since #Animal is closed
 }

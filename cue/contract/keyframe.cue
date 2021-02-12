@@ -1,9 +1,9 @@
 package contract
 
 #Keyframe: #Contract & {
-	type: "keyframe"
+	type:    "keyframe"
 	version: "1.0.0"
-	data: close({
+	data:    close({
 		children: [string]: #Contract
 		links: [string]: [string]: string
 	})
