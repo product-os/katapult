@@ -67,3 +67,17 @@ import (
 		test: [...string]
 	})
 }
+
+#AliasesRef: contract.#Ref & {
+	type: "aliases"
+	data: close({
+		aliases: [...string]
+	})
+}
+
+#PortsRef: contract.#Ref & {
+	type: "ports"
+	data: close({
+		ports: [...string]
+	})
+}

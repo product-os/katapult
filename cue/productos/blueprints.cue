@@ -21,7 +21,9 @@ blueprints: "product-os": {
 			"tick": "redis": "redis"
 			"worker": "postgres": "postgres"
 			"worker": "redis": "redis"
-			"ui": "api": "api"						
+			"ui": "api": "api",
+			"postgres": {}
+			"redis": {}
 		}
 	}
 }

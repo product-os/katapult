@@ -1,8 +1,10 @@
 package environment
 
 blueprints: "balena-compose": {
-	data: selector: [
-		{slug: "open-balena-haproxy"},
-		{slug: "balena-mdns-publisher"},
-	]
+	data: {
+		selector: [
+			{as: "haproxy", slug: "open-balena-haproxy"},
+			{as: "mdns", slug: "balena-mdns-publisher"},		
+		]
+	}
 }

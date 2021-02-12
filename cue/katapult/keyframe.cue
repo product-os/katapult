@@ -3,7 +3,7 @@ package katapult
 // evalate identifier 
 #func_identifier: {
 
-    #as?: string
+    #as: string
     #slug: string
 
     if #as != _|_ {
@@ -25,14 +25,6 @@ for id, blueprint in blueprints {
                 }
             }
             links: blueprint.data.links
-        }
-    }
-}
-
-keyframeComponentBySlug: {
-    for id, keyframe in keyframes {
-        for _, component in keyframe.data.children {
-            "\(id)-\(component.slug)": component
         }
     }
 }

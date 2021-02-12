@@ -10,7 +10,7 @@ package contract
 }
 
 #Ref: #Base & {
-	as:          string
+	as?:          string
 	cardinality?: string
 	version?:     string
 }

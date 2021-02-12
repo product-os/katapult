@@ -19,9 +19,18 @@ blueprints: [Name=string]: contract.#Blueprint & {
 blueprints: environment.blueprints
 
 input: {
-	product: string
-	environment: string
+	product: {
+		slug: string
+		data: {...}
+	}
+	environment: {
+		slug: string
+		data: {...}
+	}
 	config: {...}
 }
+
+keyframes: "\(input.product.slug)": data: input.product.data
+keyframes: "\(input.environment.slug)": data: input.environment.data
 
 configs: [Name=string]: contract.#Contract & {}
