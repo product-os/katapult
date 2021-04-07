@@ -10,7 +10,7 @@ contracts: environment.contracts
 
 keyframes: [Name=string]: contract.#Keyframe & {
 	slug: "\(Name)-keyframe"
-	data: children: [string]: #SwContainerizedService
+	data: children: [string]: contract.#SwContainerizedService
 }
 
 blueprints: [Name=string]: contract.#Blueprint & {

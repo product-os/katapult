@@ -1,16 +1,21 @@
-Quick start
+## Product-os
 
-- [Install `cue`](https://cuelang.org/docs/install/)
-- Run 
+The following will output a docker-compose.yml for product-os
 ```
-cue cmd printCompose katapult.cue katapult_openbalena.cue  katapult/compose.cue input.cue
+cue cmd printCompose katapult.cue katapult/keyframe.cue katapult/definitions.cue katapult/compose.cue katapult/compose_tool.cue katapult_productos.cue > docker-compose.yml
 ```
 
-- Try converting NPM package to a keyframe.
+To see how an evaluation is built start by `eval` the first file in the command above, inspect the output and then continue with the next...
+
 ```
-cue import --force -p katapult --with-context -l '"npmData"' -l 'path.Base(filename)' -l data.name ../package*.json
-cue cmd dumpKeyframes katapult*.cue npm-*.cue ../package*.cue
-``` 
+cue eval katapult.cue
+```
+
+```
+cue eval katapult.cue katapult/keyframe.cue
+```
+
+etc...
 
 ## Development
 

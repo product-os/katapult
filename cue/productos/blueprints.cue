@@ -5,8 +5,8 @@ blueprints: "product-os": {
 		selector: [
 			{as: "api", slug:      "jellyfish-api"},
 			{as: "livechat", slug: "jellyfish-livechat"},
-			{as: "postgres", slug: "open-balena-db", version: "4.1.0"},
-			{as: "redis", slug:    "balena-redis", version:   "0.0.3"},
+			{as: "postgres", slug: "open-balena-db", version: "4.1.0"}, // TODO: allow for managed postgres in some environments
+			{as: "redis", slug:    "balena-redis", version:   "0.0.3"}, // TODO: allow for managed redis in some environments
 			{as: "tick", slug:     "jellyfish-tick-server"},
 			{as: "ui", slug:       "jellyfish-ui"},
 			{as: "worker", slug:   "jellyfish-action-server"},

@@ -1,17 +1,21 @@
 package katapult
 
 import (
-	"encoding/yaml"
-	"tool/cli"
 	"list"
 	"github.com/product-os/katapult/cue/adapter/compose"
+//	"github.com/product-os/katapult/cue/contract"
 )
 
-command: printCompose: {
-	task: print: cli.Print & {
-		text: yaml.MarshalStream([configs[input.product.slug].data])
-	}
-}
+//#func_dependsOn: {
+//
+//	#links: [string]: string // alias: target
+//	#contracts: [...contract.#Contract]
+//
+//	let contractsBySlug = {for _, contract in #contracts { "\(contract.slug)": contract }}
+//
+//	[ for _, alias in #links { for index in list.Range(1, contract.data.replicas+1, 1) { "\(id)_\(index)" } } ]
+//
+//}
 
 // generate compose service
 #func_service: {
@@ -19,6 +23,7 @@ command: printCompose: {
 	#contract: #SwContainerizedService
 	#links: [string]: string
 	#id: string
+	#networks: [...string]
 
 	let requiresByType = {for _, ref in #contract.requires {"\(ref.type)": ref}}
 
@@ -36,12 +41,14 @@ command: printCompose: {
 		command: #contract.data.command
 	}
 
-	if #links != _|_ {
+	if len(#links) > 0 {
 		depends_on: [ for _, target in #links {target}]
 	}
 
-	environment: {
-		for config_name, config in #contract.config {"\(config_name)": config.value}
+    if len(#contract.config) > 0 {
+		environment: {
+			for config_name, config in #contract.config {"\(config_name)": config.value}
+		}
 	}
 	// expose: [ for ref in #contract.provides if ref.type == "net.expose" { "\(ref.data.port)" }]
 	// healthcheck: TODO: how to select only one health check
@@ -55,6 +62,10 @@ command: printCompose: {
 	let _aliases = list.FlattenN([ for ref in #contract.requires if (#AliasesRef & ref) != _|_ {ref.data.aliases}], 1)
 	if len(_aliases) > 0 {
 		network: internal: aliases: _aliases
+	}
+
+	if len(#networks) > 0 {
+		networks: #networks
 	}
 
 	if requiresByType["network_mode"] != _|_ {
@@ -75,18 +86,18 @@ command: printCompose: {
 
 	let _security_opt = list.FlattenN([ for ref in #contract.requires if (#SecurityOptRef & ref) != _|_ {ref.data.labels}], 1)
 
-	if len(_security_opt) > 0
-	// volumes: [ for ref in #contract.requires if ref.type == "hw.disk" 
-	//     {                             
+	if len(_security_opt) > 0 {
+		security_opt: _security_opt
+	}
+
+	// volumes: [ for ref in #contract.requires if ref.type == "hw.disk"
+	//     {
 	//         type: "volume"
 	//         source: ref.data.name
 	//         target: ref.data.target
 	//         read_only: ref.data.readonly
 	//     }
-	// ]    
-	{
-		security_opt: _security_opt
-	}
+	// ]
 }
 
 let productKeyframe = keyframes[input.product.slug]
@@ -103,16 +114,25 @@ configs: "\(input.product.slug)": {
 	data:    compose.#Compose & {
 		version: "2.1"
 		// gen product services
-		for id, service in productServices {
-			for index in list.Range(1, service.data.replicas+1, 1) {
-				services: "\(id)_\(index)": #func_service & {#contract: service, #links: productKeyframe.data.links[id], #id: id}
+		for id, contract in productServices {
+			for index in list.Range(1, contract.data.replicas+1, 1) {
+				services: "\(id)_\(index)": #func_service & {
+					#contract: contract,
+					#links: productKeyframe.data.links[id],
+					#id: id,
+					#networks: ["internal"]
+				}
 			}
 		}
 
 		// gen environment services
-		for id, service in environmentServices {
-			for index in list.Range(1, service.data.replicas+1, 1) {
-				services: "\(id)_\(index)": #func_service & {#contract: service, #id: id}
+		for id, contract in environmentServices {
+			for index in list.Range(1, contract.data.replicas+1, 1) {
+				services: "\(id)_\(index)": #func_service & {
+					#contract: contract,
+					#id: id,
+					#networks: []
+				}
 			}
 		}
 

@@ -18,6 +18,7 @@ contracts: {
 			}
 			restart: "always"
 		}
+		config: {}
 		version: "4.1.0"
 	}
 	"balena-redis": {
@@ -39,6 +40,7 @@ contracts: {
 			command: ["sh", "-c", "redis-server /usr/local/etc/redis/redis.conf --save ''"]
 			restart: "always"
 		}
+		config: {}
 		version: "0.0.3"
 	}
 	"jellyfish-api": {
@@ -210,7 +212,7 @@ contracts: {
 		provides: []
 		data: {
 			assets: {
-				image: url: "balena/jellyfish-action-server:33.50.5"
+				image: url: "balena/jellyfish-action-server"
 				repo: {
 					https: "https://github.com/balena-io/jellyfish.git"
 					ssh:   "git@github.com:product-os/jellyfish.git"

@@ -11,6 +11,10 @@ input: {
 	product: {
 		slug: "product-os"
 		data: children: {
+			"api": config: {
+				REGISTRY_TOKEN_AUTH_CERT_KEY: value: ""
+				REGISTRY_TOKEN_AUTH_CERT_KID: value: ""
+			}
 			"worker": data: {
 				replicas: input.config.WORKERS
 			}
