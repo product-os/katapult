@@ -2,8 +2,22 @@ package productos
 
 //TODO the compose environment needs to provide the volumes
 
-let runner = {
+#Contract: {
+	slug: "\(namespace)/\(type)/\(name)"
+	name: string
+	namespace: string
+	type: string
+	title?: string
+	requires: [...]
+	provides: [...]
+	data: {...}
+	config: {...}
+	version: string
+}
+
+let runner = #Contract & {
 	name: "transformer-runner"
+	namespace: "product-os"
 	type: "service"
 	requires: [
 		{ type:"volume", data: { tag:"shared"} }
@@ -25,8 +39,9 @@ let runner = {
 	version: "1. 1.0"
 }
 
-let launcher = {
+let launcher = #Contract & {
 	name: "fleet-launcher"
+	namespace: "product-os"
 	type: "service"
 	requires: [
 		{type:"volume", tag:"shared"},
@@ -45,8 +60,9 @@ let launcher = {
 // this is interesting:
 // the contracts above come from the service (repos), but where does
 // this one come from?
-let gc = {
+let gc = #Contract & {
 	name: "garbage-collector"
+	namespace: "product-os"
 	type: "service"
 	requires: [
 		{type:"volume", tag:"shared"},
@@ -63,7 +79,7 @@ let gc = {
 }
 
 contracts: {
-	"\(runner.name)": runner
-	"\(gc.name)": gc
-	"\(launcher.name)": launcher
+	"\(runner.slug)": runner
+	"\(gc.slug)": gc
+	"\(launcher.slug)": launcher
 }
