@@ -36,7 +36,7 @@ let runner = #Contract & {
 		JF_API_PREFIX: {value: *"api/v2" | string}
 		RSA_PRIVATE_KEY: {value: *"" | string}
 	} // why is this outside data?
-	version: "1. 1.0"
+	version: "1.1.0"
 }
 
 let launcher = #Contract & {
@@ -54,7 +54,7 @@ let launcher = #Contract & {
 			{to:"/shared", from:"shared"}
 		]
 	}
-	version: "1. 1.0"
+	version: "1.1.0"
 }
 
 // this is interesting:
@@ -75,7 +75,7 @@ let gc = #Contract & {
 			{to:"/shared", from:"shared"}
 		]
 	}
-	version: "1. 1.0"
+	version: "1.1.0"
 }
 
 contracts: {
