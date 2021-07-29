@@ -1,7 +1,7 @@
 {
   "name": "@balena/katapult",
   "description": "A tool for launching container-based products",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "author": "Michael Angelos Simos <michalis@balena.io>",
   "bin": {
     "katapult": "./bin/run"
@@ -123,5 +123,8 @@
     "test": "mocha \"test/**/*.spec.ts\"",
     "version": "oclif-dev readme && git add README.md"
   },
-  "types": "lib/index.d.ts"
+  "types": "lib/index.d.ts",
+  "versionist": {
+    "publishedAt": "2021-07-29T09:16:47.858Z"
+  }
 }
