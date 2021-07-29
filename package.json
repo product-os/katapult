@@ -6,7 +6,7 @@
   "bin": {
     "katapult": "./bin/run"
   },
-  "bugs": "https://github.com/loop-os/katapult/issues",
+  "bugs": "https://github.com/product-os/katapult/issues",
   "dependencies": {
     "@oclif/command": "^1.5.12",
     "@oclif/config": "^1.12.10",
@@ -78,9 +78,10 @@
     "/bin",
     "/lib",
     "/npm-shrinkwrap.json",
-    "/oclif.manifest.json"
+    "/oclif.manifest.json",
+    "/schemas"
   ],
-  "homepage": "https://github.com/loop-os/katapult",
+  "homepage": "https://github.com/product-os/katapult",
   "keywords": [
     "oclif"
   ],
@@ -111,7 +112,7 @@
       "git add"
     ]
   },
-  "repository": "loop-os/katapult",
+  "repository": "product-os/katapult",
   "scripts": {
     "build": "tsc",
     "prettify": "prettier --config ./node_modules/resin-lint/config/.prettierrc --write \"src/**/*.ts\" \"typings/**/*.ts\" \"test/**/*.ts\"",
